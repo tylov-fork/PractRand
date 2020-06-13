@@ -9,63 +9,58 @@
 using namespace PractRand;
 
 //raw:
-Uint64 PractRand::RNGs::Raw::EntropyPools::arbee::do_jsflike() {
-	Uint64 e = a - ((b << 51) | (b >> 13));
-	a = b ^ ((c << 33) | (c >> 31));
-	b = c + ~d;
-	c = d + e;
+Uint64 PractRand::RNGs::Raw::EntropyPools::arbee::raw64() {
+	Uint64 e = a - ((b << 7) | (b >> (64-7)));
+	a = b ^ ((c << 13) | (c >> (64-13)));
+	b = ((d << 37) | (d >> (64-37))) + c + i++;
+	c = ~d + e;
 	d = e + a;
 	return b;
 }
-Uint64 PractRand::RNGs::Raw::EntropyPools::arbee::do_mix() {
-	Uint64 tmp;
-	a += c;
-	a += 0x7ed29130fa9e79b9ull;
-	tmp = (a<<13)|(a>>51);
-	a = b ^ (~tmp)^(tmp<<3);
-	a = (a<<13)|(a>>51);
-	b = tmp;
-	tmp = (b & c) | (a & ~c);
-	tmp = (tmp << 19) | (tmp >> 45);
-	d += tmp;
-	c = (c^a)+b;
-	b ^= d;
-	return a;
+void PractRand::RNGs::Raw::EntropyPools::arbee::mix() {
+	Uint64 e;
+	e = (a & b) | (~b & c);
+	d ^= ((e << 21) | (e >> (64-21))) + i++;
+	e = (a & b) | (b & d) | (d & a);
+	c += ((e << 19) | (e >> (64-19)));
 }
 void PractRand::RNGs::Raw::EntropyPools::arbee::seed(Uint64 s) {
 	a = s;
 	b = 1;
 	c = 2;
 	d = 3;
-	do_jsflike();
-	do_jsflike();
-	do_mix();
-	do_mix();
+	i = 0;
+	raw64();
+	raw64();
+	mix();
 }
 void PractRand::RNGs::Raw::EntropyPools::arbee::walk_state(StateWalkingObject *walker) {
 	walker->handle(a);
 	walker->handle(b);
 	walker->handle(c);
 	walker->handle(d);
+	walker->handle(i);
 }
 void PractRand::RNGs::Raw::EntropyPools::arbee::add_entropy16(Uint16 value) {
 	a ^= value;
 	c += value;
-	do_jsflike();
+	raw64();
 }
 void PractRand::RNGs::Raw::EntropyPools::arbee::add_entropy32(Uint32 value) {
 	a ^= value;
 	c += value;
-	do_jsflike();
-	do_mix();
+	raw64();
+	mix();
+	raw64();
 }
 void PractRand::RNGs::Raw::EntropyPools::arbee::add_entropy64(Uint64 value) {
 	a ^= value;
 	c += value;
-	do_jsflike();
-	do_jsflike();
-	do_mix();
-	do_mix();
+	raw64();
+	mix();
+	raw64();
+	mix();
+	raw64();
 }
 
 

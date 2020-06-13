@@ -1,7 +1,6 @@
 #ifndef __RNG_ADAPTORS_H__
 #define __RNG_ADAPTORS_H__
 
-//disabled as I haven't finished updating it for the latest round of interface changes
 #if 1
 namespace PractRand {
 	namespace RNGs {
@@ -169,12 +168,12 @@ namespace PractRand {
 						>::t
 					>::t t;
 				};
-				template<class base_rng> class RAW_TO_NORMAL_RNG : public _NORMALIZE<base_rng>::t {
+				template<class base_rng> class RAW_TO_LIGHT_WEIGHT_RNG : public _NORMALIZE<base_rng>::t {
 				public:
-					RAW_TO_NORMAL_RNG(SEED_AUTO_TYPE) {autoseed();}
-					RAW_TO_NORMAL_RNG(SEED_NONE_TYPE) {}
-					RAW_TO_NORMAL_RNG(Uint64 s) {seed(s);}
-					RAW_TO_NORMAL_RNG(vRNG *seeder) {seed(seeder);}
+					RAW_TO_LIGHT_WEIGHT_RNG(SEED_AUTO_TYPE) {autoseed();}
+					RAW_TO_LIGHT_WEIGHT_RNG(SEED_NONE_TYPE) {}
+					RAW_TO_LIGHT_WEIGHT_RNG(Uint64 s) {seed(s);}
+					RAW_TO_LIGHT_WEIGHT_RNG(vRNG *seeder) {seed(seeder);}
 				};
 				//to do:
 				//template<class base_rng> class RAW_TO_POLYMORPHIC_RNG;

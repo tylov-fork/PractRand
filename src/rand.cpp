@@ -9,7 +9,7 @@
 #include "PractRand/rng_internals.h"
 
 #include "PractRand/RNGs/entropy_pools/arbee.h"
-#include "PractRand/RNGs/entropy_pools/sha2_based_pool.h"
+//#include "PractRand/RNGs/entropy_pools/sha2_based_pool.h"
 
 namespace PractRand {
 	void issue_error ( const char *msg ) {
@@ -80,7 +80,9 @@ namespace PractRand {
 			for (int i = 0; i < 8; i++) seeder.raw64();
 		}
 		static void initialize() {
-			PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool entropy_pool;
+			//PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool entropy_pool;
+			if (initialized) return;
+			PractRand::RNGs::Polymorphic::EntropyPools::arbee entropy_pool;
 			entropy_pool.add_entropy_automatically(1);
 			initialized = true;
 			for (int i = 0; i < SIZE; i++) {
@@ -103,6 +105,9 @@ namespace PractRand {
 	};
 	bool AutoSeedingStateWalker::initialized = false;
 	Uint64 AutoSeedingStateWalker::shared_data[SIZE] = {0};
+	Uint32 randi_fast_implementation(Uint32 random_value, Uint32 max) {
+		return Uint32((Uint64(max) * random_value) >> 32);
+	}
 	StateWalkingObject *int_to_rng_seed(Uint64 i) {
 		return new GenericIntegerSeedingStateWalker(i);
 	}
@@ -119,8 +124,8 @@ namespace PractRand {
 		Uint64 vRNG::randli(Uint64 max) {
 			PRACTRAND__RANDLI_IMPLEMENTATION(max)
 		}
-		float vRNG::randf() {return PRACTRAND__RANDF_IMPLEMENTATION(*this);}
-		double vRNG::randlf() {return PRACTRAND__RANDLF_IMPLEMENTATION(*this);}
+		float vRNG::randf() {PRACTRAND__RANDF_IMPLEMENTATION(*this)}
+		double vRNG::randlf() {PRACTRAND__RANDLF_IMPLEMENTATION(*this)}
 		void vRNG::seed(Uint64 i) {
 			GenericIntegerSeedingStateWalker walker(i);
 			walk_state(&walker);
@@ -137,8 +142,8 @@ namespace PractRand {
 			flush_buffers();
 		}
 		Uint64 vRNG::get_flags() const {return 0;}
-		void vRNG::seek_forward (Uint64 how_far) {}
-		void vRNG::seek_backward(Uint64 how_far) {}
+		void vRNG::seek_forward (Uint64 ) {}
+		void vRNG::seek_backward(Uint64 ) {}
 		void vRNG::add_entropy8 (Uint8)  {}
 		void vRNG::add_entropy16(Uint16) {}
 		void vRNG::add_entropy32(Uint32) {}

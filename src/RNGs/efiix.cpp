@@ -38,18 +38,18 @@ void PractRand::RNGs::Polymorphic::efiix64x256::seed(Uint64 s) {implementation.s
 Uint8 PractRand::RNGs::Raw::efiix8x256::raw8() {
 	enum {WORDBITS = 8 * sizeof(Word)};
 	enum {SHIFT1 = 3, SHIFT2 = 2};
-	Word indirect = table[c % SIZE];
+	Word indirect = table[a % SIZE];
 	Word iterated = table[i % SIZE];
-	iterated = ((iterated << SHIFT2) | (iterated >> (WORDBITS-SHIFT2)));
-	table[c % SIZE] = iterated;
-	table[i % SIZE] = b + i;
+	iterated = ((iterated << SHIFT1) | (iterated >> (WORDBITS-SHIFT1)));
+	table[a % SIZE] = iterated;
+	table[i % SIZE] = c + i;
 	Word feed_in = indirect+iterated;
-	Word temp = a ^ ((b << SHIFT1) | (b >> (WORDBITS-SHIFT1)));
+	Word temp = a ^ ((b << SHIFT2) | (b >> (WORDBITS-SHIFT2)));
 	a = b + c;
 	b = c + feed_in;
 	c = feed_in + temp;
 	i++;
-	return a + indirect; 
+	return temp;
 }
 void PractRand::RNGs::Raw::efiix8x256::seed(Uint64 s) {
 	PractRand::RNGs::Raw::jsf64 seeder;
@@ -76,18 +76,18 @@ void PractRand::RNGs::Raw::efiix8x256::walk_state(StateWalkingObject *walker) {
 Uint16 PractRand::RNGs::Raw::efiix16x256::raw16() {
 	enum {WORDBITS = 8 * sizeof(Word)};
 	enum {SHIFT1 = 5, SHIFT2 = 9};
-	Word indirect = table[c % SIZE];
+	Word indirect = table[a % SIZE];
 	Word iterated = table[i % SIZE];
-	iterated = ((iterated << SHIFT2) | (iterated >> (WORDBITS-SHIFT2)));
-	table[c % SIZE] = iterated;
-	table[i % SIZE] = b + i;
+	iterated = ((iterated << SHIFT1) | (iterated >> (WORDBITS-SHIFT1)));
+	table[a % SIZE] = iterated;
+	table[i % SIZE] = c + i;
 	Word feed_in = indirect+iterated;
-	Word temp = a ^ ((b << SHIFT1) | (b >> (WORDBITS-SHIFT1)));
+	Word temp = a ^ ((b << SHIFT2) | (b >> (WORDBITS-SHIFT2)));
 	a = b + c;
 	b = c + feed_in;
 	c = feed_in + temp;
 	i++;
-	return a + indirect; 
+	return temp;
 }
 void PractRand::RNGs::Raw::efiix16x256::seed(Uint64 s) {
 	PractRand::RNGs::Raw::jsf64 seeder;
@@ -114,18 +114,18 @@ void PractRand::RNGs::Raw::efiix16x256::walk_state(StateWalkingObject *walker) {
 Uint32 PractRand::RNGs::Raw::efiix32x256::raw32() {
 	enum {WORDBITS = 8 * sizeof(Word)};
 	enum {SHIFT1 = 11, SHIFT2 = 17};
-	Word indirect = table[c % SIZE];
+	Word indirect = table[a % SIZE];
 	Word iterated = table[i % SIZE];
-	iterated = ((iterated << SHIFT2) | (iterated >> (WORDBITS-SHIFT2)));
-	table[c % SIZE] = iterated;
-	table[i % SIZE] = b + i;
+	iterated = ((iterated << SHIFT1) | (iterated >> (WORDBITS-SHIFT1)));
+	table[a % SIZE] = iterated;
+	table[i % SIZE] = c + i;
 	Word feed_in = indirect+iterated;
-	Word temp = a ^ ((b << SHIFT1) | (b >> (WORDBITS-SHIFT1)));
+	Word temp = a ^ ((b << SHIFT2) | (b >> (WORDBITS-SHIFT2)));
 	a = b + c;
 	b = c + feed_in;
 	c = feed_in + temp;
 	i++;
-	return a + indirect; 
+	return temp;
 }
 void PractRand::RNGs::Raw::efiix32x256::seed(Uint64 s) {
 	PractRand::RNGs::Raw::jsf64 seeder;
@@ -152,18 +152,18 @@ void PractRand::RNGs::Raw::efiix32x256::walk_state(StateWalkingObject *walker) {
 Uint64 PractRand::RNGs::Raw::efiix64x256::raw64() {
 	enum {WORDBITS = 8 * sizeof(Word)};
 	enum {SHIFT1 = 23, SHIFT2 = 35};
-	Word indirect = table[c % SIZE];
+	Word indirect = table[a % SIZE];
 	Word iterated = table[i % SIZE];
-	iterated = ((iterated << SHIFT2) | (iterated >> (WORDBITS-SHIFT2)));
-	table[c % SIZE] = iterated;
-	table[i % SIZE] = b + i;
+	iterated = ((iterated << SHIFT1) | (iterated >> (WORDBITS-SHIFT1)));
+	table[a % SIZE] = iterated;
+	table[i % SIZE] = c + i;
 	Word feed_in = indirect+iterated;
-	Word temp = a ^ ((b << SHIFT1) | (b >> (WORDBITS-SHIFT1)));
+	Word temp = a ^ ((b << SHIFT2) | (b >> (WORDBITS-SHIFT2)));
 	a = b + c;
 	b = c + feed_in;
 	c = feed_in + temp;
 	i++;
-	return a + indirect; 
+	return temp;
 }
 void PractRand::RNGs::Raw::efiix64x256::seed(Uint64 s) {
 	PractRand::RNGs::Raw::jsf64 seeder;

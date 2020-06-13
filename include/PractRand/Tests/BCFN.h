@@ -3,7 +3,6 @@ namespace PractRand {
 		class BCFN : public TestBaseclass {
 		protected:
 			enum { LEVELS = 40 };
-			enum { BASE_LEVEL = 0};
 			VariableSizeCount<Uint16> counts[LEVELS];
 			bool autofail;
 			long mask[LEVELS];

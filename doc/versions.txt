@@ -1,0 +1,71 @@
+version 0.81
+	fixed the missing symbol "randi_fast_implementation"
+	fixed the bloated file sizes on PractRand.lib and PractRand_full.lib
+	fixed some rare issues with uniform floating point distribution
+	improved various bits of documentation
+	removed various files that did not belong in this package
+	now supports limited compatibility with C++0x TR1 RNG distributions
+		only on vRNG8, vRNG16, vRNG32, and vRNG64
+	tweaked various RNGs:
+		jsf: made more conformant to Robert Jenkins code, blocked some bad states
+		arbee: improved quality, eliminated bad cycles
+		efiix: reverted to older faster version
+	checked licenses on RNGs
+		jsf, ibaa
+
+verion 0.80 - initial release
+	RNG stuff:
+		RNG types
+			Raw
+			light-weight
+			Polymorphic
+			entropy pool
+			inline
+			template adaptor (Raw -> light-weight)
+		RNG interface
+			output
+				RNG output type abstraction
+				uniform integers
+				fast (semi-)uniform integers
+				uniform floating point
+			seeding
+				seed from 64 bit integer
+				seed from any polymorphic RNG
+				seed automatically
+				special seeding interface for entropy pools
+					default state
+					add_entropy8/add_entropy16/add_entropy32/add_entropy64/add_entropy_N
+					add_entropy_automatically
+					flush_buffers
+			other
+				state walking, is useful for
+					serialization
+					deserialization
+					checksuming
+					monitoring internal state (avalanche)
+					used internally for generic seeding
+				optional RNG methods
+					seek_forward, seek_backward
+					entropy accumulation functions, see seeding / entropy pools above
+		recommended RNGs:
+			jsf64, jsf32, jsf16
+			mwlac64, mwlac32
+			clcg96_32, lcg64_32   <--- lcg64_32?  not really recommended is it?
+			hc256
+			isaac32x256, isaac64x256
+			efiix8x256, efiix16x256, efiix32x256, efiix64x256 *still in development
+			mt19937
+		entropy pools:
+			arbee
+			sha2_based_pool
+			isaac_with_sha2_pool
+	Statistical tests:
+		recommended tests:
+			DC6
+			BCFN
+			Gap-16
+		test transforms:
+			*multiplex
+			shrink
+			lowbits
+			FirstNofM

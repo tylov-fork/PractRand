@@ -3,8 +3,64 @@ Not much documentation yet, hopefully that will get fixed in the
 next version.  The test program shows off testing on a simple 
 RNG though.  
 
-Tests:
-	Gap16 - a simple 16 bit gap test
+The testing interface is not well documented, but you can see much of it 
+in include/PractRand/tests.h
+
+You can also see the tests in action in the sample program in test/test.cpp
+
+The process of testing a stream of data generally goes like this:
+1. Call the tests constructor, with the tests parameters.  The parameters 
+can not be changed after this (unless a new test is constructed).  
+2. Call the tests init() method, which takes a known good polymorphic RNG 
+as a parameter.  Most tests don't actually use the the known good RNG but 
+some rare tests do and all tests in PractRand share the same API, so all 
+tests must be handed a known good RNG.  
+3. Create a block of memory to put the data to be tested in.  The data 
+doesn't all have to fit at once.  The block of memory should come in the 
+form of an array of the type PractRand::Tests::TestBlock.  Each TestBlock 
+is 1 kilobyte in size, and should be filled with random bits.  TestBlock 
+has a method for efficiently using a polymorphic RNG to fill it.  If you 
+wish to fill it with a different data source then you'll have to do that 
+manually.  
+4. Pass the block of memory to the test, using the tests test_blocks() 
+method.  The parameters are a pointer at the array of TestBlocks and the 
+number of TestBlocks in that array.  
+[optional:] 5. Create more arrays of TestBlocks full of random bits 
+and pass them to the test with test_blocks().  However, now you are 
+supposed to have the tail end of the previous array of blocks prefixed on 
+to the begining of each new array.  The pointer at the array of blocks 
+should point to the part of the new array where the new stuff begins.  The 
+maximum number of blocks that you may be required to prefix in this way is 
+PractRand::Tests::Testbaseclass::REPEATED_BLOCKS.  
+I know this direction may be confusing.  Try looking at sample programs 
+source code (currently test/test.cpp, the class "TestManager" in it.  That 
+class encapsulates complying with those demands.  
+Like the known good RNG, only a few tests actually need the repeated blocks, 
+but all test users are supposed to comply with that part of the interface 
+so that all tests get a common interface.  
+6. Call the tests get_result() method.  This will return a number.  
+Unfortunately, there is no standard meaning to this number.  If you know 
+what test you're dealing with then you may know how to deal with this 
+number.  Otherwise go on to step 7.  
+[optional:] 7. Call the tests result_to_pvalue() method.  Unfortunately 
+many tests can't convert their result in to a p-value, or can't convert their 
+results to a p-value unless the recommended parameterization was used.  Even 
+those tests that do end up converting to a p-value often only use crude 
+aproximate p-values.  
+[optional:] 8. You can repeat the above procedure starting with step 5.  It 
+will remember the data it had recieved before and new data is effectively 
+post-pended on to the old.  This means you can effectively get interim results 
+part way through a longer test without spoiling the longer test.  
+9. Call the deinit() method of the test.  This resets the test state.  In 
+some (but not all) cases this will free up most of the memory used by the 
+test.  
+[optional:] 10. Repeat from step 2 above.  
+11. Destruct the test object.  At this point all memory used by the test 
+should be released.  
+
+
+Specific Tests:
+	Gap16 - a 16 bit gap test
 	BCFN - checks for long range linear correlations;
 		in practice this often detects Fibonacci style RNGs that 
 		rely upon large lags to defeat other statistical tests
@@ -14,4 +70,5 @@ Tests:
 		multiplex - simply routes operations on this test to multiple subtests
 		lowbits - for each 1,2,4,or 8 bytes this takes the lowest 1,2,4,8,16, 
 			or 32 bits and routes them to the wrapped tests)
+		shrink - 
 		FirstNofM - 

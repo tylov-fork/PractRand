@@ -681,10 +681,10 @@ double PractRand::Tests::BCFN::get_result() {
 		rs[level] = math_chisquared_to_normal(rs[level], reduced_size-1);
 	}
 	//to do: combine two adjacent levels together?
-	double r = rs[BASE_LEVEL];
+	double r = rs[0];
 	int chosen_level = -1;
 	double MINDIFF = 5.0;
-	for (int level = BASE_LEVEL+1; level < LEVELS; level++) {
+	for (int level = 0+1; level < LEVELS; level++) {
 		if (fabs(r)+MINDIFF < fabs(rs[level])) {
 			r = rs[level];
 			chosen_level = level;
@@ -735,7 +735,7 @@ void PractRand::Tests::BCFN::test_blocks(TestBlock *data, int numblocks) {
 #define GET_BITS16(pos) (count_bits16(data[0].as16[i+(pos)]) - 8)
 #define GET_BITS32(pos) (count_bits32(data[0].as32[i+(pos)]) - 16)
 #define GET_BITS64(pos) (count_bits64(data[0].as64[i+(pos)]) - 32)
-#define HANDLE_BITS(level,var) if (level >= BASE_LEVEL && var){tmp=var>>31;cur[level]=((cur[level]<<1)-tmp)&mask[level];if (warmup[level]) warmup[level]--; else counts[level].increment(cur[level]);}
+#define HANDLE_BITS(level,var) if (var){tmp=var>>31;cur[level]=((cur[level]<<1)-tmp)&mask[level];if (warmup[level]) warmup[level]--; else counts[level].increment(cur[level]);}
 		switch (unitsL2) {
 			case 0: {
 				for (int i = 0; i < TestBlock::SIZE / 1; i+=1) {
@@ -798,7 +798,7 @@ void PractRand::Tests::BCFN::test_blocks(TestBlock *data, int numblocks) {
 				for (unsigned long i = 0; i < max; i+=8) {
 					long bits0, bits1, bits2, bits3;
 					long tmp;
-#define HANDLE_BITS(level,var) if (level >= BASE_LEVEL && var){tmp=var>>31;cur[level]=((cur[level]<<1)-tmp)&mask[level];if (warmup[level]) warmup[level]--; else counts[level].increment(cur[level]);}
+#define HANDLE_BITS(level,var) if (var){tmp=var>>31;cur[level]=((cur[level]<<1)-tmp)&mask[level];if (warmup[level]) warmup[level]--; else counts[level].increment(cur[level]);}
 					//0
 					bits1 = bits0 = GET_BITS(0);
 					HANDLE_BITS(0,bits0);
@@ -1029,6 +1029,9 @@ double PractRand::Tests::BCFN::result_to_pvalue ( Uint64 blocks, double r ) {
 //0.01,		0.001,		0.0001,		0.00001,	0.000001,	0.0000001,	0
 	}*/
 }
+
+
+
 
 
 PractRand::Tests::Transforms::multiplex::multiplex(const char *name_, ListOfTests &testlist)

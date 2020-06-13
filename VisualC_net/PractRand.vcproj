@@ -105,16 +105,19 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="1"
 				EnableIntrinsicFunctions="true"
+				OmitFramePointers="true"
+				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="../include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
+				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -350,42 +353,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-		</Filter>
-		<Filter
-			Name="Documentation"
-			>
-			<File
-				RelativePath="..\doc\installation.txt"
-				>
-			</File>
-			<File
-				RelativePath="..\doc\license.txt"
-				>
-			</File>
-			<File
-				RelativePath="..\doc\PractRand.txt"
-				>
-			</File>
-			<File
-				RelativePath="..\doc\RNG_engines.txt"
-				>
-			</File>
-			<File
-				RelativePath="..\doc\RNG_multithreading.txt"
-				>
-			</File>
-			<File
-				RelativePath="..\doc\RNG_usage.txt"
-				>
-			</File>
-			<File
-				RelativePath="..\doc\Tests.txt"
-				>
-			</File>
-			<File
-				RelativePath="..\doc\to_do.txt"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

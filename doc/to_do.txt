@@ -1,9 +1,25 @@
-post-initial-release:
-	figure out where the giant size for the .lib files is coming from
-	add compatibility with C++0x TR1 RNG distributions
+post-0.81:
 	double-check licenses/patents on RNG algorithms & code
+		mt19937 - revise to eliminate any code other than my own?
+	ack, the sha2 code requires reproduction of its copyright notice
+		use my own sha-2 code?  it's not as good IIRC
+		find another sha-2 implementation?
+	add some bad to mediocre RNGs to full version, put together chart showing which RNGs fail which tests when
+		RNGs on list should include various qualities in each category:
+			simple w/o multiplication
+				bin48_16, sapparot, ...
+			simple w/ multiplication
+				lcg32_16, lcg48_16, cmwc, semigarth16, semigarth32, ...
+			cyclic buffer
+				mm, mwc4691, mt19937_unhashed, ...
+			indirection
+				rc4_weakened, ibaa8x4, ibaa16x4, rc4, isaac32x16, ...
+			special
+				icg32_16, ???
 	add self-tests, regression tests, etc
-	test program
+	revise RNG "efiix"
+		possibly split it in to two RNGs, one for speed one for security
+	test program(s)
 		add multithreading (using SDL?  or maybe native WIN32?)
 	choices in library to be reconsidered:
 		names of randlf, randli
@@ -13,22 +29,7 @@ post-initial-release:
 		change return type of RNG::get_name to something that doesn't require STL (ie write to buffer)?
 		should split add_entropy* methods off from vRNG in to a new child class?
 		???
-	improvements to example program(s)
-		multithreading testing
-	put together chart showing which RNGs fail which tests when
-		RNGs on list should include various qualities in each category:
-			simple w/o multiplication
-				bin48_16, sapparot, ...
-			simple w/ multiplication
-				lcg32_16, lcg48_16, cmwc, ...
-			cyclic buffer
-				mm, lfsr?, mwc4691, ...
-			indirection
-				rc4_weakened, ibaa8x4, ibaa16x4, rc4, isaac32x16
-			special
-				icg32_16, ???
 	review and add to documentation
-		RNGs rated vs various criteria
 		detailed descriptions of RNGs, particularly recommended RNGs
 		RNG basics
 		RNG selection

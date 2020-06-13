@@ -38,12 +38,21 @@ namespace PractRand {
 			Uint32 randi_fast(Uint32 min, Uint32 max) {return randi_fast(max-min)+min;}
 			Uint64 randli(Uint64 max);
 			Uint64 randli(Uint64 min, Uint64 max) {return randli(max-min)+min;}
-			float randf() {return PRACTRAND__RANDF_IMPLEMENTATION(*this);}
+			float randf();
 			float randf(float max) {return randf() * max;}
 			float randf(float min, float max) {return randf() * (max-min) + min;}
-			double randlf() {return PRACTRAND__RANDLF_IMPLEMENTATION(*this);}
+			double randlf();
 			double randlf(double max) {return randlf() * max;}
 			double randlf(double min, double max) {return randlf() * (max-min) + min;}
+
+			//Boost / C++0x TR1 compatibility:
+			typedef Uint32 result_type;
+			result_type operator()() {return raw32();}
+			static const bool has_fixed_value = true;
+			static const result_type min_value = 0;
+			static const result_type max_value = (result_type)~min_value;
+			result_type min() const {return min_value;}
+			result_type max() const {return max_value;}
 		};
 		
 		namespace Polymorphic {

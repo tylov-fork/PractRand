@@ -10,17 +10,17 @@ namespace PractRand {
 						FLAGS = FLAG::USES_SPECIFIED | FLAG::ENDIAN_SAFE | FLAG::SUPPORTS_ENTROPY_ACCUMULATION
 					};
 				protected:
-					Uint64 a, b, c, d;
-					Uint64 do_jsflike();
-					Uint64 do_mix();
+					Uint64 a, b, c, d, i;
 				public:
 					arbee() {reset_state();}
-					Uint8  raw8 () {return Uint8 (do_jsflike());}
-					Uint16 raw16() {return Uint16(do_jsflike());}
-					Uint32 raw32() {return Uint32(do_jsflike());}
-					Uint64 raw64() {return Uint64(do_jsflike());}
+					arbee(Uint64 s) {seed(s);}
+					Uint8  raw8 () {return Uint8 (raw64());}
+					Uint16 raw16() {return Uint16(raw64());}
+					Uint32 raw32() {return Uint32(raw64());}
+					Uint64 raw64();
+					void mix();
 					void seed(Uint64 s);
-					void reset_state() {a=b=c=d=0;}
+					void reset_state() {a=b=c=d=i=0;}
 					void walk_state(StateWalkingObject *walker);
 					void add_entropy8 (Uint8  value) {add_entropy16(value);}
 					void add_entropy16(Uint16 value);
@@ -36,7 +36,7 @@ namespace PractRand {
 				public:
 					Raw::EntropyPools::arbee implementation;
 					std::string get_name() const;
-					arbee(Uint64 s) {seed(s);}
+					arbee(Uint64 s) : implementation(s) {}
 					arbee(vRNG *seeder) {seed(seeder);}
 					arbee(SEED_AUTO_TYPE ) {autoseed();}
 					arbee(SEED_NONE_TYPE ) {}

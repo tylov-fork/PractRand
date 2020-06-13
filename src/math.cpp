@@ -162,14 +162,14 @@ namespace PractRand {
 		if (a == 1) return 1 - std::exp(-x);
 		if (a == 0.5) return std::sqrt(3.14159265358979) * math_erf(std::sqrt(x));
 		if (a > 1) return (a-1) * math_lower_incomplete_gamma( a-1, x ) - std::pow(x, a-1) * std::exp(-x);
-		issue_error();
+		issue_error();return -1;
 	}
 	static double math_gamma_function ( double a ) {
 		if (a == 0.5) return std::sqrt(3.14159265358979);
 		if (a == 1) return 1;
 		if (a == 2) return 1;
 		if (a > 1) return math_gamma_function(a-1) * (a-1);
-		issue_error();
+		issue_error();return -1;
 	}
 	double math_upper_incomplete_gamma ( double a, double x ) {
 		if (a == 1) return std::exp(-x);
@@ -187,7 +187,7 @@ namespace PractRand {
 		if (a == 0.5) return sqrt(3.14159265358979) * (1 - math_erf(sqrt(x)));
 	//	if (a == 0.0 && x>0) return -math_exponent_integral(-x)
 		if (a > 1) return (a-1) * math_upper_incomplete_gamma( a-1, x ) + pow(x, a-1) * ::exp(-x);
-		issue_error();
+		issue_error();return -1;
 	}
 	double math_chisquared_to_pvalue ( double chisquared, double DoF ) {
 		long double p = math_lower_incomplete_gamma(DoF/2,chisquared/2) / math_gamma_function(DoF/2);

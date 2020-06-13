@@ -8,13 +8,10 @@
 #include <list>
 //#include <map>
 
-#include "PractRand/config.h"
-
-
 //using namespace PractRand;
-//#include "struct_text.h"
 
 #include "PractRand_full.h"
+
 #include "PractRand/Tests/BCFN.h"
 #include "PractRand/Tests/gap16.h"
 #include "PractRand/Tests/DistC6.h"
@@ -25,6 +22,8 @@
 #include "PractRand/RNGs/jsf16.h"
 #include "PractRand/RNGs/jsf32.h"
 #include "PractRand/RNGs/jsf64.h"
+#include "PractRand/RNGs/mwlac32.h"
+#include "PractRand/RNGs/mwlac64.h"
 #include "PractRand/RNGs/efiix8x256.h"
 #include "PractRand/RNGs/efiix16x256.h"
 #include "PractRand/RNGs/efiix32x256.h"
@@ -36,22 +35,23 @@
 
 using namespace PractRand;
 
+
 /*
-A bastardized minimal RNG implementation to test
+A minimal RNG implementation to test
 
 I just made this algorithm up off the top of my head.  
-I tested it with TestU01: it passes SmallCrush and failed only a 
-single test in Crush when I tried it, though it got 
-suspicious results (p=10**-4) on 3 other tests in Crush as well.  
-It takes 13 seconds for it to fail the testing in this program 
-on my computer.  
+I tested it with TestU01.  
+SmallCrush: passes
+Crush: fails 1 test, suspicious results (p ~= 10**-4) on 3 other tests
+BigCrush: fails 10 tests, suspicous results on 5 tests, highly suspicious results on 2 tests
+It takes 10 to 20 seconds for it to fail the testing in this program on my computer.  
 */
 class DummyRNG {
 public:
 	enum {
 		OUTPUT_TYPE = PractRand::RNGs::OUTPUT_TYPES::NORMAL_1,
 		OUTPUT_BITS = 32,
-		FLAGS = 0
+		FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING
 	};
 	Uint32 a, b, c;
 	Uint32 raw32() {
@@ -139,7 +139,7 @@ Tests::ListOfTests get_core_tests() {
 Tests::ListOfTests get_standard_tests8() {
 	Tests::ListOfTests l = get_core_tests();
 	l.tests.push_back(
-		new Tests::Transforms::lowbits("core", get_core_tests(), 0, 0)
+		new Tests::Transforms::lowbits(NULL, get_core_tests(), 0, 0)
 	);
 	return l;
 }
@@ -200,6 +200,7 @@ void print_result(const char *tname, double result, double pvalue) {
 
 	printf("\n");
 }
+
 void main(int argc, char **argv) {
 	PractRand::initialize_PractRand();
 	std::time_t start_time = std::time(NULL);
@@ -209,23 +210,32 @@ void main(int argc, char **argv) {
 	//RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::lcg64_32(rng_seed);
 	RNGs::vRNG *rng = new Polymorphic_DummyRNG();
 	rng->seed(rng_seed);
-	printf("rng = %s, seed = 0x%llx\n\n", rng->get_name().c_str(), rng_seed);
+	printf("RNG = %s, seed = 0x%llx\n\n", rng->get_name().c_str(), rng_seed);
+	printf("a random floating point number in [0,1) using that RNG: %f\n\n", rng->randf());
+
 	TestManager targ(rng);
 	Tests::ListOfTests tests = get_standard_tests(rng->get_native_output_size());
 	for (unsigned int i = 0; i < tests.tests.size(); i++) tests.tests[i]->init(known_good);
-	Uint64 test_size = 1<<10;
-	while (test_size < 1ull<<35) {
-		Uint64 blocks_left = test_size - targ.blocks_so_far;
-		test_size <<= 1;
+
+	//Start by testing 32 kilobytes, then double the amount to test repeatedly.  
+	//Stop after testing 32 terabytes.  
+	//After each round of testing finishes print interium results.  
+	//Skip the printing if it's been less than 2 seconds since this program started.  
+	Uint64 test_size = 1024 * 32;
+	while (test_size < 1ull<<45) {
+		Uint64 blocks_left = test_size/Tests::TestBlock::SIZE - targ.blocks_so_far;
+		test_size <<= 1;//
 		while (blocks_left) {
 			targ.prep_blocks(blocks_left);
 			for (unsigned int i = 0; i < tests.tests.size(); i++) targ.use_blocks(tests.tests[i]);
 		}
+		int time_passed = std::time(NULL) - start_time;
+		if (time_passed <= 1) continue;
 		printf("rng=%s, seed=0x%llx, length=2^%.0f bytes, time=%d seconds\n", 
 			rng->get_name().c_str(), 
 			rng_seed, 
 			std::log(double(Tests::TestBlock::SIZE) * targ.blocks_so_far) / std::log(2.0),
-			std::time(NULL) - start_time
+			time_passed
 		);
 		for (unsigned int i = 0; i < tests.tests.size(); i++) {
 			Tests::TestBaseclass *test = tests.tests[i];
@@ -251,8 +261,8 @@ void main(int argc, char **argv) {
 			}
 		}
 	}
-	for (int i = 0; i < 3; i++) tests.tests[i]->deinit();
-	for (int i = 0; i < 3; i++) delete tests.tests[i];
+	for (unsigned int i = 0; i < tests.tests.size(); i++) tests.tests[i]->deinit();
+	for (unsigned int i = 0; i < tests.tests.size(); i++) delete tests.tests[i];
 }
 
 

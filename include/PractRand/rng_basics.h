@@ -75,6 +75,15 @@ namespace PractRand {
 			virtual Uint32 raw32();
 			virtual Uint64 raw64();
 			virtual int get_native_output_size() const;
+
+			//Boost / C++0x TR1 compatibility:
+			typedef Uint8 result_type;
+			result_type operator()() {return raw8();}
+			static const bool has_fixed_value = true;
+			static const result_type min_value = 0;
+			static const result_type max_value = (result_type)~min_value;
+			result_type min() const {return min_value;}
+			result_type max() const {return max_value;}
 		};
 		class vRNG16 : public vRNG {
 		public:
@@ -82,6 +91,15 @@ namespace PractRand {
 			virtual Uint32 raw32();
 			virtual Uint64 raw64();
 			virtual int get_native_output_size() const;
+
+			//Boost / C++0x TR1 compatibility:
+			typedef Uint16 result_type;
+			result_type operator()() {return raw16();}
+			static const bool has_fixed_value = true;
+			static const result_type min_value = 0;
+			static const result_type max_value = (result_type)~min_value;
+			result_type min() const {return min_value;}
+			result_type max() const {return max_value;}
 		};
 		class vRNG32 : public vRNG {
 		public:
@@ -89,6 +107,15 @@ namespace PractRand {
 			virtual Uint16 raw16();
 			virtual Uint64 raw64();
 			virtual int get_native_output_size() const;
+
+			//Boost / C++0x TR1 compatibility:
+			typedef Uint32 result_type;
+			result_type operator()() {return raw32();}
+			static const bool has_fixed_value = true;
+			static const result_type min_value = 0;
+			static const result_type max_value = (result_type)~min_value;
+			result_type min() const {return min_value;}
+			result_type max() const {return max_value;}
 		};
 		class vRNG64 : public vRNG {
 		public:
@@ -96,6 +123,15 @@ namespace PractRand {
 			virtual Uint16 raw16();
 			virtual Uint32 raw32();
 			virtual int get_native_output_size() const;
+
+			//Boost / C++0x TR1 compatibility:
+			typedef Uint64 result_type;
+			result_type operator()() {return raw64();}
+			static const bool has_fixed_value = true;
+			static const result_type min_value = 0;
+			static const result_type max_value = (result_type)~min_value;
+			result_type min() const {return min_value;}
+			result_type max() const {return max_value;}
 		};
 		namespace OUTPUT_TYPES {enum {
 	//		SIMPLE_1 = 0,//one of 8,16,32,64 as _raw()
@@ -142,7 +178,13 @@ namespace PractRand {
 
 			NEEDS_GENERIC_SEEDING = 1<<31,
 		};}
-		namespace Polymorphic {}
+		namespace Polymorphic {
+			using PractRand::RNGs::vRNG;
+			using PractRand::RNGs::vRNG8;
+			using PractRand::RNGs::vRNG16;
+			using PractRand::RNGs::vRNG32;
+			using PractRand::RNGs::vRNG64;
+		}
 	}//namespace RNGs
 }//namespace PractRand
 #endif//_practrand_rng_basics_h

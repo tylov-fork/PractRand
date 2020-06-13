@@ -5,31 +5,43 @@ are public domain.
 
 All the auxillary code is by myself and thus public domain.  
 
-For the other RNGs...
+The SHA-2 code in the current version requires that its copyright 
+notice be reproduced in all redistributions, including binary ones.  
+I'll replace it with another SHA-2 implementation w/ identical 
+interface to eliminate that requirement sometime.  
 
-mwlac* is designed and coded by myself, and thus public domain.  
+All of the recommended RNGs are unencumbered:
+	jsf* was designed by Robert Jenkins, and he has released it to 
+	the public domain.  The implementation is mostly his code with a 
+	little of my own.  
 
-efiix* is designed and coded by myself, and thus public domain.  
+	isaac* was designed by Robert Jenkins, and he has released it to 
+	the public domain.  The implementation is mostly his code with a 
+	little of my own.  
 
-isaac* is designed by Robert Jenkins, and he has released it to 
-the public domain.  The implementation is mostly his code with a 
-little of my own.  
+	mwlac* was designed and coded by myself, and is public domain.  
 
-jsf* is designed by Robert Jenkins.  I believe that he intended 
-to release it to the public domain, but I'll have to double-check 
-that.  
+	efiix* was designed and coded by myself, and is public domain.  
 
-hc256 is an unencumbered algorithm.  The code is a mix of the 
-reference code and my own code.  I'm afraid I can't recall if the 
-reference code was public domain or what, I'll have to double-check.  
-See the eStream project for more details on HC-256 and HC-128.  
+	hc256: "The stream ciphers HC-128 and HC-256 are not patented and 
+	are royalty free. Anyone can use HC-128 and HC-256 free of charge."
 
-lcg64_32 is an unencumbered algorithm.  The implementation was 
-coded by myself, and is thus public domain.  
+	lcg64_32 is an unencumbered algorithm.  The implementation was 
+	coded by myself, and is public domain.  
 
-clcg96_32 is an unencumbered algorithm.  The implementation was 
-coded by myself, and is thus public domain.  
+	clcg96_32 is an unencumbered algorithm.  The implementation was 
+	coded by myself, and is public domain.  
 
-mt19937 is an unencumbered algorithm (though it wasn't always IIRC).  
-The implementation was mostly coded by... I do not recall.  I'll 
-have to look around a bit.  
+	mt19937 is an unencumbered algorithm (though it wasn't always IIRC).  
+	The implementation was mostly coded by... I do not recall.  I'll 
+	have to look around a bit.  
+
+	ibaa* was designed by Robert Jenkins, and he has released it to 
+	the public domain.  The implementation is mostly his code with a 
+	little of my own.   
+
+The extra RNGs included in the research package... are more numerous, and 
+less important, since they mostly are not intended to actually ship with 
+any real product.  The code for them was either written by myself or 
+copied from a public location.  
+*extra RNGs not yet included in the research package

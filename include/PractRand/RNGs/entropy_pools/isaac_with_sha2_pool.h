@@ -20,8 +20,8 @@ namespace PractRand {
 					ISAAC_Word isaac_state[ISAAC_SIZE];
 					ISAAC_Word isaac_a, isaac_b, isaac_c;
 					Uint8 input_buffer[INPUT_BUFFER_SIZE];
-					int input_buffer_left;
-					int isaac_results_left;
+					unsigned int input_buffer_left;
+					unsigned int isaac_results_left;
 
 				public:
 					isaac_with_sha2_pool(Uint64 s) {seed(s);}

@@ -18,23 +18,23 @@ of those two.
 Also, when picking an RNG for a multithreaded application, it may be 
 wise to go slightly higher on statistical quality and statespace size 
 than you would for an equivalent single-threaded application.  See the 
-document on choosing RNG algorithms for more on that subject.  
+RNG_engines.txt for more on that subject.  
 
 The next question is, how do you seed each threads RNG?  The simple 
 answer is, the auto-seeding mechanism is mostly thread-safe, so you 
 can just initialize each RNG with the parameter PractRand::SEED_AUTO.  
 However... the auto-seeding mechanism is less than perfect.  It has 
 access to relatively little entropy, does not even attempt 
-cryptographically secure seeding, is not intended for reproducable 
+cryptographically secure seeding, and is not intended for reproducable 
 seeding.  Also, if PractRand::initialize_PractRand() has not yet been 
 called when autoseed runs then autoseed will call it - and 
 PractRand::initialize_PractRand() is not thread-safe.  Normally 
-that's not an issue because if AUTO_SEED is used on a thread-local 
-RNG then the first call will occur in the main thread prior to the 
-creation of any other threads, so everything is safe.  However if 
-your app creates threads before global variables finish initializing 
-or otherwise could have the first autoseeding concurrent with the 
-second autoseeding, then you have a problem.  
+that's not an issue because if AUTO_SEED is passed to the constructor of 
+a thread-local RNG then the first call will occur in the main thread 
+prior to the creation of any other threads, so everything is safe.  
+However if your app creates threads before global variables finish 
+initializing or otherwise could have the first autoseeding concurrent 
+with a later autoseeding, then you have a problem.  
 
 The answer recommended for programs that may need higher quality 
 seeding, cryptographically secure RNG seeding / entropy collection,

@@ -5,7 +5,7 @@ includes comments that tell you what to do.
 
 2.  Building PractRand:
 PractRand currently comes with precomiled static libraries (.lib files) 
-built with MSVC for WIN32.  
+built with MSVC for WIN32 / x86.  
 If you can't use the precompiled .lib files it comes with then you'll 
 need to rebuild PractRand.  
 It comes with an MSVC project file.  

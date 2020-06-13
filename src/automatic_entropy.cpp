@@ -28,8 +28,8 @@ void PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 #if 1
 	{//libc
 		//not much entropy, but we take what we can get
-		rng->add_entropy64(::time(NULL));
-		rng->add_entropy64(::clock());
+		rng->add_entropy64((Uint64)::time(NULL));
+		rng->add_entropy64((Uint64)::clock());
 		rng->add_entropy64((Uint64)rng);
 		void *p = malloc(1);
 		rng->add_entropy64((Uint64)p);

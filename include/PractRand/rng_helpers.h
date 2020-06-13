@@ -55,8 +55,6 @@ namespace PractRand {
 	StateWalkingObject *vrng_to_rng_seeder(RNGs::vRNG *);//must be deleted after use
 	StateWalkingObject *get_autoseeder(void *);//must be deleted after use
 }
-#define PRACTRAND__RANDF_IMPLEMENTATION(RNG)  ((RNG).raw32() * float(1.0/4294967296.0))
-#define PRACTRAND__RANDLF_IMPLEMENTATION(RNG) ((RNG).raw64() * double(1.0/18446744073709551616.0))
 #define PRACTRAND__POLYMORPHIC_RNG_BASICS_H(RNG) public:\
 		enum {OUTPUT_TYPE = OUTPUT_TYPES::NORMAL_ALL,OUTPUT_BITS = Raw:: RNG ::OUTPUT_BITS,FLAGS = Raw:: RNG ::FLAGS};\
 		Raw:: RNG implementation;\
@@ -69,8 +67,11 @@ namespace PractRand {
 		Uint64 raw64();\
 		Uint32 raw32();\
 		using vRNG::seed;\
-		std::string get_name() const;\
 		Uint64 get_flags() const;\
+		std::string get_name() const;\
 		void walk_state(StateWalkingObject *walker);
+
+//		std::string get_name() const;\
+
 
 #endif //_practrand_rng_helpers_h

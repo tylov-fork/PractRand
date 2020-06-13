@@ -1,24 +1,17 @@
-
-PractRand is a C++ library of pseudo-random number generators (PRNGs, 
-or just RNGs) and statistical tests for PRNGs.  
+PractRand (Practically Random) is a C++ library of pseudo-random number 
+generators (PRNGs, or just RNGs) and statistical tests for RNGs.  
 
 version 0.80
 
 1. Randon Number Generation in PractRand
 
-PractRand provides a common C++ interface to a wide variety of RNGs.  
-PractRands RNG interface is intended to be extremely convenient.  
+features:
 
-Advantages over other RNG libraries:
-A. Unlike some prior RNG libraries, PractRand RNGs have a convenient 
-interface intended for real world usage, not just research.  
-B. PrantRands set of RNGs includes several algorithms that are 
-faster than previously published RNGs of comparable statistical 
-quality and of better statistical quality than previously 
-published algorithms of comparable speed.  
-
-Disadvantages over other RNG libraries:
-A. Code in in C++, and thus less compatible with other languages.  
+A. Very convenient interface for practical use, not just research.  
+B. A variety of very high quality RNG algorithms optimized for 
+several different scenarios.  
+C. Common interface available for a variety of RNG algorithms, 
+making switching underlying algorithms trivial.  
 
 Other libraries including multiple RNG algorithms:
 Boost / C++0x TR1 - http://www.boost.org/
@@ -28,29 +21,15 @@ GSL - http://www.gnu.org/software/gsl/
 
 2. Statistical testing of RNGs
 
-PractRand includes a variety of tests for RNGs.  
+features:
 
-Advantages over other RNG testing packages:
-A. PractRands standardized battery of tests does well in comparison 
-to existing test suites at catching a wide variety of RNG biases in a 
-small amount of time.  I'll put together a table showing a variety of 
-RNGs and how well they do on PractRands standard tests versus on 
-TestU01s standard tests, but I haven't had time to put that together 
-yet.  
-B. Unlike some packages, PractRand tests are provided as legally 
-unencumbered source code and static libraries.  This means that the 
-tests can be called directly upon the random numbers, without having 
-to write them to disk first, which dramatically speeds up testing 
-and allows longer sequences to be tested, much larger than hard drive 
-sizes.  
-C. Unlike most test suites (except TestU01) PractRands includes a 
-standardized battery of tests.  This makes it easier to figure out 
-what tests to do, and easier to keep track of and communicate how well 
-an RNG does in testing.  
-
-Disadvantages over other RNG testing packages:
-A. p-values are crude empirically determined aproximations and less 
-precise than the average p-value.  
+A. Includes a standard battery of tests, in the tradition of Diehard 
+and TestU01 Crush / BigCrush.  
+B. Standard battery of tests can detect bias in a wide variety of RNGs 
+quickly.  
+C. Tests are provided as legally unencumbered source code and static 
+libraries, so that data can be passed directly to them bypassing the 
+hard disk speed and size limitations.  
 
 Other packages for testing PRNGs:
 TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
@@ -60,14 +39,20 @@ Dieharder - http://www.phy.duke.edu/~rgb/General/dieharder.php
 Diehard - http://www.stat.fsu.edu/pub/diehard/
 ENT - http://www.fourmilab.ch/random/
 
-
 Documentation:
+
 PractRand.txt - this file
 installation.txt - some minimal discussion of how to install PractRand
 license.txt - some minimal discussion of legal issue with PractRand
 RNG_usage.txt - basic RNG usage in PractRand
 RNG_engines.txt - overview of various RNG algorithms and their merits
 RNG_multithreading.txt - brief overview of the intended methods 
-	for multithreaded RNG using programs w/ PractRand
-Tests.txt - not yet writen
-to_do.txt - Things left to do for PractRand.  There's lots.  
+	for multithreaded programs using PractRand RNGs
+RNG_interface_variations.txt - while PractRand offers a common interface 
+	to all RNGs in it, there are actually several minor variations on 
+	that common interface, ie polymorphic RNGs vs light-weight RNGs.  
+RNG_entropy_pools.txt - not yet written
+Tests.txt - brief discusion of how to use the statitical tests... 
+	examining the sample program is probably more useful in that regard.  
+versions.txt - what has changed between different versions of PractRand
+to_do.txt - Things left to do for PractRand.  There are lots.  
