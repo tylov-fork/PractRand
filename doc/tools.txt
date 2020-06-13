@@ -37,7 +37,7 @@ PractRand includes several programs that use the library to do useful things:
 		testing a PractRand RNG:
 			RNG_test jsf32
 		testing a file:
-			type random_data_file | RNG_test stdin
+			RNG_test stdin < random_data_file
 		testing data piped in from RNG_output:
 			RNG_output jsf32 inf | RNG_test stdin32
 3. RNG_benchmark

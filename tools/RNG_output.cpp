@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
-//#include <set>
+#include <set>
 #include <list>
 #include <iostream>
 #include <sstream>
@@ -79,6 +79,8 @@ void signal_handler(int param)
 	signaled = param;
 }
 
+#include "SeedingTester.h"
+
 int main(int argc, char **argv) {
 #ifdef WIN32
 	_setmode( _fileno(stdout), _O_BINARY); // needed to allow binary stdout on windows
@@ -89,9 +91,15 @@ int main(int argc, char **argv) {
 	RNG_Factories::register_recommended_RNGs();
 	RNG_Factories::register_nonrecommended_RNGs();
 	RNG_Factories::register_candidate_RNGs();
-	RNGs::vRNG *rng = RNG_Factories::create_rng(argv[1]);
+	Seeder_MetaRNG::register_name();
+	EntropyPool_MetaRNG::register_name();
+	std::string errmsg;
+	RNGs::vRNG *rng = RNG_Factories::create_rng(argv[1], &errmsg);
 
-	if (!rng) {std::fprintf(stderr, "unrecognized RNG name\n"); print_usage(argv[0]);}
+	if (!rng) {
+		if (errmsg.empty()) { std::fprintf(stderr, "RNG_output ERROR: unrecognized RNG name\n"); print_usage(argv[0]); }
+		else { std::fprintf(stderr, "RNG_output ERROR: RNG_Factories returned error message:\n%s\n", errmsg.c_str()); exit(1); }
+	}
 
 	double _n = atof(argv[2]);//should be atol, but on 32 bit systems that's too limited
 	Uint64 n;
@@ -105,7 +113,7 @@ int main(int argc, char **argv) {
 			n = 0xFFFFffffFFFFffffull;
 		}
 		else {
-			std::fprintf(stderr, "invalid number of output bytes\n"); print_usage(argv[0]);
+			std::fprintf(stderr, "RNG_output ERROR: invalid number of output bytes\n"); print_usage(argv[0]);
 		}
 	}
 	else n = Uint64(_n);
@@ -113,7 +121,7 @@ int main(int argc, char **argv) {
 	if (argc == 3) rng->autoseed();
 	else {
 		Uint64 seed;
-		if (!interpret_seed(argv[3],seed)) {std::fprintf(stderr, "\"%s\" is not a valid 64 bit hexadecimal seed\n", argv[3]); std::exit(0);}
+		if (!interpret_seed(argv[3],seed)) {std::fprintf(stderr, "RNG_output ERROR: \"%s\" is not a valid 64 bit hexadecimal seed\n", argv[3]); std::exit(0);}
 		rng->seed(seed);
 	}
 
@@ -124,26 +132,26 @@ int main(int argc, char **argv) {
 	prev_handler = signal(SIGPIPE, signal_handler); if (prev_handler == SIG_ERR) { std::cerr << "WARNING: Setting signal handler for SIGPIPE has failed." << std::endl; }
 #endif  
 
-	enum {BUFFER_SIZE = 512};
-	Uint64 buffer[BUFFER_SIZE];
+	enum {BUFFER_SIZE = 8};
+	//Uint64 buffer[BUFFER_SIZE];
+	PractRand::Tests::TestBlock buffer[BUFFER_SIZE];
 	while (n && !signaled) {
-		for (int i = 0; i < BUFFER_SIZE; i++) buffer[i] = rng->raw64();
-		std::size_t b = BUFFER_SIZE * 8;
-		b = (b > n) ? std::size_t(n) : b;
-		size_t bytes_written = std::fwrite(&buffer[0], 1, b, stdout);
+		//for (int i = 0; i < BUFFER_SIZE; i++) buffer[i] = rng->raw64();
+		std::size_t bytes_this_loop = n > (BUFFER_SIZE * PractRand::Tests::TestBlock::SIZE) ? (BUFFER_SIZE * PractRand::Tests::TestBlock::SIZE) : n;
+		buffer[0].fill(rng, (bytes_this_loop + PractRand::Tests::TestBlock::SIZE - 1) >> PractRand::Tests::TestBlock::SIZE_L2);
+		size_t bytes_written = std::fwrite(&buffer[0], 1, bytes_this_loop, stdout);
 		n -= bytes_written;
-		if ( bytes_written != b ) {
+		if ( bytes_written != bytes_this_loop ) {
 			//if (std::ferror(stdout)) std::perror("I/O error when writing to standard output"); // this was generating spurious error messages on windows
 			break;
 		}
 	}
 	std::fflush(stdout);
-	//std::cout.flush();
 	if (signaled) {
 		//std::cerr << "WARNING: Received signal " << signaled << ". Closing the application." << std::endl; // this was generating spurious error messages on linux
 	}
 	if (n && _n) {
-		std::cerr << "ERROR: " << Uint64(_n) << " bytes were requested, but only " << (Uint64(_n) - n) << " bytes were written." << std::endl;
+		std::cerr << "RNG_output ERROR: " << Uint64(_n) << " bytes were requested, but only " << (Uint64(_n) - n) << " bytes were written." << std::endl;
 	}
 	return 0;
 }

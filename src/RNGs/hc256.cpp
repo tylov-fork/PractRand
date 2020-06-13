@@ -130,7 +130,7 @@ void PractRand::RNGs::Raw::hc256::seed(Uint64 s) {//LOCKED, do not change
 	for (int i = 2; i < 16; i++) seed_array[i] = 0;
 	seed(seed_array);
 }
-void PractRand::RNGs::Raw::hc256::seed(vRNG *seeder_rng) {
+void PractRand::RNGs::Raw::hc256::seed(vRNG *seeder_rng) {//LOCKED, do not change
 	Uint32 seed_array[16];
 	for (int i = 0; i < 16; i++) seed_array[i] = seeder_rng->raw32();
 	seed(seed_array);

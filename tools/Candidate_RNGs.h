@@ -183,6 +183,11 @@ public:
 	Word _raw_native() {
 		Word old;
 		const Word K = Word(0x92ec64765925a395ull);
+		//now based upon alearx:
+		a ^= rotate(b + c, LSHIFT);
+		b ^= rotate(c + (c << 3), RSHIFT);
+		c ^= a + (a << 3); c = rotate(c, ROTATE);
+		return a;//*/
 		//good speed, 16 bit version fails @ 32 GB, 32 bit version passed 8 TB
 		/*old = a + b;
 		a = b ^ (b >> RSHIFT);
@@ -190,7 +195,7 @@ public:
 		c = old + rotate(c,ROTATE);// RSHIFT,LSHIFT,ROTATE : 7,3,9 @ 32 bit
 		return old;//*/
 		//best quality: 16 bit fails @ 1 TB, but not as fast ;; switching "a += b ^ c;" for "a ^= b + c;" increases that to 2 TB
-		old = a + (a << LSHIFT);
+		/*old = a + (a << LSHIFT);
 		a += b ^ c;
 		b = c ^ (c >> RSHIFT);
 		c = old + rotate(c,ROTATE);
@@ -328,11 +333,32 @@ public:
 		//w/ counter	32:29->24, 28->37?, 27->36		16:14->22, 13->23, 12->32, 11->37, 10->37, 9->30, 8->19, 7->30, 6->38, 5->38, 4->29, 3->19, 2->18
 		//w/o counter	32:29->  , 28->  , 27->			16:14->17, 13->19, 12->26, 11->30, 10->31, 9->31, 8->17, 7->31, 6->31, 5->31, 4->30, 3->19, 2->17
 
-		//VERY good speed, 16 bit version failed @ 16 TB (1 TB w/o counter), 32 bit @ > 4 TB w/o counter
+		//xoroshiro128+:
+		/*  //
+		Word result = a + b;
+		b ^= a;
+		a = rotate(a, 55 % OUTPUT_BITS) ^ b ^ (b << (14 % OUTPUT_BITS));
+		b = rotate(b, 36 % OUTPUT_BITS);
+		return result;//*/
+
+		//??? speed, 16 bit version failed @ ? GB (16 GB w/o counter), 32 bit @ ?
+		enum { _SHIFT1 = (OUTPUT_BITS == 64) ? 43 : ((OUTPUT_BITS == 32) ? 23 : ((OUTPUT_BITS == 16) ? 10 : -1)) };
+		enum { _SHIFT2 = (OUTPUT_BITS == 64) ? 25 : ((OUTPUT_BITS == 32) ?  9 : ((OUTPUT_BITS == 16) ?  7 : -1)) };
+
+
+		//a += b; b -= c;
+		//c += a; a ^= counter++;
+		//b = rotate(b, _SHIFT1);//*/
+		//c = rotate(c, _SHIFT2);//*/
+		//w/ counter	32:29->24, 28->37?, 27->36		16:14->22, 13->23, 12->32, 11->37, 10->37, 9->30, 8->19, 7->30, 6->38, 5->38, 4->29, 3->19, 2->18
+		//w/o counter	32:29->  , 28->  , 27->			16:14->17, 13->19, 12->26, 11->30, 10->31, 9->31, 8->17, 7->31, 6->31, 5->31, 4->30, 3->19, 2->17
+
+		//VERY good speed, 16 bit version failed @ 16 TB (1 TB w/o counter), 32 bit @ > 4 TB w/o counter ; 16 bit version passes gjrand --huge (--??? w/o counter
+		/*
 		enum { SH1 = (OUTPUT_BITS == 64) ? 48 : ((OUTPUT_BITS == 32) ? 14 : ((OUTPUT_BITS == 16) ? 9 : ((OUTPUT_BITS == 8) ? 5 : -1))) };
-		enum { SH2 = (OUTPUT_BITS == 64) ? 3 : ((OUTPUT_BITS == 32) ? 3 : ((OUTPUT_BITS == 16) ? 3 : ((OUTPUT_BITS == 8) ? 2 : -1))) };// using LEA on x86
+		enum { SH2 = (OUTPUT_BITS == 64) ?  3 : ((OUTPUT_BITS == 32) ?  3 : ((OUTPUT_BITS == 16) ? 3 : ((OUTPUT_BITS == 8) ? 2 : -1))) };// using LEA on x86
 		a += b; b -= c;
-		c += a; a ^= counter++;
+		c += a; //a ^= counter++;
 		c = rotate(c, SH1);//cb  with count: ?, 14, 9, ?  ; w/o count: 16, 8, 9, ?
 		b += (b << SH2);//ba*/
 		//						1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31	32
@@ -764,104 +790,12 @@ public:
 	std::string get_name() const { return implementation.get_name(); }
 };
 
-class raw_xsm16 {
-public:
-	enum {
-		OUTPUT_TYPE = PractRand::RNGs::OUTPUT_TYPES::NORMAL_1,
-		OUTPUT_BITS = 16,
-		FLAGS = PractRand::RNGs::FLAG::ENDIAN_SAFE | PractRand::RNGs::FLAG::USES_SPECIFIED | PractRand::RNGs::FLAG::USES_MULTIPLICATION | PractRand::RNGs::FLAG::SUPPORTS_FASTFORWARD
-		//FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING | PractRand::RNGs::FLAG::ENDIAN_SAFE | PractRand::RNGs::FLAG::USES_SPECIFIED | PractRand::RNGs::FLAG::USES_MULTIPLICATION | PractRand::RNGs::FLAG::SUPPORTS_FASTFORWARD
-	};
-public:
-	//PractRand::RNGs::Raw::xsm32 base;
-	//Uint16 raw16() {return Uint16(base.raw32()>>0);}
-	//void walk_state(StateWalkingObject *walker) {base.walk_state(walker);}
-protected:
-	Uint16 lcg_low, lcg_high, lcg_adder, history;
-	void step_backwards() {
-		if (!lcg_low && !lcg_high) lcg_adder -= 2;
-		bool carry = lcg_low < lcg_adder;
-		lcg_low -= lcg_adder;
-		lcg_high -= lcg_low + carry;
-	}
-	Uint16 rotate16(Uint16 value, int bits) {return (value << bits) | (value >> (16-bits));}
-	Uint64 rotate64(Uint64 value, int bits) {return (value << bits) | (value >> (64-bits));}
-public:
-	Uint16 raw16() {
-		const Uint16 K = 0xa395;
-		
-		// 16 GB, medium avalanche, good speed
-		/*Uint16 tmp = lcg_high;
-		tmp ^= tmp >> 8;
-		tmp *= K;
-		tmp += rotate16(tmp ^ lcg_low, 6);
-		Uint16 old_lcg_low = lcg_low;
-		lcg_low += lcg_adder;
-		lcg_high += old_lcg_low + ((lcg_low < lcg_adder) ? 1 : 0);
-		old = history;
-		history = tmp;
-		if (!lcg_low) if (!lcg_high) lcg_adder += 2;
-		return tmp + rotate16(old, 8);//*/
 
-		// 128 GB, good avalanche, acceptable speed
-		/*Uint16 old = history * K;
-		Uint16 tmp = lcg_high;
-		tmp += rotate16(tmp ^ lcg_low, 6);
-		tmp *= K;
-		old ^= old >> 8;
-		history = tmp ^=  tmp >> 8;
 
-		Uint16 old_lcg_low = lcg_low;
-		lcg_low += lcg_adder|1;
-		lcg_high += old_lcg_low + ((lcg_low < lcg_adder) ? 1 : 0);
-		if (!lcg_low) if (!lcg_high) lcg_adder += 2;
-
-		return tmp + old;//*/
-
-		//*
-		// 256 GB, good avalanche, 
-		Uint16 rv = history * K;
-		Uint16 tmp = lcg_high ^ rotate16(lcg_high + lcg_low, 6);
-		tmp *= K;
-
-		Uint16 old_lcg_low = lcg_low;
-		lcg_low += lcg_adder;
-		old_lcg_low += ((lcg_low < lcg_adder) ? 1 : 0);
-		rv = rotate16(rv + lcg_high, 0) ^ rotate16(rv, 4);
-		lcg_high += old_lcg_low;
-		if (!lcg_low) if (!lcg_high) lcg_adder += 2;
-
-		rv += history = tmp ^= tmp >> 8;
-		return rv;//*/
-	}
-	void seed(Uint64 s) {
-		s ^= rotate64(s, 21) ^ rotate64(s, 39);
-		lcg_low = Uint16(s);
-		lcg_high = Uint16(s>>16);
-		lcg_adder = Uint16(s>>32) | 1;
-		history = 0;
-		raw16();
-	}
-	void walk_state(StateWalkingObject *walker) {
-		walker->handle(lcg_low);
-		walker->handle(lcg_high);
-		walker->handle(lcg_adder);
-		walker->handle(history);
-		if (walker->is_clumsy() && !walker->is_read_only()) {
-			lcg_adder |= 1;
-			step_backwards();
-			raw16();
-		}
-	}//*/
-	//void seek_forward (Uint64 how_far);
-	//void seek_backward(Uint64 how_far);
-};
-POLYMORPHIC_CANDIDATE(xsm, 16)
-}
+}//namespace Candidates
 #if defined RNG_from_name_h
 namespace RNG_Factories {
 	void register_candidate_RNGs() {
-		RNG_factory_index["xsm16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_xsm16>;
 		RNG_factory_index["sfc_alternative64"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative64>;
 		RNG_factory_index["sfc_alternative32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative32>;
 		RNG_factory_index["sfc_alternative16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative16>;
