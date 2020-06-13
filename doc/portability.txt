@@ -1,0 +1,46 @@
+1. Portability of programs using PractRand:
+	In general, PractRands attempts to produce identical results across 
+	all platforms.  However, there are some exceptions, particularly 
+	with regard to endianness.  These exceptions include:
+		Some non-recommended RNGs may produce different results on big 
+			endian platforms than on little endian platforms
+		There are numerous minor endianness issues in the tests, and in 
+			how the TestBlocks for the tests are filled.  These tend to 
+			cause tests results to not be identical between big and 
+			little endian platforms, though the differences are minor.  
+
+2. Portability of PractRand itself:
+	I have built PractRand on:
+		VC 2008 x86 (32-bit)
+		gcc 3.4.5 / MinGW x86 (32-bit) - though TLS was not supported
+
+	When compiling on a other platform, the first thing that must be done 
+		is a few minor edits in include/PractRand/config.h
+
+	In addition to that, the basic version of PractRand requires:
+		support for 8, 16, 32, and 64 bit signed and unsigned integers
+		memory be addressed in 8-bit units (sizeof(Uint8) == 1)
+		basic C++ support
+		the C++ variant of the C standard library
+		endianness must be either big endian or little endian
+			all remotely modern architectures qualify
+		auto-seeding & automatic entropy currently work best with WIN32
+			see automatic_entropy.cpp
+			You can add code there for your platform
+			If you just use the generic code there will be an increased chance 
+				that it will produce duplicate seeds between two different runs
+		IEEE floating point
+			only required for randf & randlf methods
+				and even then nothing very bad happens if it's not compliant
+				and it can be adjusted for non-IEEE formats in RNG_internals.h
+		STL strings (I may remove this requirement soon...)
+		TLS support is recommended if you plan to used PractRand in multithreaded programs
+
+	In addition to that, the full version of PractRand requires:
+		general support for C++ templates
+		STL containers
+
+	In addition to that, the example program requires:
+		RTTI
+
+

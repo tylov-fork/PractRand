@@ -1,3 +1,15 @@
+version 0.83
+	fixed issues with randi_fast methods
+		missing symbol for one version, lack of return statement for another
+	fixed bugs in the HC-256 implementation
+		was xoring output with an uninitialized value
+		was walking the output buffer in the wrong direction
+	fixed license issues
+		sha2 code now public domain (and smaller and a little faster)
+		mt19937 code now public domain (and significantly faster)
+	moved code defining standard test sets from example program to library
+		new header PractRand/test_batteries.h
+
 version 0.82
 	fixed various issues preventing compilation on gcc
 		now builds on MSVC & gcc/MinGW

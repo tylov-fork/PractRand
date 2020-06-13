@@ -3,15 +3,29 @@ generators (PRNGs, or just RNGs) and statistical tests for RNGs.
 
 version 0.80
 
-1. Randon Number Generation in PractRand
+1. Randon Number Generation with PractRand
 
 features:
 
 A. Very convenient interface for practical use, not just research.  
-B. A variety of very high quality RNG algorithms optimized for 
+A.1: Abstracts away details of the RNG algorithms native output format
+A.2: Natively supports uniform integer and floating point distributions, 
+compatible with the more complex distributions offered by Boost / C++0x TR1.  
+A.3: Automatic seeding, or seeding from any type you want.  
+A.4: Common interface available for a variety of RNG algorithms, making 
+switching underlying algorithms trivial.  
+
+C. A variety of very high quality RNG algorithms optimized for 
 several different scenarios.  
-C. Common interface available for a variety of RNG algorithms, 
-making switching underlying algorithms trivial.  
+C.1: Lists of RNG algorithms and their strengths, to make it easy 
+to find one appropriate for specific circumstances quickly.  
+C.2: RNG algorithms that pass all statistical tests.  
+C.3: RNG algorithms that are very fast.  
+C.4: RNG algorithms that are cryptographically secure.  
+C.5: RNG algorithms that are easy to implement in hardware.  
+C.6: RNG algorithms that allow seeking / random access.  
+C.7: RNG algorithms appropriate just about any type of CPU (except 
+floating point DSPs... will add some for those later).  
 
 Other libraries including multiple RNG algorithms:
 Boost / C++0x TR1 - http://www.boost.org/
@@ -19,7 +33,7 @@ TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
 hasard - http://bytebucket.org/haypo/hasard/wiki/Home
 GSL - http://www.gnu.org/software/gsl/
 
-2. Statistical testing of RNGs
+2. Statistical testing of RNGs with PractRand
 
 features:
 

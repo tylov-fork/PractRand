@@ -74,20 +74,19 @@ void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::walk_state(Sta
 void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::empty_input_buffer() {
 	if (input_buffer_left == INPUT_BUFFER_SIZE) return;
 	state_phase++;
-	PractRand::Crypto::SHA512_CTX workspace;
-	PractRand::Crypto::SHA512_Init(&workspace);
-	PractRand::Crypto::SHA512_Update(&workspace, &state[0], STATE_SIZE);
-	PractRand::Crypto::SHA512_Update(&workspace, 
+	PractRand::Crypto::SHA2_512 sha2;
+	sha2.handle_input(&state[0], STATE_SIZE);
+	sha2.handle_input(
 		&input_buffer[input_buffer_left], 
 		INPUT_BUFFER_SIZE - input_buffer_left);
-	PractRand::Crypto::SHA512_Final(&state[(state_phase&1) * (STATE_SIZE-64)], &workspace );
+	sha2.finish(&state[(state_phase&1) * (STATE_SIZE-64)] );
 	input_buffer_left = INPUT_BUFFER_SIZE;
 }
 void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::refill_output_buffer() {
-	PractRand::Crypto::SHA512_CTX workspace;
-	PractRand::Crypto::SHA512_Init(&workspace);
-	PractRand::Crypto::SHA512_Update(&workspace, &state[0], STATE_SIZE);
-	PractRand::Crypto::SHA512_Final(&output_buffer[0], &workspace );
+	PractRand::Crypto::SHA2_512 sha2;
+	sha2.handle_input(&state[0], STATE_SIZE);
+	sha2.finish(&output_buffer[0]);
+
 	for (int i = 0; i < 64; i++) {
 		state_phase++;
 		while (state_phase >= STATE_SIZE) state_phase -= STATE_SIZE;

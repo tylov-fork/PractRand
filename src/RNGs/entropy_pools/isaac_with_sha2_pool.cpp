@@ -82,17 +82,16 @@ void PractRand::RNGs::Polymorphic::EntropyPools::isaac_with_sha2_pool::walk_stat
 }
 void PractRand::RNGs::Polymorphic::EntropyPools::isaac_with_sha2_pool::empty_input_buffer() {
 	if (input_buffer_left == INPUT_BUFFER_SIZE) return;
-	PractRand::Crypto::SHA512_CTX workspace;
-	PractRand::Crypto::SHA512_Init(&workspace);
+	PractRand::Crypto::SHA2_512 sha2;
 	for (unsigned int i = 0; i < input_buffer_left; i++) {
 		input_buffer[i] = Uint8(raw32());
 	}
 	for (unsigned int i = input_buffer_left; i < INPUT_BUFFER_SIZE; i ++) {
 		input_buffer[i] ^= Uint8(raw32());
 	}
-	PractRand::Crypto::SHA512_Update(&workspace, &input_buffer[0], INPUT_BUFFER_SIZE);
-	Uint8 temp[64];
-	PractRand::Crypto::SHA512_Final(&temp[0], &workspace );
+	sha2.handle_input(&input_buffer[0], INPUT_BUFFER_SIZE);
+	Uint8 temp[sha2.RESULT_LENGTH];
+	sha2.finish(&temp[0]);
 	Uint8 *ptr = &temp[0];
 	for (unsigned int i = 0; i < 4; i++) isaac_a += Uint32(*(ptr++)) << (i*8);
 	for (unsigned int i = 0; i < 4; i++) isaac_b += Uint32(*(ptr++)) << (i*8);

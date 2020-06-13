@@ -18,14 +18,14 @@ jsf16 / jsf32 / jsf64
 	good statistical properties, and small size.  
 	In addition, this algorithm is particularly good for implementation on 
 	exotic hardware like low-end embedded CPUs.  
+	This algorithm has an unknown number of bad cycles, though it is 
+	believed that the overwhelming majority of states lie on good cycles.  
 	As a special case, in addition to the usual raw and polymorphic 
 	implementations, PractRand also offers a light-weight implementation 
 	of jsf32 which supports almost all of the standard PractRand RNG 
 	interface while having no vtable.  Thus this light-weight implementation 
 	has faster performance and smaller size than the normal polymorphic 
 	version, with a more complete interface than the raw version.  
-	This algorithm has an unknown number of bad cycles, though it is 
-	believed that the overwhelming majority of states lie on good cycles.  
 isaac32x256 / isaac64x256
 	actual names: ISAAC, ISAAC64
 	This algorithm is included because of its combination of decent 
@@ -47,12 +47,12 @@ hc256
 mwlac32 / mwlac64
 	This algorithm is included because of its combination of fast speed, 
 	good statistical properties, and small size.  
-	This algorithm was writen by myself.  So I might be prejudiced.  
 	This algorithm has an unknown number of bad cycles, though it is 
 	believed that the overwhelming majority of states lie on good cycles.  
+	This algorithm was writen by myself.  So I might be prejudiced.  
 efiix8x256 / efiix16x256 / efiix32x256 / efiix64x256
 	This algorithm is included because of its combination of reasonable 
-	speed (it tends to be a tiny bit faster than mt19937) with very 
+	speed (it tends to be a tiny bit faster than isaac) with very 
 	good statistical quality (even better than isaac32/64, I believe).  
 	However, I'm not yet finished designing this algorithm, so it may 
 	be different in future versions.  
@@ -107,7 +107,8 @@ lcg64_32
 	Not really recommended.  It's probably the simplest algorithm of any 
 	in this list from an assembly language perspective, but its statistical 
 	properties are the worst of the RNGs in here.  It does have the 
-	combination of a small size with well understood mathematical properties.  
+	combination of a small size with well understood mathematical properties, 
+	and the ability to seek to an arbitrary point in its cycle.  
 	This algorithm has no bad cycles (it is single-cycle).  
 clcg96_32
 	description: "96 bits of two combined LCGs with 32 bit output"
@@ -115,7 +116,7 @@ clcg96_32
 	/ random access / whatever you wish to call it.  
 	If you do not need seeking then do not use this - for any purpose that 
 	does not require seeking there are better RNGs included here.  
-	This algorithm has no bad cycles (it is single-cycle).  
+	This algorithm has no bad cycles.  
 
 
 *****************************************************************************
@@ -170,6 +171,7 @@ Engine      quality speed   theory  output    word    size        statespace
 jsf16       3***    4****   0       16 bit    16 bit  8 bytes     2**64-1 multicyclic
 jsf32       4****   4****   0       32 bit    32 bit  16 bytes    2**128-4 multicyclic
 jsf64       4****   4****   0       64 bit    64 bit  32 bytes    2**256-1 multicyclic
+mt19937     3***    3***    4****   32 bit    32 bit  2500 bytes  2**19937-1 single cycle
 isaac32x256 5*****  3***    2**     32 bit    32 bit  2064 bytes  2**8296 irreversible multicyclic
 isaac64x256 5*****  3***    2**     64 bit    64 bit  4128 bytes  2**16584 irreversible multicyclic
 efiix8x256  5*****  3***    0       8 bit     8 bit   260 bytes   2**2080 irreversible multicyclic
@@ -184,16 +186,19 @@ include/PractRand/RNGs directory.
 * There are a few algorithms included that focus more on how they are 
 seeded than on the the random numbers produced.  In this library these 
 algorithms are refered to as "entropy pools".  They tend to be slower than 
-regular RNGs.  They are used internaly to PractRand for some purposes, and 
+regular RNGs.  They are used internally to PractRand for some purposes, and 
 may be of use to users who want to do complex seeding operations.  They 
 all generally do very well on statistical tests.  
 Engine                Out-Speed In-Speed Max-Entropy Other
-arbee                 3***      2**      256 bits    small & light-weight
+arbee                 3***      2**      ~256 bits   small & light-weight
 isaac_with_sha2_pool  3***      0        8256 bits   mostly cryptographically secure
 sha2_based_pool       0         0        832 bits    cryptographically secure
 Those RNGs are in the PractRand::RNGs::Polymorphic::EntropyPools 
 and PractRand::RNGs::Raw::EntropyPools namespaces.  Their headers are in the 
 include/PractRand/RNGs/entropy_pools directory.  
+note: The raw version of arbee includes a more complete interface than most raw 
+RNGs, to make using the raw version a viable alternative for light-weight 
+entropy accumulation.  
 
 * The following RNGs algorithms, already listed above, offer some degree 
 of cryptographic security, with the following qualifications:
@@ -259,7 +264,8 @@ quality: (rated from 0 to 5 stars)
 	strength versions on statistical tests, and anticipated performance on 
 	future statistical tests or statistical tests not yet tried.  
 	0 star RNGs are inadequate for many uses and should be avoided.  
-		They fail many statistical tests very quickly.  
+		They fail many statistical tests very quickly.  Most platforms 
+		default RNGs fall in to this category.  
 	1 star RNGs are good enough for 99+% of uses, but fail many 
 		statistical tests eventually and fail some tests quickly.  
 	2 star RNGs are good enough for almost all uses, even many uses 

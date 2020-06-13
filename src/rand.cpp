@@ -126,6 +126,9 @@ namespace PractRand {
 		Uint64 vRNG::randli(Uint64 max) {
 			PRACTRAND__RANDLI_IMPLEMENTATION(max)
 		}
+		Uint32 vRNG::randi_fast(Uint32 max) {
+			return randi_fast_implementation(raw32(), max);
+		}
 		float vRNG::randf() {PRACTRAND__RANDF_IMPLEMENTATION(*this)}
 		double vRNG::randlf() {PRACTRAND__RANDLF_IMPLEMENTATION(*this)}
 		void vRNG::seed(Uint64 i) {

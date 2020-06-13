@@ -15,58 +15,56 @@ void PractRand::RNGs::Polymorphic::mt19937::seed(Uint64 s) {implementation.seed(
 void PractRand::RNGs::Polymorphic::mt19937::flush_buffers() {implementation.flush_buffers();}
 
 //raw:
-static Uint32 hiBit32( const Uint32 u ) { return u & 0x80000000U; }
-//static Uint32 loBit32( const Uint32 u ) const { return u & 0x00000001U; }
-static Uint32 loBits32( const Uint32 u ) { return u & 0x7fffffffU; }
-//static Uint32 hiBits32( const Uint32 u ) const { return u & 0xfffffffeU; }
-static Uint32 mixBits32( const Uint32 u, const Uint32 v ) {
-	return hiBit32(u) | loBits32(v);
+static inline unsigned long twist32( unsigned long m, unsigned long s0, unsigned long s1 ) {
+	static const Uint32 gfsr_twist_table[2] = {0, 0x9908b0dful};
+	return m ^ gfsr_twist_table[s1&1] ^ (((s0&0x80000000ul)|(s1&0x7ffffffful))>>1);
 }
-static Uint32 twist32( const Uint32 m, const Uint32 s0, const Uint32 s1 ) {
-	enum {TWIST=0x9908b0dfU};
-	return m ^ (mixBits32(s0,s1)>>1) ^ ((s1&1) ? Uint32(TWIST) : 0U);
-}
-
-void PractRand::RNGs::Raw::mt19937::_advance_state() {//do not change
+void PractRand::RNGs::Raw::mt19937::_advance_state() {//LOCKED, do not change
 	Uint32 *p = state;
-	unsigned long i;
-	for( i = N - M; i--; ++p )
-		*p = twist32( p[M], p[0], p[1] );
-	for( i = M; --i; ++p )
-		*p = twist32( p[M-N], p[0], p[1] );
-	*p = twist32( p[M-N], p[0], state[0] );
+	long i;
+	for( i = ARRAY_SIZE - OFFSET; i--; ++p )
+		*p = Uint32(twist32( p[OFFSET], p[0], p[1] ));
+	for( i = OFFSET; --i; ++p )
+		*p = Uint32(twist32( *(p - (ARRAY_SIZE-OFFSET)), p[0], p[1] ));
+	*p = Uint32(twist32( *(p - (ARRAY_SIZE-OFFSET)), p[0], state[0] ));
 
 	used = 0;
 }
 Uint32 PractRand::RNGs::Raw::mt19937::raw32() {//LOCKED, do not change
-	if ( used >= N ) _advance_state();
-	
+	//it might seem to make sense to arrange the array backwards
+	//so that the comparison could be with 0 instead of ARRAY_SIZE
+	//but in testing arranging the array backwards was 5% slower
+	//so I didn't do it
 	Uint32 r;
-	r = state[used++];
+	if ( used >= ARRAY_SIZE ) {
+		_advance_state();
+		r = state[used++];
+	}
+	else r = state[used++];
+	
 	r ^= (r >> 11);
 	r ^= (r <<  7) & 0x9d2c5680u;
 	r ^= (r << 15) & 0xefc60000u;
-	return ( r ^ (r >> 18) );
+	return r ^ (r >> 18);
 }
 void PractRand::RNGs::Raw::mt19937::seed(Uint64 s) {//LOCKED, do not change
-	if (s <= 0xFFffFFff) {
+	if (s < (Uint64(1) << 32)) {
 		state[0]= Uint32(s);
-		int i;
-		for (i=1; i < N; i++) {
+		for (long i=1; i < ARRAY_SIZE; i++) {
 			state[i] = 1812433253UL * (state[i-1] ^ (state[i-1] >> 30)) + i; 
 		}
-		_advance_state();
+		used = ARRAY_SIZE;
 	}
 	else {
 		PractRand::RNGs::Raw::jsf32 seeder;
 		seeder.seed(s);
-		for (unsigned long i=0; i < N; i++) state[i] = seeder.raw32();
-		used = N;
+		for (unsigned long i=0; i < ARRAY_SIZE; i++) state[i] = seeder.raw32();
+		used = ARRAY_SIZE;
 	}
 }
 void PractRand::RNGs::Raw::mt19937::walk_state(StateWalkingObject *walker) {
 	//LOCKED, do not change
 	walker->handle(used);
-	for (unsigned int i = 0; i < N; i++) walker->handle(state[i]);
-	if (used > N) used = N;
+	for (unsigned int i = 0; i < ARRAY_SIZE; i++) walker->handle(state[i]);
+	if (used > ARRAY_SIZE) used = ARRAY_SIZE;
 }

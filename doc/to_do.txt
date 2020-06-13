@@ -1,26 +1,68 @@
-post-0.82:
-	double-check licenses/patents on RNG algorithms & code
-		mt19937 - revise to eliminate any code other than my own?
-	ack, the sha2 code requires reproduction of its copyright notice
-		use my own sha-2 code?  it's not as good IIRC
-		find another sha-2 implementation?
-	add some bad to mediocre RNGs to full version, put together chart showing which RNGs fail which tests when
-		RNGs on list should include various qualities in each category:
-			simple w/o multiplication
-				bin48_16, sapparot, ...
-			simple w/ multiplication
-				lcg32_16, lcg48_16, cmwc, semigarth16, semigarth32, ...
-			cyclic buffer
-				mm, mwc4691, mt19937_unhashed, ...
-			indirection
-				rc4_weakened, ibaa8x4, ibaa16x4, rc4, isaac32x16, ...
-			special
-				icg32_16, ???
+post-0.83:
+(* = high priority)
+	document quality of tests relative to other published test sets
+*		put together chart showing which RNGs fail which tests when
+			add some bad to mediocre RNGs to full version to allow chart to show detail
+				RNGs on list should include various qualities in each category:
+					simple w/o multiplication
+						bin48_16, sapparot, ...
+					simple w/ multiplication
+						lcg32_16, lcg48_16, cmwc, semigarth16, semigarth32, ...
+					cyclic buffer
+						mm, mwc4691, mt19937_unhashed, ...
+					indirection
+						rc4_weakened, ibaa8x4, ibaa16x4, rc4, isaac32x16, ...
+					special
+						icg32_16, ???
+				quality adjustments of various kinds
+					algorithm adapted to a different integer size
+					array size constants in algorithm changed
+					apply a simple shuffle to the algorithms output
+					output xored with a very low quality RNGs output
+					extend period via adding simply varying constants to internal state
 	add self-tests, regression tests, etc
-	revise RNG "efiix"
-		possibly split it in to two RNGs, one for speed one for security
-	consider revising RNG mwlac
-		some variants offer guarantees of no short cycles, but may be slower and/or lower quality
+*		test vectors for MT19937, ISAAC, ISAAC64, HC-256, SHA2-512
+		???
+	review / reorganize header files
+		some headers protect against multiple inclusion, some don't
+		some headers protect against inclusion prior to dependencies, some don't
+		test_helpers should probably be split in two
+	revise the RNG algorithms of my own creation
+		not other RNG algorithms as they tend to have defined correct behaviors
+		EFIIX
+			possibly split it in to two RNGs, one for speed one for security
+		MWLAC
+			some variants offer guarantees of no short cycles, but may be slower and/or lower quality
+	RNG testing
+		consider splitting in to a separate library
+			yes, it's already a semi-separate .lib file, but...
+			maybe it should also have separate:
+				names, SourceForge project pages, VC project files, downloads
+		revise specific RNG testing algorithms
+			Gap16
+				possible minor bug in get_result, fix and recalibrate
+			DC6
+				investigate Bob Jenkins suggestion of applying to x^(x>>1)
+			BCFN
+				many variations to investigate; currently focused on BCACN
+			CoupGap
+				try to get more testable factors per run
+			FPF
+				optimize strides 2,4,8,16
+			Rares
+				publish
+			BCN_generic
+				worth more investigation
+			...others
+				most of the others don't appear to be worth the effort
+		create new tests
+			consider more autowindowing / leveling
+			investigate idea: design a test for running on GPUs
+		possible modifications to test interfaces
+			allow a single test to be multithread?
+		increase automation & quality of calibration process
+		improve clarity & quality of example code (TestManager)
+			possibly move TestManager class in to library
 	test program(s)
 		add multithreading (using SDL?  or maybe native WIN32?)
 	choices in library to be reconsidered:
@@ -42,8 +84,5 @@ post-0.82:
 		RNGs and exotic platforms
 		RNGs and cryptography
 		RNG testing / RNG tests
-		apply_standard_tests(RNG, length)
-		apply_common_standard_test_foldings(RNG, length)
-		apply_all_standard_test_foldings(RNG, length)
 		RNG theory and analysis
 

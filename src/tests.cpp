@@ -11,6 +11,7 @@
 #include "PractRand/rng_helpers.h"
 #include "PractRand/tests.h"
 #include "PractRand/test_helpers.h"
+#include "PractRand/test_batteries.h"
 #include "PractRand/tests/gap16.h"
 #include "PractRand/tests/DistC6.h"
 #include "PractRand/tests/BCFN.h"
@@ -41,16 +42,16 @@ static const Uint8 distance_table[256] = {
 	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
 	4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
 };
-int PractRand::count_bits8 (Uint8 a) {
+int PractRand::Tests::count_bits8 (Uint8 a) {
 	return distance_table[a];
 }
-int PractRand::count_bits16(Uint16 a) {
+int PractRand::Tests::count_bits16(Uint16 a) {
 	return distance_table[Uint8(a)] + distance_table[Uint8(a>>8)];
 }
-int PractRand::count_bits32(Uint32 a) {
+int PractRand::Tests::count_bits32(Uint32 a) {
 	return distance_table[Uint8(a)] + distance_table[Uint8(a>>8)] + distance_table[Uint8(a>>16)] + distance_table[Uint8(a>>24)];
 }
-int PractRand::count_bits64(Uint64 a) {
+int PractRand::Tests::count_bits64(Uint64 a) {
 	return distance_table[Uint8(a)] + distance_table[Uint8(a>>8)] + distance_table[Uint8(a>>16)] + distance_table[Uint8(a>>24)] +
 		distance_table[Uint8(a>>32)] + distance_table[Uint8(a>>40)] + distance_table[Uint8(a>>48)] + distance_table[Uint8(a>>56)];
 }
@@ -1108,18 +1109,18 @@ double PractRand::Tests::FPF::get_result() {
 		counts2[i] = counts_[i];
 		actual_samples += counts_[i];
 	}
-	int usable_exp = max_exp;
+	unsigned int usable_exp = max_exp;
 	for (unsigned int fe = 0; fe <= max_exp; fe++) {
 		int lossL2 = fe;
 		if (fe == max_exp) lossL2 = fe-1;
-		double p = pow(.5, sig_bits + lossL2 + 1);
+		double p = pow(.5, sig_bits + lossL2 + 1.);
 		double subcount = 0;
 		for (unsigned int i = 0; i <= max_sig; i++) {
 			int index = (fe << sig_bits) + i;
 			probs[index] = p;
 			subcount += counts2[index];
 		}
-		double expected = p * pow(2.0,sig_bits) * samples;
+		double expected = p * pow(2.0,(double)sig_bits) * samples;
 		if (subcount < 40 && usable_exp > fe) usable_exp = fe;
 	}
 
@@ -1317,7 +1318,7 @@ void PractRand::Tests::CoupGap::test_blocks(TestBlock *data, int numblocks) {
 		if (oldest_sym == sym) {
 			oldest_sym = next_younger_sym[sym];
 		}
-		next_younger_sym[youngest_sym] = sym;
+		next_younger_sym[youngest_sym] = Uint8(sym);
 		youngest_sym = sym;
 	}
 	Uint64 oblocks = blocks;

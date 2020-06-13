@@ -10,8 +10,8 @@ namespace PractRand {
 			};
 			static Uint8 count_leading_zeroes_table[COUNT_LEADING_ZEROES_TABLE_SIZE];
 			static unsigned long count_leading_zeroes32( Uint32 value );
-			int sig_bits, exp_bits;
-			int stride_bits_L2;
+			unsigned int sig_bits, exp_bits;
+			unsigned int stride_bits_L2;
 			VariableSizeCount<Uint8> counts;
 			Uint64 blocks;
 		public:

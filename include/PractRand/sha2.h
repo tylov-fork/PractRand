@@ -48,53 +48,28 @@ Changes made to Aaron's code in this file:
 
 namespace PractRand {
 	namespace Crypto {
-		/*** SHA-256/384/512 Various Length Definitions ***********************/
-		enum {
-			SHA256_BLOCK_LENGTH   = 64,
-			SHA256_DIGEST_LENGTH  = 32,
-			//SHA256_DIGEST_STRING_LENGTH	= (SHA256_DIGEST_LENGTH * 2 + 1),
-			SHA384_BLOCK_LENGTH   = 128,
-			SHA384_DIGEST_LENGTH  = 48,
-			//SHA384_DIGEST_STRING_LENGTH = (SHA384_DIGEST_LENGTH * 2 + 1),
-			SHA512_BLOCK_LENGTH   = 128,
-			SHA512_DIGEST_LENGTH  = 64,
-			//SHA512_DIGEST_STRING_LENGTH = (SHA512_DIGEST_LENGTH * 2 + 1)
+		class SHA2_512 {
+			typedef Uint64 Word;
+			Word state[8];
+			Uint64 length;
+			union InputBlock {
+				Word as_word[16];
+				Uint8 as_byte[16 * 8];
+			};
+			InputBlock input_buffer;
+			unsigned long leftover_input_bytes;
+			void process_block();
+			void process_final_block();
+			Word endianness_word(Word);
+			void endianness_input();
+			void endianness_state();
+		public:
+			enum {RESULT_LENGTH = 64};
+			void reset();
+			void handle_input(const Uint8 *input, unsigned long length);
+			void finish(Uint8 destination[RESULT_LENGTH]);
+			SHA2_512() {reset();}
 		};
-
-		/*** SHA-256/384/512 Context Structures *******************************/
-		typedef struct _SHA256_CTX {
-			Uint32  state[8];
-			Uint64  bitcount;
-			Uint8   buffer[SHA256_BLOCK_LENGTH];
-		} SHA256_CTX;
-		typedef struct _SHA512_CTX {
-			Uint64  state[8];
-			Uint64  bitcount[2];
-			Uint8  buffer[SHA512_BLOCK_LENGTH];
-		} SHA512_CTX;
-
-		typedef SHA512_CTX SHA384_CTX;
-
-
-		/*** SHA-256/384/512 Function Prototypes ******************************/
-
-		void SHA256_Init(SHA256_CTX *);
-		void SHA256_Update(SHA256_CTX*, const Uint8*, size_t);
-		void SHA256_Final(Uint8[SHA256_DIGEST_LENGTH], SHA256_CTX*);
-		//char* SHA256_End(SHA256_CTX*, char[SHA256_DIGEST_STRING_LENGTH]);
-		//char* SHA256_Data(const Uint8*, size_t, char[SHA256_DIGEST_STRING_LENGTH]);
-
-		void SHA384_Init(SHA384_CTX*);
-		void SHA384_Update(SHA384_CTX*, const Uint8*, size_t);
-		void SHA384_Final(Uint8[SHA384_DIGEST_LENGTH], SHA384_CTX*);
-		//char* SHA384_End(SHA384_CTX*, char[SHA384_DIGEST_STRING_LENGTH]);
-		//char* SHA384_Data(const Uint8*, size_t, char[SHA384_DIGEST_STRING_LENGTH]);
-
-		void SHA512_Init(SHA512_CTX*);
-		void SHA512_Update(SHA512_CTX*, const Uint8*, size_t);
-		void SHA512_Final(Uint8[SHA512_DIGEST_LENGTH], SHA512_CTX*);
-		//char* SHA512_End(SHA512_CTX*, char[SHA512_DIGEST_STRING_LENGTH]);
-		//char* SHA512_Data(const Uint8*, size_t, char[SHA512_DIGEST_STRING_LENGTH]);
 	}//Crypto
 }//PractRand
 

@@ -170,6 +170,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\test_batteries.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\tests.cpp"
 				>
 			</File>
@@ -261,6 +265,10 @@
 			</File>
 			<File
 				RelativePath="..\..\include\PractRand\sha2.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\PractRand\test_batteries.h"
 				>
 			</File>
 			<File
@@ -410,6 +418,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\doc\portability.txt"
+				>
+			</File>
+			<File
 				RelativePath="..\..\doc\PractRand.txt"
 				>
 			</File>
@@ -434,7 +446,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\doc\Tests.txt"
+				RelativePath="..\..\doc\Tests_batteries.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\..\doc\Tests_engines.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\..\doc\Tests_overview.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\..\doc\Tests_usage.txt"
 				>
 			</File>
 			<File

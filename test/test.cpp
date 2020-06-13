@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <ctime>
 #include <string>
@@ -12,6 +12,7 @@
 //  practical usage and research... 
 //  EXCEPT it does not include specific algorithms
 #include "PractRand_full.h"
+
 
 //specific testing algorithms, to detect bias in supposedly random numbers
 #include "PractRand/Tests/BCFN.h"
@@ -128,90 +129,28 @@ public:
 	}
 };
 
-Tests::ListOfTests get_more_tests() {
-	return Tests::ListOfTests(
-		new Tests::BCFN(0, 14),
-		new Tests::DistC6(9,0, 1,0,0),
-		new Tests::DistC6(6,1, 1,0,0),
-		new Tests::DistC6(5,2, 1,0,0),
-		new Tests::DistC6(5,3, 1,0,1),
-		new Tests::DistC6(4,3, 0,0,1),
-		new Tests::Gap16(),
-		new Tests::FPF(5, 14, 6),
-		new Tests::FPF(1, 13, 6),
-		new Tests::CoupGap(),
-		NULL
-	);
-}
-Tests::ListOfTests get_core_tests() {
-	return Tests::ListOfTests(
-		new Tests::BCFN(2, 13),
-		new Tests::DistC6(9,0, 1,0,0),
-		new Tests::Gap16()
-	);
-}
-Tests::ListOfTests get_standard_tests8() {
-	Tests::ListOfTests l = get_core_tests();
-	l.tests.push_back(
-		new Tests::Transforms::lowbits(NULL, get_core_tests(), 0, 0)
-	);
-	return l;
-}
-Tests::ListOfTests get_standard_tests16() {
-	Tests::ListOfTests l = get_core_tests();
-	l.tests.push_back(new Tests::Transforms::lowbits(NULL, get_core_tests(), 2, 1));
-	l.tests.push_back(new Tests::Transforms::lowbits(NULL, get_core_tests(), 0, 1));
-	return l;
-}
-Tests::ListOfTests get_standard_tests32() {
-	Tests::ListOfTests l = get_core_tests();
-	l.tests.push_back(new Tests::Transforms::lowbits(NULL, get_standard_tests8(), 3, 2));
-	return l;
-}
-Tests::ListOfTests get_standard_tests64() {
-	Tests::ListOfTests l = get_core_tests();
-	l.tests.push_back(new Tests::Transforms::lowbits(NULL, get_standard_tests8(), 3, 3));
-	return l;
-}
-Tests::ListOfTests get_standard_tests( int bits ) {
-	switch (bits) {
-		case 16: return get_standard_tests16();
-		case 32: return get_standard_tests32();
-		case 64: return get_standard_tests64();
-		default:
-		case 8:
-			return get_standard_tests8();
-	}
-}
-
 void print_result(const char *tname, double result, double pvalue) {
 	int len = std::strlen(tname);
-	printf("  %s", tname);
-	for (int i = len; i < 30; i++) printf(" ");
-	printf("  %+9.1f   ", result);
-	if (pvalue != -1) {
-		if (fabs(pvalue-0.5) > 0.4999) printf("p=%7.5f  ", pvalue);
-		else if (fabs(pvalue-0.5) > 0.499) printf("p=%6.4f   ", pvalue);
-		else if (fabs(pvalue-0.5) > 0.49) printf("p=%5.3f    ", pvalue);
-		else if (fabs(pvalue-0.5) > 0.4) printf("p=%4.2f     ", pvalue);
-		else printf("p=%3.1f      ", pvalue);
-	}
-	else printf("p=?        ");
-	if (pvalue == -1) {
-		if (fabs(result) > 20) printf("FAIL?");
-		else if (fabs(result) > 8) printf(" suspicious?");
-		else printf(" pass?");
-	}
-	else if (pvalue >= 0 && pvalue <= 1) {
-		if (fabs(pvalue-0.5) > 0.49999999) printf("FAIL");
-		else if (fabs(pvalue-0.5) > 0.4999) printf(" very suspicious");
-		else if (fabs(pvalue-0.5) > 0.49) printf(" suspicious");
-		else printf(" pass");
+	std::printf("  %s", tname);
+	for (int i = len; i < 30; i++) std::printf(" ");
+	std::printf("  %+9.1f   ", result);
+	if (pvalue != -1 && pvalue >= 0 && pvalue <= 1) {
+		if (std::fabs(pvalue-0.5) > 0.4999) std::printf("p=%7.5f  ", pvalue);
+		else if (std::fabs(pvalue-0.5) > 0.499) std::printf("p=%6.4f   ", pvalue);
+		else if (std::fabs(pvalue-0.5) > 0.49) std::printf("p=%5.3f    ", pvalue);
+		else if (std::fabs(pvalue-0.5) > 0.4) std::printf("p=%4.2f     ", pvalue);
+		else std::printf("p=%3.1f      ", pvalue);
+		if (std::fabs(pvalue-0.5) > 0.49999999) printf("FAIL");
+		else if (std::fabs(pvalue-0.5) > 0.4999) printf(" very suspicious");
+		else if (std::fabs(pvalue-0.5) > 0.49) printf(" suspicious");
+		else std::printf(" pass");
 	}
 	else {
-		issue_error();
+		std::printf("           ");
+		if (std::fabs(result) > 20) std::printf("FAIL?");
+		else if (std::fabs(result) > 8) std::printf(" suspicious?");
+		else std::printf(" pass?");
 	}
-
 	printf("\n");
 }
 
@@ -226,12 +165,16 @@ int main(int argc, char **argv) {
 	RNGs::vRNG *rng = new Polymorphic_DummyRNG();
 	rng->seed(rng_seed);
 
-	printf("RNG = %s, seed = 0x%x\n\n", rng->get_name().c_str(), rng_seed);
-	printf("a random floating point number in [0,1) using that RNG: %f\n\n", rng->randf());
+	std::printf("RNG = %s, seed = 0x%x\n\n", rng->get_name().c_str(), rng_seed);
+	std::printf("a random floating point number in [0,1) using that RNG: %f\n", rng->randf());
+	std::printf("a random integer in [0,13) using RNG->randi: %d\n", rng->randi(0, 13));
+	std::printf("a fast random integer in [0,13) using RNG->randi_fast: %d\n", rng->randi_fast(0, 13));
+	std::printf("a random integer in [0,13) using RNG->randli: %d\n", rng->randli(0, 13));
+	std::printf("\n");
 
-	TestManager targ(rng);
-	Tests::ListOfTests tests = get_standard_tests(rng->get_native_output_size());
-	//Tests::ListOfTests tests = get_many_tests();
+	TestManager tman(rng);
+	Tests::ListOfTests tests = Tests::Batteries::get_standard_tests(rng);
+	//Tests::ListOfTests tests = Tests::Batteries::get_expanded_standard_tests(rng);
 	for (unsigned int i = 0; i < tests.tests.size(); i++) tests.tests[i]->init(known_good);
 
 	//Start by testing 32 kilobytes, then double the amount to test repeatedly.  
@@ -240,18 +183,18 @@ int main(int argc, char **argv) {
 	//Skip the printing if it's been less than 2 seconds since this program started.  
 	Uint64 test_size = 1024 * 32;
 	while (test_size < 1ull<<45) {
-		Uint64 blocks_left = test_size/Tests::TestBlock::SIZE - targ.blocks_so_far;
+		Uint64 blocks_left = test_size/Tests::TestBlock::SIZE - tman.blocks_so_far;
 		test_size <<= 1;
 		while (blocks_left) {
-			targ.prep_blocks(blocks_left);
-			for (unsigned int i = 0; i < tests.tests.size(); i++) targ.use_blocks(tests.tests[i]);
+			tman.prep_blocks(blocks_left);
+			for (unsigned int i = 0; i < tests.tests.size(); i++) tman.use_blocks(tests.tests[i]);
 		}
 		int time_passed = std::time(NULL) - start_time;
-		if (time_passed <= 1) continue;
+		if (time_passed < 2) continue;
 		printf("rng=%s, seed=0x%x, length=2^%.0f bytes, time=%d seconds\n", 
 			rng->get_name().c_str(), 
 			rng_seed, 
-			std::log(double(Tests::TestBlock::SIZE) * targ.blocks_so_far) / std::log(2.0),
+			std::log(double(Tests::TestBlock::SIZE) * tman.blocks_so_far) / std::log(2.0),
 			time_passed
 		);
 		for (unsigned int i = 0; i < tests.tests.size(); i++) {
@@ -259,7 +202,7 @@ int main(int argc, char **argv) {
 			Tests::Transforms::multiplex *multi = dynamic_cast<Tests::Transforms::multiplex*>(test);
 			if (!multi) {
 				double r = test->get_result();
-				double p = test->result_to_pvalue(targ.blocks_so_far, r);
+				double p = test->result_to_pvalue(tman.blocks_so_far, r);
 				print_result(test->get_name().c_str(), r, p);
 			}
 			else {
@@ -282,7 +225,6 @@ int main(int argc, char **argv) {
 	for (unsigned int i = 0; i < tests.tests.size(); i++) delete tests.tests[i];
 	return 0;
 }
-
 
 
 

@@ -1,5 +1,6 @@
 namespace PractRand {
 	namespace Tests {
+		class ListOfTests;
 		namespace Transforms {
 			class multiplex : public TestBaseclass {
 			protected:

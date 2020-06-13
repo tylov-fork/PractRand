@@ -11,13 +11,13 @@ namespace PractRand {
 			protected:
 				enum { OUTPUT_BUFFER_SIZE=64 };
 				Uint32 outbuf[OUTPUT_BUFFER_SIZE];
-				Uint32 left;
+				Uint32 used;
 				Uint32 X[16], Y[16];
 				Uint32 P[1024], Q[1024];
 				Uint16 counter;
 				void _do_batch();
 			public:
-				void flush_buffers() {left = 0;}
+				void flush_buffers() {used = OUTPUT_BUFFER_SIZE;}
 				Uint32 raw32();
 				void walk_state(StateWalkingObject *walker);
 

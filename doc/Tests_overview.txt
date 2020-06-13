@@ -1,0 +1,38 @@
+The classic source of empirical statistical tests for random number 
+generators is "The Art of Computer Programming", by Donald Knuth.  Several 
+empirical tests are described in that book.  
+
+The purpose of such tests is to distinguish data produced by a truly random 
+process from data produced by a non-random process.  These tests take as 
+input a block of data (generally in the form of random bits) that is 
+hypothesized to be indistinguishable from a random block of data, and 
+produce as output a rating for how unlikely it is that that data would have 
+been produced at random.  A few tests can produce an exact probability 
+("p-value"), most produce aproximate p-values, and some produce only very 
+rough estimates or pass / fail results (fail means the data was extremely 
+unlikely, pass means it wasn't).  Different sources have different 
+standards for what degree of unlikelyhood qualifies as a failure - some 
+consider 1-in-100 levels a failure, while others don't call a result on a 
+test failure until it reaches the level of 1-in-ten-billion.  
+
+PractRand tests tend to produce only very crude evaluations - pass/fail or 
+very crude p-value aproximations.  PractRand prefers to only call an RNGs 
+performance on a test a failure if it is on the general order of 1-in-ten-
+billion, though the crude nature of the results means that the targeting 
+of that level ends up rather imprecise.  
+
+In empirical testing, another classic is the Diehard program by Marsaglia.  
+That program is badly outdated today, and should not be used anymore, but 
+it was, so far as I know, the first real standardized battery of such tests. 
+A standardized battery of tests is just a more clearly defined (and usually 
+more convenient) version of running multiple tests on a block of data.  The 
+basic results of a standardized battery of tests can be communicated quickly 
+and effectively with just the name and version of the standard battery of 
+tests length of sequence tested (though some batteries operate on fixed-size 
+sequence lengths and don't need the last).  That is much easier to interpret 
+(not to mention more concise) than a listing of every major test name / 
+version / implementation / sequence length tried.  
+
+
+*****************************************************************************
+

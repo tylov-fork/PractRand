@@ -1,0 +1,27 @@
+
+Specific Tests in PractRand:
+	Recommended tests:
+		Gap16 - a variation of the classic "Gap" test
+		BCFN - checks for long range linear correlations;
+			in practice this often detects Fibonacci style RNGs that 
+			rely upon large lags to defeat other statistical tests
+		DC6 - checks for short range linear correlations
+	Transforms:
+		(these appear as tests but are simply wrappers for other tests)
+		multiplex - simply routes operations on this test to multiple 
+			subtests
+		lowbits - for each 1,2,4,or 8 bytes this takes the lowest 1,2,4,8,16, 
+			or 32 bits and routes them to the wrapped tests)
+		shrink - 
+		FirstNofM - 
+	Non-recommended tests:
+		FPF - "floating point frequency" test; contrary to the name 
+			it's purely integer math.  Can be very slow on some settings.  
+			Tends to not be very good.  
+		CoupGap - "Coupon / Gap hybrid" test; still in development;
+			behavior is similar to most gap tests
+		...many more still to come
+
+*****************************************************************************
+
+

@@ -47,7 +47,7 @@ void PractRand::RNGs::Polymorphic::hc256::seed(Uint32 key_and_iv[16]) {implement
 	(u) += (b)+(tem0^tem1)+Q[tem2]; \
 	(a) = (u); \
 	h1((d),tem3); \
-	(m) ^= tem3 ^ (u) ; \
+	(m) = tem3 ^ (u) ; \
 }
 #define step_B(u,v,a,b,c,d,m){ \
 	Uint32 tem0,tem1,tem2,tem3; \
@@ -57,7 +57,7 @@ void PractRand::RNGs::Polymorphic::hc256::seed(Uint32 key_and_iv[16]) {implement
 	(u) += (b)+(tem0^tem1)+P[tem2]; \
 	(a) = (u); \
 	h2((d),tem3); \
-	(m) ^= tem3 ^ (u) ; \
+	(m) = tem3 ^ (u) ; \
 }
 
 void PractRand::RNGs::Raw::hc256::_do_batch() {//do not change
@@ -83,7 +83,7 @@ void PractRand::RNGs::Raw::hc256::_do_batch() {//do not change
 			step_A(P[cc+13],P[cc+14],X[13],X[3], X[10],X[1], data[13]);
 			step_A(P[cc+14],P[cc+15],X[14],X[4], X[11],X[2], data[14]);
 			Uint32 dd = (cc+16)&0x3ff;
-			step_A(P[cc+15],P[dd], X[15],X[5], X[12],X[3], data[15]);
+			step_A(P[cc+15],P[dd+0], X[15],X[5], X[12],X[3], data[15]);
 			cc = dd;
 			data += 16;
 		}
@@ -112,12 +112,12 @@ void PractRand::RNGs::Raw::hc256::_do_batch() {//do not change
 		}
 	}
 	counter = (counter + OUTPUT_BUFFER_SIZE) & 0x7ff;
-	left = OUTPUT_BUFFER_SIZE;
+	used = 0;
 }
 Uint32 PractRand::RNGs::Raw::hc256::raw32() {//LOCKED, do not change
-	if (left) return outbuf[--left];
+	if (used < OUTPUT_BUFFER_SIZE) return outbuf[used++];
 	_do_batch();
-	return outbuf[--left];
+	return outbuf[used++];
 }
 void PractRand::RNGs::Raw::hc256::seed(Uint64 s) {//LOCKED, do not change
 	Uint32 seed_array[16];
@@ -154,6 +154,7 @@ void PractRand::RNGs::Raw::hc256::seed(Uint32 key_and_iv[16]) {//LOCKED, do not 
 	for (i = 0; i < 16; i++) P[i] = P[i+512];
 	for (i = 16; i < 1024; i++)
 		P[i] = f(P[i-2],P[i-7],P[i-15],P[i-16])+512+i;
+
 	for (i = 0; i < 16; i++) Q[i] = P[1024-16+i];
 	for (i = 16; i < 32; i++)
 		Q[i] = f(Q[i-2],Q[i-7],Q[i-15],Q[i-16])+1520+i;
@@ -175,20 +176,21 @@ void PractRand::RNGs::Raw::hc256::seed(Uint32 key_and_iv[16]) {//LOCKED, do not 
 	}
 	//initialize counter2048, and tables X and Y
 	counter = 0;
-	for (i = 0; i < 16; i++) X[i] = P[1008+i];
-	for (i = 0; i < 16; i++) Y[i] = Q[1008+i];
-	left = 0;
+	for (i = 0; i < 16; i++) X[i] = P[1024-16+i];
+	for (i = 0; i < 16; i++) Y[i] = Q[1024-16+i];
+	//initialize output buffer
+	used = OUTPUT_BUFFER_SIZE;
 }
 void PractRand::RNGs::Raw::hc256::walk_state(StateWalkingObject *walker) {
 	//LOCKED, do not change
 	for (unsigned int i = 0; i < 1024; i++) walker->handle(P[i]);
 	for (unsigned int i = 0; i < 1024; i++) walker->handle(Q[i]);
 	walker->handle(counter);
-	walker->handle(left);
+	walker->handle(used);
 	for (unsigned int i = 0; i < OUTPUT_BUFFER_SIZE; i++) walker->handle(outbuf[i]);
 
 	if (!(walker->get_properties() & StateWalkingObject::FLAG_READONLY)) {
-		if (left > OUTPUT_BUFFER_SIZE) left = OUTPUT_BUFFER_SIZE;
+		if (used > OUTPUT_BUFFER_SIZE) used = OUTPUT_BUFFER_SIZE;
 		counter %= 1024 * 2;
 		//to do: verify that this is correct
 		if (counter < 1024) {
@@ -201,6 +203,6 @@ void PractRand::RNGs::Raw::hc256::walk_state(StateWalkingObject *walker) {
 		}
 	}
 	if (walker->get_properties() & StateWalkingObject::FLAG_CLUMSY) {
-		left = 0;
+		used = OUTPUT_BUFFER_SIZE;
 	}
 }

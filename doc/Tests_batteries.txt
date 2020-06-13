@@ -1,0 +1,36 @@
+The recommended batteries defined in PractRand are:
+"standard" - This is the recommended battery of tests for PractRand.  It is 
+	intended to quickly find bias in a wide variety of RNGs.  Some important 
+	notes:
+	1. This battery actually internally consists of several very closely 
+	related batteries, of which one is chosen based upon the output format 
+	of the RNG to be tested (determined by checking the metadata).  Each 
+	variant puts a little extra effort in to checking the low bits of the 
+	RNGs output (because the nature of operations offered on modern 
+	computers tends to lead to flaws in the low bits of fast PRNGs).  It 
+	must know the output format of the RNG to figure out which bits are the 
+	low bits.  
+	2. This battery is optimized for efficiency over sensitivity to a much 
+	greater degree than other batteries - it is poor at detecting bias on a 
+	per-bit basis but makes up for it by being very good at detecting bias on 
+	a per-second basis.  
+"core" - Not generally recommended.  This is the same as the "standard" 
+	battery except that it does not put extra effort in to targeting certain 
+	bits.  
+
+Additional batteries are provided by PractRand for the sake of completeness, 
+but are not recommended.  Those are:
+"extra_foldings" - Not generally recommended.  This is the same as the 
+	"standard" battery except that it puts extra effort in to targeting a 
+	wide variety of different bits of the output.  
+"expanded_core" - Not generally recommended.  This includes the "core" battery 
+	plus a bunch of additional tests that were considered inferior to the 
+	core tests.  
+"expanded_standard" - Not generally recommended.  This includes the 
+	"expanded_core" tests, plus it pays extra attention to certain bits of 
+	the output, like the "standard" battery.  
+"expanded_with_extra_foldings" - Not generally recommended.  This includes 
+	the "expanded_standard" battery, but it puts extra effort in to 
+	targeting a wide variety of of different bits of the output.  
+
+

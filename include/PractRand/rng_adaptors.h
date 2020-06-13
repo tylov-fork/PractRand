@@ -118,7 +118,7 @@ namespace PractRand {
 						}
 						Uint64 randli ( Uint64 min, Uint64 max ) {return randli(max-min) + min;}
 
-						Uint32 randi_fast ( Uint32 max ) {return (Uint32)((raw32() * (Uint64)max) >> 32);}
+						Uint32 randi_fast ( Uint32 max ) {return randi_fast_implementation(raw32(), max);}
 						Uint32 randi_fast ( Uint32 min, Uint32 max ) {return randi_fast(max-min) + min;}
 
 						//random floating point numbers:

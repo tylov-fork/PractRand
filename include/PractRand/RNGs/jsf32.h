@@ -34,7 +34,7 @@ namespace PractRand {
 
 			Uint32 randi(Uint32 max);
 			Uint32 randi(Uint32 min, Uint32 max) {return randi(max-min)+min;}
-			Uint32 randi_fast(Uint32 max) {randi_fast_implementation(raw32(), max);}
+			Uint32 randi_fast(Uint32 max) {return randi_fast_implementation(raw32(), max);}
 			Uint32 randi_fast(Uint32 min, Uint32 max) {return randi_fast(max-min)+min;}
 			Uint64 randli(Uint64 max);
 			Uint64 randli(Uint64 min, Uint64 max) {return randli(max-min)+min;}

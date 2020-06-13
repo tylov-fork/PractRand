@@ -1,0 +1,41 @@
+
+In the next version (0.84) I plan to fill this file with charts showing 
+empirical measurements of the merits of the PractRand standard battery of 
+tests relative to various other standard batteries of tests.  I will do this 
+by putting together a large list of RNG algorithms of diverse type and 
+quality, and measuring the number of seconds and number of bits required for 
+each RNG to fail a variety of batteries of tests, and possibly some 
+individual tests as well.  
+
+
+*****************************************************************************
+
+
+I call the merits of a test "Sensitivity", "Efficiency", "Breadth", and 
+"Orthogonality".  
+These are not standard terms, but invented purely the purpose of discussing 
+statistical tests for randomness used on PRNGs.  
+These mean:
+"Sensitivity" - the ability to find bias in a small amount of data.  
+"Efficiency" - the ability to find bias in a small amount of time on 
+	modern computers.  
+"Breadth" - the ability to find a wide variety of possible biases.  
+"Orthogonality" - The degree to which adding or removing this test to/from 
+a larger set of tests would increase/decrease the overall Breadth of the 
+set of tests.  In short, how original is this test?  
+
+Note that these properties can not strictly be defined for a test in 
+isolation.  Clearly orthogonality is not meaningful in the absence of a 
+broader set of tests to compare an individual test to.  Less obviously, and 
+to a lesser degree, sensitivity, efficiency, and breadth are all dependent 
+on the nature of the biases considered.  
+
+The recommended test batteries in PractRand tend to emphasize breadth and 
+efficiency more than sensitivity.  Meaning, they need a lot of input to 
+find bias, but they make up for it by processing input quickly and finding 
+a variety of types of bias.  
+
+
+*****************************************************************************
+
+

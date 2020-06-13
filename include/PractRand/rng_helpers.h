@@ -71,7 +71,5 @@ namespace PractRand {
 		std::string get_name() const;\
 		void walk_state(StateWalkingObject *walker);
 
-//		std::string get_name() const;\
-
 
 #endif //_practrand_rng_helpers_h
