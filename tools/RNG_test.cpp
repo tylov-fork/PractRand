@@ -61,11 +61,12 @@ public:
 	};
 	//RNG state goes here:
 
+
 	Uint32 a, b, c;
 	Uint32 raw32() {//RNG algorithm goes here:
-		Uint32 old = a;// + b;
-		a = b ^ (b >> 5);
-		b = c + (c << 7);
+		Uint32 old = a + (b >> 1);
+		a = b ^ c;
+		b = c;
 		c = old + ((c << 13) | (c >> (32-13)));
 		return old;
 	}

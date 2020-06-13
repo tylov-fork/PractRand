@@ -301,5 +301,8 @@
     <None Include="..\..\doc\tools.txt">
       <Filter>Documentation</Filter>
     </None>
+    <None Include="..\..\doc\Tests_performance.txt">
+      <Filter>Documentation</Filter>
+    </None>
   </ItemGroup>
 </Project>

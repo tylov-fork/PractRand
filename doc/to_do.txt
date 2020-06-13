@@ -1,8 +1,9 @@
-post-0.87:
+post-0.88:
 	high priority items
 		review serialization & seeding interface
 	add more self-tests, regression tests, etc
 		checks that serialization works correctly
+		add self-test to SHA2-512 implementation (why isn't there one there already?)
 	review / reorganize header files
 		some headers protect against multiple inclusion, some don't
 		some headers protect against inclusion prior to dependencies, some don't

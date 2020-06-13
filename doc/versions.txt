@@ -1,3 +1,7 @@
+version 0.88
+	Important Bugfix:
+		a serious bug introduced at the last minute in 0.87 in sha2_based_pool
+		which gets used internally by autoseeding, among other things
 version 0.87
 	! The big changes were improved p-value quality, changed RNG test reporting format, more useful tools, and improved autoseeding.  
 	RNG algorithms:

@@ -14,10 +14,10 @@
 
 
 RNG biases found only by one test battery (all suites given 4 hours per RNG to work)
-                    TOTAL     rec.     simple      non-LCG     LCGish     cbuf      indirect
-PractRand std       20        0         6           2           2          6         4
-TestU01 *Crush      4         1         3           0           0          0         0
-RaBiGeTe ext        2         0         1           0           1          0         0
+                    TOTAL   rec.   simple  non-LCG LCGish  cbuf   indirect
+PractRand std       20      0      6       2       2       6      4
+TestU01 *Crush      4       1      3       0       0       0      0
+RaBiGeTe ext        2       0      1       0       1       0      0
 (RaBiGeTe is penalized slightly since it has no good 4 hour long test)
 
 number of RNGs bias was found in VS test battery VS time
@@ -243,10 +243,10 @@ other RNGs - cyclic buffer based (or other static structures)
 	mm32             0/5/5/0     4 MB        1/8/12      pass        pass       FAIL
 	mm32_16          0/5/5/0     1 GB        0/0/2       pass?       pass       FAIL
 	mm32_awc         1/5/5/0     8 GB        0/8/11      pass?       pass       FAIL
-	mwc4691          1/5/5/0     1 GB        pass        pass        ?          ?
+	mwc4691          0/5/5/0     1 GB        pass        pass        ?          ?
 	cbuf_accum       1/5/5/2     4 GB        pass        pass        FalsePos?! pass
 	dual_cbuf        2/5/5/2     128 GB      pass        16 Kb       pass       FAIL
-	dual_cbuf_accum  4/5/5/2     1 TB        pass        16 Kb       ?          ?
+	dual_cbuf_accum  3/5/5/2     1 TB        pass        16 Kb       ?          ?
 	fibmul32_16      1/5/5/2     2 GB        pass        pass        pass       pass
 	fibmul64_32      3/5/5/3     512 GB      pass        pass        ?          ?
 	ranrot32         1/5/5/2     4 GB        pass        pass        ?          ?

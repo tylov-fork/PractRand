@@ -157,6 +157,7 @@
     <ClInclude Include="..\..\include\PractRand\Tests\transforms.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\doc\Tests_performance.txt" />
     <None Include="..\..\doc\tools.txt" />
     <None Include="..\..\doc\index.html">
       <SubType>Designer</SubType>

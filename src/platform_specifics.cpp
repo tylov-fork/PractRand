@@ -59,6 +59,7 @@ bool PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 #endif
 #if (defined _WIN32) && 1
 	{//win32 crypto PRNG, another interface
+		return false;
 		HMODULE hLib=LoadLibraryA("ADVAPI32.DLL");
 		if (hLib) {
 			BOOLEAN (APIENTRY *get_random_bytes)(void*, ULONG) =
