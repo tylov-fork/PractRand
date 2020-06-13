@@ -92,6 +92,7 @@
     <ClCompile Include="..\src\rand.cpp" />
     <ClCompile Include="..\src\RNGs\arbee.cpp" />
     <ClCompile Include="..\src\RNGs\chacha.cpp" />
+    <ClCompile Include="..\src\RNGs\salsa.cpp" />
     <ClCompile Include="..\src\RNGs\sfc.cpp" />
     <ClCompile Include="..\src\RNGs\sha2_based_pool.cpp" />
     <ClCompile Include="..\src\RNGs\trivium.cpp" />
@@ -114,6 +115,7 @@
     <ClInclude Include="..\include\PractRand\RNGs\efiix32x384.h" />
     <ClInclude Include="..\include\PractRand\RNGs\efiix64x384.h" />
     <ClInclude Include="..\include\PractRand\RNGs\efiix8x384.h" />
+    <ClInclude Include="..\include\PractRand\RNGs\salsa.h" />
     <ClInclude Include="..\include\PractRand\RNGs\sfc16.h" />
     <ClInclude Include="..\include\PractRand\RNGs\sfc32.h" />
     <ClInclude Include="..\include\PractRand\RNGs\sfc64.h" />

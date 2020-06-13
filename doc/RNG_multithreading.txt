@@ -75,7 +75,7 @@ The complex version looks like this on MSVC:
   CRITICAL_SECTION thread_startup_lock;
   PractRand::RNGs::Polymorphic::sha2_based_pool entropy_pool;
 
-  //inside main(): (or elsewhere, as long as it runs prior to multithreading)
+  //inside main(): (or elsewhere, as long as it runs prior to multithreading or RNG use)
   InitializeCriticalSection(&thread_startup_lock);
   entropy_pool.add_entropy_automatically();
   //additional entropy_pool.add_entropy* calls go here if needed
@@ -99,7 +99,7 @@ On linux / gcc the complex version looks more like:
   pthread_mutex_t thread_startup_lock;
   PractRand::RNGs::Polymorphic::sha2_based_pool entropy_pool;
 
-  //inside main(): (or elsewhere, as long as it runs prior to multithreading)
+  //inside main(): (or elsewhere, as long as it runs prior to multithreading or RNG use)
   pthread_mutex_init( &thread_startup_lock, NULL);
   entropy_pool.add_entropy_automatically();
   //additional entropy_pool.add_entropy* calls go here if needed

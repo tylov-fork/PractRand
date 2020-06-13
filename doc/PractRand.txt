@@ -1,7 +1,7 @@
 PractRand (Practically Random) is a C++ library of pseudo-random number 
 generators (PRNGs, or just RNGs) and statistical tests for RNGs.  
 
-version 0.88
+version 0.90
 
 
 1. Randon Number Generation with PractRand
@@ -111,8 +111,8 @@ TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
 	quality: good
 	presentation: decent
 	open source: non-commercial only
-	The best alternative or supplement to PractRand for testing 
-	purposes.  
+	The best alternative or supplement to PractRand for normal 
+	testing purposes.  
 	It's rather difficult to build on win32 though.  
 RaBiGeTe - http://cristianopi.altervista.org/RaBiGeTe_MT/
 	quality: decent
@@ -120,9 +120,9 @@ RaBiGeTe - http://cristianopi.altervista.org/RaBiGeTe_MT/
 	open source: recent versions closed source, older versions viral (GPL)
 	The third best testing package after PractRand and TestU01.  
 	RaBiGeTe has a tendency to crash a bit, but it's still usable.  
-	It is more efficient on a per-bit basis though, and comes with a 
-	GUI that can help visualize the distribution of results from 
-	multiple samples if desired.  
+	It is more efficient on a per-bit basis, and comes with a GUI that can 
+	help visualize the distribution of results from multiple samples if 
+	desired.  
 	This is the only test suite besides PractRand that has built-in 
 	support for multithreading.  
 Dieharder - http://www.phy.duke.edu/~rgb/General/dieharder.php
@@ -149,7 +149,7 @@ Diehard - http://www.stat.fsu.edu/pub/diehard/
 	Dieharder (see above) was named after this.  
 ENT - http://www.fourmilab.ch/random/
 	quality: bad
-	presentation: decent
+	presentation: mediocre
 	open source: yes (not sure what the license is)
 	A very weak test.  
 gjrand - http://gjrand.sourceforge.net/
@@ -157,3 +157,9 @@ gjrand - http://gjrand.sourceforge.net/
 	presentation: ???
 	open source: yes (not sure what the license is)
 	Fairly obscure.  I have not tried it.  
+BSI test suite - ???
+	quality: ???
+	presentation: ???
+	open source: ???
+	I can't find a working download link for this one.  
+

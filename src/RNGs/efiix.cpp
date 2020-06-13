@@ -11,7 +11,7 @@
 #include "PractRand/RNGs/efiix64x384.h"
 
 #include "PractRand/RNGs/arbee.h"
-typedef PractRand::RNGs::Raw::arbee SeederRNG;
+//#include "PractRand/RNGs/trivium.h"
 
 using namespace PractRand;
 using namespace PractRand::Internals;
@@ -44,34 +44,38 @@ std::string PractRand::RNGs::Polymorphic::efiix64x384::get_name() const {return 
 	b = c + indirect;\
 	c = old + rotate ## BITS (c, SHIFT_AMOUNT);\
 	return b ^ iterated;
-/*
-	on the algorithm:
+/*	on the algorithm:
 		examining small windows of the output is never sufficient to learn anything significant, 
 			due to relatively large FIFO "iteration_table"
 		examining small windows at a stride of ITERATION_SIZE apart might be sufficient, but...
 			if the indirection pattern is not predicted/guessed that is meaningless
-			if the indirection pattern is predicted, 
+			if the indirection pattern is predicted/guessed, 
 				if it doesn't reach back ITERATION_SIZE elements
 					that will simply add more unknowns
 				if it does reach back ITERATION_SIZE elements
-					you still need multiple successive guesses to establish the contents of (a,b,c)
-	a possible attack:
-		guess a value for (a,b,c) such that the next step will use an identical index in to indirection_table
-		use the output and the guessed "b" to figure out "iterated"
-		guess a value for "indirect" such that the 3rd step will use an identical index in to indirection_table
-		step forward once, use the new output to find the new "iterated"
-		step forward once, use the new output to find the new "iterated"
-		step forward ITERATION_SIZE-2 times
-		repeart the first 5 parts of this
-		if the new values of "iterated" match the old values of "indirect" then we've found the state
-			or at least a large part of it, enough to start unraveling the rest
-			takes 2**(N*8) tries to get a good chance of success though
-				(where ** denotes an exponent, and N is 8 for 8 bit efiix, 16 for 16 bit efiix, etc)
-			can probably do significantly better with some work though... maybe 2**((N+8)*4) or so?
+					you still need to establish the contents of (a,b,c)
+					and besides that's an enormous amount of indirection pattern to figure out
+		figuring out any significant portion of the indirection pattern should be very very difficult
+	idea for an attack:
+		guess values of (a,b,c) and "indirect"
+			such that two consecutive indirection indeces will be identical
+		guess such values again for a window ITERATION_SIZE steps ahead
+		and again for ITERATION_SIZE steps ahead of that
+		now guess a sequence of "iterated" values getting fed in to the first window
+			such that the indirection index remains constant
+		each time you extend the sequence of "iterated" values by 1
+			you have to guess N bits (8/16/32/64)
+			but you get twice that many bits of output you can check for consistency
+		your initial overhead on guesses is 12*N bits
+			to pay back the initial overhead you need that many again bits
+			then you can start establishing knowledge of a window in the state
+		so, 24*N bits, meaning 2**192+ tries needed for the 8 bit variant, 
+			2**384+ for the 16 bit variant, etc
+		I think optimizations are possible though, at least for the larger word size variants
 */
 
 #define EFIIX_SEED(BITS) \
-	SeederRNG seeder;\
+	PractRand::RNGs::Raw::arbee seeder;\
 	seeder.seed(s1, s2, s3, s4);\
 	for (unsigned long w=0; w < INDIRECTION_SIZE; w++) indirection_table[w] = Word(seeder.raw64());\
 	for (unsigned long w=0; w < ITERATION_SIZE  ; w++) iteration_table  [w] = Word(seeder.raw64());\
@@ -80,12 +84,11 @@ std::string PractRand::RNGs::Polymorphic::efiix64x384::get_name() const {return 
 	b = Word(seeder.raw64());\
 	c = Word(seeder.raw64());\
 	for (unsigned long w=0; w < 64; w++) raw ## BITS();\
-	seeder.seed(a ^ s1^s2, b ^ s3^s4, c ^ seeder.raw64(), ~s4);\
+	seeder.raw64(); s1 += seeder.raw64(); s2 += seeder.raw64(); s3 += seeder.raw64();\
+	seeder.seed(s1^a, s2^b, s3^c, ~s4);\
 	for (unsigned long w=0; w < INDIRECTION_SIZE; w++) indirection_table[w] ^= Word(seeder.raw64());\
-	for (unsigned long w=0; w < 64+16; w++) raw ## BITS();
-
-/*
-	on seeding:
+	for (unsigned long w=0; w < ITERATION_SIZE+16; w++) raw ## BITS();
+/*	on seeding:
 		two different seedings of seeder are needed because:
 			the first one gets things to a nice state, but might not be sufficiently secure
 			simply skipping some output makes part of the state secure, but...
@@ -94,9 +97,9 @@ std::string PractRand::RNGs::Polymorphic::efiix64x384::get_name() const {return 
 			(a,b,c) because it needs a function of the initial seed that is too complex for attacks
 				the 64 steps taken before that make (a,b,c) very complex because of the indirection
 			~s4 to guarantee that it can never be the same seed as was used in the first seeding
-			(s1,s2,s3) because (a,b,c) may have insufficient entropy when operating on smaller word sizes
-				not that that really helps anything significantly...
-				realistically, the benefit of adding (s1,s2,s3) is modest at best
+			a function of the first seeders final state
+				because (a,b,c) may not be enough bits on smaller word sizes
+				not sure that really helps much though
 */
 
 /*
@@ -114,6 +117,8 @@ PractRand::RNGs::Raw::efiix8x384::~efiix8x384() {std::memset(this, 0, sizeof(thi
 PractRand::RNGs::Raw::efiix16x384::~efiix16x384() {std::memset(this, 0, sizeof(this));}
 PractRand::RNGs::Raw::efiix32x384::~efiix32x384() {std::memset(this, 0, sizeof(this));}
 PractRand::RNGs::Raw::efiix64x384::~efiix64x384() {std::memset(this, 0, sizeof(this));}
+
+
 Uint8 PractRand::RNGs::Raw::efiix8x384::raw8() {
 //	Word rv = raw4() & 15; return rv | ((raw4() & 15) << 4);
 	EFIIX_ALGORITHM(8, 3)

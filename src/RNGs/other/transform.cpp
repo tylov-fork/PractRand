@@ -1,9 +1,11 @@
 #include <string>
 #include <sstream>
+#include <vector>
 #include "PractRand/config.h"
 #include "PractRand/rng_basics.h"
 #include "PractRand/rng_helpers.h"
 #include "PractRand/rng_internals.h"
+#include "PractRand/tests.h"
 
 #include "PractRand/RNGs/other/transform.h"
 
@@ -13,16 +15,120 @@ namespace PractRand {
 			namespace NotRecommended {
 				void Transform64::seed(Uint64 s) {base_rng->seed(s);}
 				Uint64 Transform64::get_flags() const {return base_rng->get_flags() | FLAG::USES_INDIRECTION;}
+				void Transform64::walk_state(StateWalkingObject *walker) {base_rng->walk_state(walker);}
 				Transform64::~Transform64() {delete base_rng;}
 				void Transform32::seed(Uint64 s) {base_rng->seed(s);}
 				Uint64 Transform32::get_flags() const {return base_rng->get_flags() | FLAG::USES_INDIRECTION;}
+				void Transform32::walk_state(StateWalkingObject *walker) {base_rng->walk_state(walker);}
 				Transform32::~Transform32() {delete base_rng;}
 				void Transform16::seed(Uint64 s) {base_rng->seed(s);}
 				Uint64 Transform16::get_flags() const {return base_rng->get_flags() | FLAG::USES_INDIRECTION;}
+				void Transform16::walk_state(StateWalkingObject *walker) {base_rng->walk_state(walker);}
 				Transform16::~Transform16() {delete base_rng;}
 				void Transform8::seed(Uint64 s) {base_rng->seed(s);}
 				Uint64 Transform8::get_flags() const {return base_rng->get_flags() | FLAG::USES_INDIRECTION;}
+				void Transform8::walk_state(StateWalkingObject *walker) {base_rng->walk_state(walker);}
 				Transform8::~Transform8() {delete base_rng;}
+
+				ReinterpretAsUnknown::ReinterpretAsUnknown( vRNG *rng ) : Transform8(rng) {
+					PractRand::Tests::TestBlock *block = new PractRand::Tests::TestBlock;
+					buffer = &block->as8[0];
+					index = 8192 / OUTPUT_BITS;
+				}
+				ReinterpretAsUnknown::~ReinterpretAsUnknown() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					delete block;
+				}
+				void ReinterpretAsUnknown::refill() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					block->fill(base_rng);
+					index = 0;
+				}
+				Uint8 ReinterpretAsUnknown::raw8() {
+					if (index >= 8192 / OUTPUT_BITS) refill();
+					return buffer[index++];
+				}
+				std::string ReinterpretAsUnknown::get_name() const {return std::string("AsUnknown(") + base_rng->get_name() + ")";}
+
+				ReinterpretAs8::ReinterpretAs8( vRNG *rng ) : Transform8(rng) {
+					PractRand::Tests::TestBlock *block = new PractRand::Tests::TestBlock;
+					buffer = &block->as8[0];
+					index = 8192 / OUTPUT_BITS;
+				}
+				ReinterpretAs8::~ReinterpretAs8() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					delete block;
+				}
+				void ReinterpretAs8::refill() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					block->fill(base_rng);
+					index = 0;
+				}
+				Uint8 ReinterpretAs8::raw8() {
+					if (index >= 8192 / OUTPUT_BITS) refill();
+					return buffer[index++];
+				}
+				std::string ReinterpretAs8::get_name() const {return std::string("As8(") + base_rng->get_name() + ")";}
+
+				ReinterpretAs16::ReinterpretAs16( vRNG *rng ) : Transform16(rng) {
+					PractRand::Tests::TestBlock *block = new PractRand::Tests::TestBlock;
+					buffer = &block->as16[0];
+					index = 8192 / OUTPUT_BITS;
+				}
+				ReinterpretAs16::~ReinterpretAs16() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					delete block;
+				}
+				void ReinterpretAs16::refill() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					block->fill(base_rng);
+					index = 0;
+				}
+				Uint16 ReinterpretAs16::raw16() {
+					if (index >= 8192 / OUTPUT_BITS) refill();
+					return buffer[index++];
+				}
+				std::string ReinterpretAs16::get_name() const {return std::string("As16(") + base_rng->get_name() + ")";}
+
+				ReinterpretAs32::ReinterpretAs32( vRNG *rng ) : Transform32(rng) {
+					PractRand::Tests::TestBlock *block = new PractRand::Tests::TestBlock;
+					buffer = &block->as32[0];
+					index = 8192 / OUTPUT_BITS;
+				}
+				ReinterpretAs32::~ReinterpretAs32() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					delete block;
+				}
+				void ReinterpretAs32::refill() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					block->fill(base_rng);
+					index = 0;
+				}
+				Uint32 ReinterpretAs32::raw32() {
+					if (index >= 8192 / OUTPUT_BITS) refill();
+					return buffer[index++];
+				}
+				std::string ReinterpretAs32::get_name() const {return std::string("As32(") + base_rng->get_name() + ")";}
+
+				ReinterpretAs64::ReinterpretAs64( vRNG *rng ) : Transform64(rng) {
+					PractRand::Tests::TestBlock *block = new PractRand::Tests::TestBlock;
+					buffer = &block->as64[0];
+					index = 8192 / OUTPUT_BITS;
+				}
+				ReinterpretAs64::~ReinterpretAs64() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					delete block;
+				}
+				void ReinterpretAs64::refill() {
+					PractRand::Tests::TestBlock *block = (PractRand::Tests::TestBlock*) buffer;
+					block->fill(base_rng);
+					index = 0;
+				}
+				Uint64 ReinterpretAs64::raw64() {
+					if (index >= 8192 / OUTPUT_BITS) refill();
+					return buffer[index++];
+				}
+				std::string ReinterpretAs64::get_name() const {return std::string("As64(") + base_rng->get_name() + ")";}
 
 				void GeneralizedTableTransform::seed(Uint64 s) {base_rng->seed(s);}
 				Uint64 GeneralizedTableTransform::get_flags() const {

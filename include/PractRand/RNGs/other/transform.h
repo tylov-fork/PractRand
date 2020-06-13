@@ -9,34 +9,38 @@ namespace PractRand {
 			namespace NotRecommended {
 				class Transform64 : public vRNG64 {
 				public:
-					vRNG64 *base_rng;
+					vRNG *base_rng;
 					void seed(Uint64 seed);
 					Uint64 get_flags() const;
-					Transform64(vRNG64 *rng) : base_rng(rng) {}
+					void walk_state(StateWalkingObject *walker);
+					Transform64(vRNG *rng) : base_rng(rng) {}
 					~Transform64();
 				};
 				class Transform32 : public vRNG32 {
 				public:
-					vRNG32 *base_rng;
+					vRNG *base_rng;
 					void seed(Uint64 seed);
 					Uint64 get_flags() const;
-					Transform32(vRNG32 *rng) : base_rng(rng) {}
+					void walk_state(StateWalkingObject *walker);
+					Transform32(vRNG *rng) : base_rng(rng) {}
 					~Transform32();
 				};
 				class Transform16 : public vRNG16 {
 				public:
-					vRNG16 *base_rng;
+					vRNG *base_rng;
 					void seed(Uint64 seed);
 					Uint64 get_flags() const;
-					Transform16(vRNG16 *rng) : base_rng(rng) {}
+					void walk_state(StateWalkingObject *walker);
+					Transform16(vRNG *rng) : base_rng(rng) {}
 					~Transform16();
 				};
 				class Transform8 : public vRNG8 {
 				public:
-					vRNG8 *base_rng;
+					vRNG *base_rng;
 					void seed(Uint64 seed);
 					Uint64 get_flags() const;
-					Transform8(vRNG8 *rng) : base_rng(rng) {}
+					void walk_state(StateWalkingObject *walker);
+					Transform8(vRNG *rng) : base_rng(rng) {}
 					~Transform8();
 				};
 
@@ -68,6 +72,59 @@ namespace PractRand {
 				};
 				vRNG *apply_SelfShrinkTransform(vRNG *base_rng);
 				//vRNG *apply_SimpleShrinkTransform(vRNG *base_rng);
+
+				class ReinterpretAsUnknown : public Transform8 {
+					Uint8 *buffer;//don't feel like requiring a header for TestBlock
+					int index;
+					void refill();
+				public:
+					ReinterpretAsUnknown( vRNG *rng );
+					~ReinterpretAsUnknown();
+					Uint8 raw8();
+					//to do: fix endianness issues
+					std::string get_name() const;
+					virtual int get_native_output_size() const {return -1;}
+				};
+				class ReinterpretAs8 : public Transform8 {
+					Uint8 *buffer;//don't feel like requiring a header for TestBlock
+					int index;
+					void refill();
+				public:
+					ReinterpretAs8( vRNG *rng );
+					~ReinterpretAs8();
+					Uint8 raw8();
+					std::string get_name() const;
+				};
+				class ReinterpretAs16 : public Transform16 {
+					Uint16 *buffer;
+					int index;
+					void refill();
+				public:
+					ReinterpretAs16( vRNG *rng );
+					~ReinterpretAs16();
+					Uint16 raw16();
+					std::string get_name() const;
+				};
+				class ReinterpretAs32 : public Transform32 {
+					Uint32 *buffer;
+					int index;
+					void refill();
+				public:
+					ReinterpretAs32( vRNG *rng );
+					~ReinterpretAs32();
+					Uint32 raw32();
+					std::string get_name() const;
+				};
+				class ReinterpretAs64 : public Transform64 {
+					Uint64 *buffer;
+					int index;
+					void refill();
+				public:
+					ReinterpretAs64( vRNG *rng );
+					~ReinterpretAs64();
+					Uint64 raw64();
+					std::string get_name() const;
+				};
 
 				class BaysDurhamShuffle64 : public Transform64 {
 					Uint64 table[256];

@@ -126,7 +126,7 @@ following forms:
 * normal p-value (e.g. "p = 0.188") - exactly what you'd expect
 * p-value near zero (e.g. "p = 2.3e-4") - scientific notation in 
 a fairly standard form.  Note however that the exponent can reach 
-extreme values (up to 999) that do not fit in normal floating 
+extreme values (up to 9999) that do not fit in normal floating 
 point formats.  
 * p-value near one (e.g. "p =1-2.7e-3") - one minus a number in 
 scientific notation.  This format is a little less standard but 
@@ -140,7 +140,7 @@ may get rounded to one.
 distinguished from normal p-values by the "~" between the "p" and 
 the "=" in the Processed results column of RNG_test output.  The 
 current version should never produce these, but past and future 
-versions did and will.  Such results are usually shown with fewer 
+versions did and will.  Such results may be shown with fewer 
 significant digits displayed than normal p-values.  
 * "pass" or "fail" in place of a p-value - Some subtests can't 
 produce p-values.  If you must have a p-value, assume that "pass" 
@@ -149,7 +149,7 @@ while "fail" corresponds to a p-value of exactly zero.  Generally
 PractRand subtests that produce this kind of output are very 
 boring tests that never fail any but the most absurdly extreme 
 RNGs (things like RNGs that produce only zeroes).  These results 
-are necessary because normal subtests results cannot be 
+are necessary because some normal subtests results cannot be 
 calculated at all under such absurd circumstances, but the test 
 still needs some way to report those circumstances occuring.  
 An example results chart showing one of each category of result:

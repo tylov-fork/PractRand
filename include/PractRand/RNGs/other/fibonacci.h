@@ -57,7 +57,7 @@ namespace PractRand {
 				//proposed by Marsaglia
 				class mwc4691 : public vRNG32 {
 					Uint32 cbuf[4691];
-					int index, carry;
+					unsigned int index, carry;
 				public:
 					Uint32 raw32();
 					std::string get_name() const;

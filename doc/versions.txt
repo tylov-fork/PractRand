@@ -1,7 +1,23 @@
+version 0.90
+	other
+		accidentally had some debugging code enabled in 0.89 and 0.88 that was breaking autoseeding, fixed
+		had some header file case sensitivity issues
+			fixed them, revised testing methodology to fix the issue that prevented me from noticing them
+		added reinterpret-as RNG transforms
+			to act as if the RNGs data was being piped around and reinterpretted at a different size
+	RNGs
+		efiix
+			revised seeding algorithm slightly
+		various RNGs
+			added additional seeding options
+	tools
+		fixed a few bugs in RNG_output (and in the non-recommended RNGs)
 version 0.89
 	RNGs:
 		chacha:
 			disabled SIMD path, as alignment was not correct on dynamic allocations (isn't that counter to the spec?)
+		salsa:
+			added Salsa20, a predecessor to ChaCha
 	tools:
 		RNG_test:
 			added -tlfail / -tlmaxonly command line options
@@ -20,7 +36,7 @@ version 0.87
 		chacha
 			added new RNG: chacha
 			this is a single 32 bit RNG with a variable quality setting, despite the naming convention
-			cryptographically security, random access, and fast seeding
+			cryptographic security, random access, and fast seeding
 		jsf16 / jsf32 / jsf64
 			very very minor tweak to jsf32 initialization
 			removed jsf16 - with improvements in sfc16 it was no longer competitive

@@ -14,12 +14,12 @@
 #include "PractRand/tests.h"
 #include "PractRand/test_helpers.h"
 #include "PractRand/test_batteries.h"
-#include "PractRand/tests/gap16.h"
-#include "PractRand/tests/DistC6.h"
-#include "PractRand/tests/BCFN.h"
-#include "PractRand/tests/FPF.h"
-#include "PractRand/tests/CoupGap.h"
-#include "PractRand/tests/transforms.h"
+#include "PractRand/Tests/Gap16.h"
+#include "PractRand/Tests/DistC6.h"
+#include "PractRand/Tests/BCFN.h"
+#include "PractRand/Tests/FPF.h"
+#include "PractRand/Tests/CoupGap.h"
+#include "PractRand/Tests/transforms.h"
 
 
 namespace PractRand {
@@ -41,7 +41,9 @@ namespace PractRand {
 				Tests::ListOfTests l = base_tests();
 				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 0, 0));
 				//l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 1, 1));
-				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 2, 2));
+				Tests::ListOfTests sub4of32 = base_tests();
+				sub4of32.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 0, -1));
+				l.tests.push_back(new Tests::Transforms::lowbits(NULL, sub4of32, 2, 2));
 				return l;
 			}
 			static Tests::ListOfTests standard_foldings8(ListOfTests (*base_tests)()) {

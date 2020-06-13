@@ -17,12 +17,12 @@
 #include "PractRand/rng_internals.h"
 #include "PractRand/test_helpers.h"
 #include "PractRand/test_batteries.h"
-#include "PractRand/tests/gap16.h"
-#include "PractRand/tests/DistC6.h"
-#include "PractRand/tests/BCFN.h"
-#include "PractRand/tests/FPF.h"
-#include "PractRand/tests/CoupGap.h"
-#include "PractRand/tests/transforms.h"
+#include "PractRand/Tests/Gap16.h"
+#include "PractRand/Tests/DistC6.h"
+#include "PractRand/Tests/BCFN.h"
+#include "PractRand/Tests/FPF.h"
+#include "PractRand/Tests/CoupGap.h"
+#include "PractRand/Tests/transforms.h"
 
 using namespace PractRand;
 

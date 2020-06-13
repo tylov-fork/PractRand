@@ -186,6 +186,13 @@ namespace RNG_Factories {
 		return PractRand::RNGs::Polymorphic::NotRecommended::apply_BaysDurhamShuffle(rng, L2, shift);
 	}
 	template<class RNG>
+	PractRand::RNGs::vRNG *_generic_single_parameter_transform_RNG_factory(std::vector<std::string> &params) {
+		if (params.size() != 1) return NULL;
+		PractRand::RNGs::vRNG *rng = create_rng(params[0]);
+		if (!rng) return NULL;
+		return new RNG(rng);
+	}
+	template<class RNG>
 	PractRand::RNGs::vRNG *_generic_single_parameter_RNG_factory(std::vector<std::string> &params) {
 		if (params.size() != 1) return NULL;
 		return new RNG(atoi(params[0].c_str()));
@@ -237,10 +244,13 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(xorshift32_16)
 		REGISTER_RNG_0(xorshift64_32)
 		REGISTER_RNG_0(xorshift32x4)
+		REGISTER_RNG_0(xorwow96_32)
+		REGISTER_RNG_0(xorwow32x6)
 		REGISTER_RNG_0(sapparot)
 		REGISTER_RNG_0(sap48_16)
 		REGISTER_RNG_0(sap96_32)
 		REGISTER_RNG_0(flea32x1)
+		REGISTER_RNG_0(jsf16)
 		REGISTER_RNG_0(sfc_v1_16)
 		REGISTER_RNG_0(sfc_v1_32)
 		REGISTER_RNG_0(sfc_v2_16)
@@ -300,8 +310,10 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(dual_cbuf_accum)
 		REGISTER_RNG_0(ranrot32)
 		REGISTER_RNG_0(fibmul32_16)
+		REGISTER_RNG_0(fibmul64_32)
 		REGISTER_RNG_0(ranrot32)
 		REGISTER_RNG_0(ranrot3tap32)
+		REGISTER_RNG_0(mt19937_unhashed)
 
 		// include/PractRand/RNGs/other/indirection.h
 		REGISTER_RNG_0(rc4)
@@ -314,6 +326,11 @@ namespace RNG_Factories {
 		// include/PractRand/RNGs/other/transform.h
 		RNG_Factories::RNG_factory_index["BDS"] = BDS_factory;
 		RNG_Factories::RNG_factory_index["SShrink"] = SelfShrink_factory;
+		RNG_Factories::RNG_factory_index["AsUnknown"] = _generic_single_parameter_transform_RNG_factory<PractRand::RNGs::Polymorphic::NotRecommended::ReinterpretAsUnknown>;
+		RNG_Factories::RNG_factory_index["As8" ] = _generic_single_parameter_transform_RNG_factory<PractRand::RNGs::Polymorphic::NotRecommended::ReinterpretAs8>;
+		RNG_Factories::RNG_factory_index["As16"] = _generic_single_parameter_transform_RNG_factory<PractRand::RNGs::Polymorphic::NotRecommended::ReinterpretAs16>;
+		RNG_Factories::RNG_factory_index["As32"] = _generic_single_parameter_transform_RNG_factory<PractRand::RNGs::Polymorphic::NotRecommended::ReinterpretAs32>;
+		RNG_Factories::RNG_factory_index["As64"] = _generic_single_parameter_transform_RNG_factory<PractRand::RNGs::Polymorphic::NotRecommended::ReinterpretAs64>;
 #undef REGISTER_RNG_0
 #undef REGISTER_RNG_1
 	}

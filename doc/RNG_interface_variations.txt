@@ -37,7 +37,7 @@ of metadata, and optionally anything else specific to the algorithm (custom
 seeding methods, etc).  But they do not provide a nice interface, just a 
 small subset of the normal PractRand RNG interface.  
 Normally users will not use raw RNGs directly.  However, it is possible if 
-you desire to do so for some reason.  Raw RNGs are declared in the 
+you desire to do so for some reason.  Raw RNGs are in the 
 PractRand::RNGs::Raw namespace.  
 
 4. Entropy-accumulating RNGs:
@@ -46,7 +46,7 @@ then they are seeded.  Entropy-accumulating RNGs, called "entropy pools" in
 PractRand, have the ability to support more complex seeding practices.  The 
 special characteristics of an entropy pool are:
 A. Entropy Pools in PractRand all have default constructors.  The default 
-constructors effectively seed them to a single specific state.  
+constructors effectively seed them to a specific predefined state.  
 B. Entropy Pools in PractRand have a set of methods of the form 
 add_entropy*.  These include add_entropy8, add_entropy16, add_entropy32, 
 add_entropy64, add_entropy_N, and, on polymorphic Entropy Pools, 

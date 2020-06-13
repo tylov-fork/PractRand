@@ -188,7 +188,11 @@ namespace PractRand {
 				//get_autoseed_entropy(&seeder, target);
 				Uint32 seed_and_iv[10];
 				get_autoseed_fixed_entropy((Uint64*)&seed_and_iv[0], &seeder);
+
+				//I would prefer ChaCha, but the license is not 100% clear atm
+				//PractRand::RNGs::Polymorphic::chacha bootstrap(seed_and_iv, false);
 				PractRand::RNGs::Polymorphic::salsa bootstrap(seed_and_iv, false);
+
 				std::memset(seed_and_iv, 0, sizeof(seed_and_iv));
 				seeder.seed(bootstrap.raw64(), bootstrap.raw64(), bootstrap.raw64(), bootstrap.raw64());
 			}

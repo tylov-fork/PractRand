@@ -66,6 +66,9 @@
     <ClCompile Include="..\src\RNGs\chacha.cpp">
       <Filter>Source Files\RNGs</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\RNGs\salsa.cpp">
+      <Filter>Source Files\RNGs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\PractRand\config.h">
@@ -150,6 +153,9 @@
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
     <ClInclude Include="..\include\PractRand\RNGs\chacha.h">
+      <Filter>Header Files\RNGs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PractRand\RNGs\salsa.h">
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
   </ItemGroup>

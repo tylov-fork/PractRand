@@ -25,10 +25,10 @@ static Uint64 shift_array64( Uint64 vec[2], unsigned long bits ) {
 //raw:
 PractRand::RNGs::Raw::trivium::~trivium() {std::memset(this, 0, sizeof(this));}
 Uint64 PractRand::RNGs::Raw::trivium::raw64() {//LOCKED, do not change
-	Uint64 tmp_a = shift_array64(c, 66) ^ shift_array64(c, 111);
+	Uint64 tmp_a = shift_array64(c, 66) ^ shift_array64(c,111);
 	Uint64 tmp_b = shift_array64(a, 66) ^ shift_array64(a, 93);
 	Uint64 tmp_c = shift_array64(b, 69) ^ shift_array64(b, 84);
-	Uint64 new_a = tmp_a ^ shift_array64(a, 69) ^ (shift_array64(c, 110) & shift_array64(c, 109));
+	Uint64 new_a = tmp_a ^ shift_array64(a, 69) ^ (shift_array64(c,110) & shift_array64(c,109));
 	Uint64 new_b = tmp_b ^ shift_array64(b, 78) ^ (shift_array64(a, 92) & shift_array64(a, 91));
 	Uint64 new_c = tmp_c ^ shift_array64(c, 87) ^ (shift_array64(b, 83) & shift_array64(b, 82));
 	a[1] = a[0]; a[0] = new_a;
@@ -38,6 +38,7 @@ Uint64 PractRand::RNGs::Raw::trivium::raw64() {//LOCKED, do not change
 	return tmp_a ^ tmp_b ^ tmp_c;
 }
 void PractRand::RNGs::Raw::trivium::seed(Uint64 s) {//LOCKED, do not change
+	//Triviums standard seeding algorithm adapted to PractRand interface
 	Uint8 vec[8];
 	for (int i = 0; i < 8; i++) {
 		vec[i] = Uint8(s); 
@@ -45,7 +46,16 @@ void PractRand::RNGs::Raw::trivium::seed(Uint64 s) {//LOCKED, do not change
 	}
 	seed(vec, 8);
 }
-void PractRand::RNGs::Raw::trivium::seed(const Uint8 *seed_and_iv, int length) {//custom seeding
+void PractRand::RNGs::Raw::trivium::seed_fast(Uint64 s1, Uint64 s2, int quality) {//LOCKED, do not change
+	//a non-standard simplified 128-bit seeding algorithm
+	a[0] = s1; a[1] = 0;
+	b[0] = s2; b[1] = 0;
+	c[0] = 0;
+	c[1] = Uint64(7) << (128-111);
+	for (int i = 0; i < quality; i++) raw64();
+}
+void PractRand::RNGs::Raw::trivium::seed(const Uint8 *seed_and_iv, int length) {//LOCKED, do not change
+	//standard algorithm for Trivium, not a good match for PractRand
 	if (length > 20) issue_error("trivium seeded with invalid length");
 
 	union SeedVec{
@@ -58,10 +68,6 @@ void PractRand::RNGs::Raw::trivium::seed(const Uint8 *seed_and_iv, int length) {
 	for (int i = 0; i < elen; i++) s.as8[i+6] = seed_and_iv[i];
 	for (int i = elen; i < 10; i++) s.as8[i+6] = 0;
 	for (int i = 0; i < 2; i++) this->a[i] = little_endian_conversion64(s.as64[1-i]);
-//	a[1] = 0x0080000000000000;
-//	a[0] = 0x0000000000000000;
-//	a[1] = 0;
-//	a[0] = 0x8000000000000000;
 
 	length -= 10;
 	seed_and_iv += 10;
@@ -70,12 +76,10 @@ void PractRand::RNGs::Raw::trivium::seed(const Uint8 *seed_and_iv, int length) {
 	for (int i = 0; i < 16-length; i++) iv.as8[i] = 0;
 	for (int i = 16-length; i < 16; i++) iv.as8[i] = seed_and_iv[i-(16-length)];
 	for (int i = 0; i < 2; i++) this->b[i] = little_endian_conversion64(iv.as64[1-i]);
-	//         hlhlhlhlhlhlhlhl
-	//b[1] = 0x0000000000000000;
-	//b[0] = 0x1000000000000000;
-	//         hlhlhlhlhlhlhlhl
+
 	c[0] = 0;
 	c[1] = Uint64(7) << (128-111);
+
 	//for (int i = 0; i < 1152; i+=1) raw1();
 	for (int i = 0; i < 18; i++) raw64();
 	/*
@@ -84,6 +88,7 @@ void PractRand::RNGs::Raw::trivium::seed(const Uint8 *seed_and_iv, int length) {
 			5 - 15
 			6 - 25
 			7 - 30
+			8 - 
 	*/
 }
 void PractRand::RNGs::Raw::trivium::walk_state(StateWalkingObject *walker) {

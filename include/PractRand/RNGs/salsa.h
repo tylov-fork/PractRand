@@ -16,7 +16,7 @@ namespace PractRand {
 				Uint32 position_overflow;
 				Uint8 rounds;
 				bool extend_cycle;//true allows carries from the position field to overflow in to the upper word of the IV
-				Uint8 padding[2];//just to make the size a round number
+				Uint8 padding[1];//just to make the size a round number
 
 				void _advance_1();
 				//void _reverse_1();

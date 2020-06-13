@@ -49,9 +49,11 @@ PractRand::RNGs::Polymorphic::hc256 known_good(PractRand::SEED_AUTO);
 
 
 /*
-A minimal RNG implementation, just enough to make is usable.  
+A minimal RNG implementation, just enough to make it usable.  
 Deliberately flawed, though still better than most platforms default RNGs
 */
+
+#include "PractRand/endian.h"
 class Raw_DummyRNG {
 public:
 	enum {
@@ -60,14 +62,12 @@ public:
 		FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING
 	};
 	//RNG state goes here:
-
-
 	Uint32 a, b, c;
 	Uint32 raw32() {//RNG algorithm goes here:
-		Uint32 old = a + (c >> 0);
+		Uint32 old = a + (b >> 25);
 		a = b ^ c;
 		b = c;
-		c = old + ((c << 13) | (c >> (32-13)));
+		c = old + ((c << 3) | (c >> (32-3)));
 		return old;
 	}
 	void walk_state(StateWalkingObject *walker) {

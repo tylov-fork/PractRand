@@ -67,3 +67,6 @@
 		a command line environment
 		either pthreads or win32 (not actually required, but recommended)
 
+	Exception:
+		Test_calibration is not portable at this time.  
+		It's not ready for use by end users anyway, so that shouldn't matter.  

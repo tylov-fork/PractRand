@@ -4,7 +4,7 @@
 0. Contents of this file
 1. Quick recommendations for which RNGs to use
 2. Quick comparison charts for recommended RNGs
-3. Descriptions of the critera used in sections #1 and #2
+3. Details on the critera used in sections #1 and #2
 4. Longer descriptions of recommended RNGs
 5. Non-recommended RNGs ("other" RNGs)
 6. Naming conventions for RNGs in PractRand
@@ -41,9 +41,7 @@ The following RNGs have the broadest appeal among normal users:
 		seeding, and easily adjustable security vs speed tradeoffs.  
 		Unfortunately while seeding and random access are fast, generating 
 		random numbers with it at any particular setting ends up being slow 
-		relative to other RNGs of comparable security and quality.  Although 
-		it can be a lot faster if implemented in SIMD and used to produce 
-		large blocks of random data at time.  
+		relative to other RNGs of comparable security and quality.  
 	efiix64x384 / efiix32x384 / efiix16x384 / efiix8x384
 		The fastest recommended RNG that qualified for a "future-proof" five  
 		star quality rating.  Also the fastest RNG to offer any degree of 
@@ -101,8 +99,8 @@ performance penalty, but is otherwise fine.
 * Some RNGs allow a user to skip forwards or backwards arbitrarily far in 
 the output stream efficiently.  The following RNGs support that:
 Engine          quality speed  size        word      other
-xsm32           2**     4****  16 bytes    32 bit    
-xsm64           3***    4****  32 bytes    64 bit    
+xsm32           2**     4****  16 bytes    32 bit    -
+xsm64           3***    4****  32 bytes    64 bit    -
 chacha(8)       5*****  1*     124 bytes   32 bit    crypto
 chacha(12)      5*****  1*     124 bytes   32 bit    crypto
 chacha(20)      5*****  0      124 bytes   32 bit    crypto
@@ -114,28 +112,28 @@ salsa(20)       5*****  0      140 bytes   32 bit    crypto
 information in an irregular or exotic format to serve as a seed or key.  The 
 following RNGs are recommended for that purpose:
 Engine          quality speed  size        word     other
-arbee           4****   4****  40 bytes    64 bit*  
+arbee           4****   4****  40 bytes    64 bit*  -
 sha2_based_pool 5*****  0      302 bytes   8/64*    crypto
 
 * Some RNGs are cryptographically secure, making it extraordinarily difficult 
-for someone to figure out their seed (aka key) from examining their output.  
-The following RNGs are recommended for that purpose:
+for someone to figure out their seed (aka key) or state from examining their 
+output.  The following RNGs are recommended for that purpose:
 Engine          quality speed  size        word     crypto   other
-trivium         5*****  1*     48 bytes    64 bit   2**      
-chacha(8)       5*****  1*     124 bytes   32 bit   2**      random access
+trivium         5*****  1*     48 bytes    64 bit   2**      -
+chacha(8)       5*****  1*     124 bytes   32 bit   1*       random access
 chacha(12)      5*****  1*     124 bytes   32 bit   3***     random access
 chacha(20)      5*****  0      124 bytes   32 bit   4****    random access
 salsa(8)        4****   1*     140 bytes   32 bit   1*       random access
 salsa(12)       5*****  0      140 bytes   32 bit   3***     random access
 salsa(20)       5*****  0      140 bytes   32 bit   4****    random access
 sha2_based_pool 5*****  0      302 bytes   8/64 *   3***     entropy pooling
-efiix8x384      5*****  3***   388 bytes   8 bit    1*		 
-efiix16x384     5*****  3***   776 bytes   16 bit   1*       
-efiix32x384     5*****  3***   1552 bytes  32 bit   2**      
-efiix64x384     5*****  3***   3104 bytes  64 bit   2**      
-isaac32x256     5*****  2**    2064 bytes  32 bit   2**      
-isaac64x256     5*****  2**    4128 bytes  64 bit   2**      
-hc256           5*****  2**    8580 bytes  32 bit   5*****   
+efiix8x384      5*****  3***   388 bytes   8 bit    0        -
+efiix16x384     5*****  3***   776 bytes   16 bit   1*       -
+efiix32x384     5*****  3***   1552 bytes  32 bit   1*       -
+efiix64x384     5*****  3***   3104 bytes  64 bit   1*       -
+isaac32x256     5*****  2**    2064 bytes  32 bit   2**      -
+isaac64x256     5*****  2**    4128 bytes  64 bit   2**      -
+hc256           5*****  2**    8580 bytes  32 bit   5*****   -
 
 Non-standard limitations may apply on some low-end, embedded, or exotic hardware 
 to what sort of RNG algorithms you can use in a cost-effective manner.  
@@ -187,10 +185,11 @@ they should stabilize by the time PractRand approaches version 1.0.
 
 
 *****************************************************************************
-3. Descriptions of the critera used in sections #1 and #2
+3. Details on the critera used in sections #1 and #2
 *****************************************************************************
 
 The categories they are rated in on the quick comparison charts include:
+
 quality: (rated from 0 to 5 stars)
 	Broadly:
 		1 star  - good enough for typical apps & games
@@ -202,7 +201,7 @@ quality: (rated from 0 to 5 stars)
 	An RNGs quality score is determined as the LOWEST of several subscores.  
 	The subscores are performance on statistical tests, cycle length, 
 	statespace, and how much I trust the algorithm.  More specifically...
-	empirical testing:
+	Empirical Testing:
 		1 star - must pass 1 GB of PractRand standard
 			also, must pass TestU01 SmallCrush
 		2 star - must pass 16 GB of PractRand standard
@@ -212,7 +211,7 @@ quality: (rated from 0 to 5 stars)
 		4 star - must pass 1 TB of PractRand standard
 			also, must pass TestU01 Crush & BigCrush
 		5 star - must not have any known failures on general tests
-	cycle length (aka period):
+	Cycle Length (aka period):
 		1 star - minimum cycle length of at least 2**40 or
 			average cycle length of at least 2**45
 		2 star - minimum cycle length of at least 2**52 or
@@ -223,13 +222,14 @@ quality: (rated from 0 to 5 stars)
 			average cycle length of at least 2**104
 		5 star - minimum cycle length of at least 2**80 or
 			average cycle length of at least 2**160
-	statespace:
+	Statespace:
 		1 star - statespace of at least 2**40
 		2 star - statespace of at least 2**60
 		3 star - statespace of at least 2**90
 		4 star - statespace of at least 2**150
 		5 star - statespace of at least 2**240
-	trusted (aka how trustworthy I think they are, aka my analysis):
+		Note that this is closely related to cycle length.  
+	Trusted (aka how trustworthy I think they are, aka my analysis):
 		1 star - not TOO horribly broken
 		2 star - probably adequate
 		3 star - mostly trustworthy
@@ -241,7 +241,7 @@ quality: (rated from 0 to 5 stars)
 		name                  overall    empirical  cycle    states  trusted
 		jsf32                 3          5          4        3       3
 		jsf64                 3          5          5        5       3
-		sfc16                 2          5          2        2       2.5
+		sfc16                 2          5          2        2       2
 		sfc32                 3          5          4        3       3
 		sfc64                 3          5          5        5       3
 		xsm32                 2.5        5          4        3       2.5
@@ -281,11 +281,11 @@ quality: (rated from 0 to 5 stars)
 			cycle: 5 - avg ~ 2**319 (min >= 2**64), future-proof
 			states: 5 - 2**320, future-proof
 			trust: 4 - better mixed & slightly larger than jsf64, fewer ways I could have missed a flaw
-		sfc16 (v4)            2          5          2        2       2.5
+		sfc16 (v4)            2          5          2        2       2
 			empirical: 5 - passed all tests
 			cycle: 2 - avg ~ 2**63 (min >=2**16), marginal for some uses
 			states: 2 - 2**64, marginal for some uses today
-			trust: 2.5 - apparent pretty decent, but I'm suspicious of it anyway
+			trust: 2 - apparent pretty decent, but I'm suspicious of it anyway
 		sfc32 (v4)            3          5          4        3       3
 			empirical: 5 - passed all tests
 			cycle: 4 - avg ~ 2**127 (min >=2**32), good enough for today but not future-proof
@@ -314,7 +314,7 @@ quality: (rated from 0 to 5 stars)
 			cycle: 5 - exactly 2**19937-1, way beyond future-proof
 			states: 5 - exactly 2**19937-1, way beyond future-proof
 			trust: 2.5 - the hashing & size seem to be sufficient to handle its 
-				underlieing problems well enough for almost any user
+				underlieing problems well enough for almost any use
 		hc256                 5          5          5        5       5
 			empirical: 5 - passes all known tests, even those normally not counted
 			cycle: 5 - average cycle is way beyond future-proof
@@ -351,7 +351,7 @@ quality: (rated from 0 to 5 stars)
 		sfc32 (v3)            2          5          3        3       2
 		sfc64 (v3)            2          5          5        4       2
 		lcg64_32              0          1          0/4      0/2     1
-		clcg96_32             2.5        4          4/5      2/3     2.5
+		clcg96_32             2          4          4/5      2/3     2
 	quality subscores for some non-PractRand RNG examples:
 		name                  overall    empirical  cycle    states  trusted
 		typical libc rand     0          0          0        0       0
@@ -513,12 +513,6 @@ crypto security
 	needed to figure out the internal state, the better.  The more people 
 	who have analyzed an RNGs security, the better.  The more self-evident 
 	or provable the security, the better.  
-	Broadly:
-	1 star:  Probably a little bit difficult to crack.  
-	2 stars: Probably difficult to crack.  
-	3 stars: Probably impossible to crack for the forseeable future.  
-	4 stars: Almost certainly impossible to crack for the forseeable future.  
-	5 stars: Impossible to crack for the forseeable future.  
 
 multi-cyclic
 	Multicyclic RNGs have statespaces greater than their minimum cycle 

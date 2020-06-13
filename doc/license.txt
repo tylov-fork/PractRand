@@ -50,7 +50,7 @@ patents covering any part of them:
 	yet.  If the IP situation is important to you, use Salsa instead 
 	just in case.  They have identical interfaces and features so that 
 	should be no issue.  
-	The implementations included are my own.  
+	The implementation included is my own.  
 
 The "NotRecommended" / "other" RNGs included in the full version... are 
 more numerous and less important - they are intended for comparison 

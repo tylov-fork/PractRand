@@ -183,6 +183,7 @@ void PractRand::RNGs::Raw::hc256::seed(Uint32 key_and_iv[16]) {//LOCKED, do not 
 	for (i = 0; i < 16; i++) Q[i] = Q[i+16];
 	for (i = 16; i < 1024;i++)
 		Q[i] = f(Q[i-2],Q[i-7],Q[i-15],Q[i-16])+1536+i;
+
 	//run the cipher 4096 steps without generating output
 	for (i = 0; i < 2; i++) {
 		for (j = 0; j < 10; j++)

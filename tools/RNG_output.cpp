@@ -19,7 +19,7 @@
 //  practical usage and research... 
 //  EXCEPT it does not include specific algorithms
 //  also it does not include PractRand/RNG_adaptors.h as that includes lots of templated stuff
-#include "PractRand_Full.h"
+#include "PractRand_full.h"
 //the full version is needed because non-recommended RNGs are supported
 
 //specific RNG algorithms, to produce (pseudo-)random numbers
@@ -61,6 +61,9 @@ void print_usage(const char *program_name) {
 	std::cout << "prints 16 bytes using the jsf32 RNG with a randomly chosen seed\n";
 	exit(0);
 }
+
+
+
 int main(int argc, char **argv) {
 #ifdef WIN32
 	_setmode( _fileno(stdout), _O_BINARY); // needed to allow binary stdout on windows
@@ -72,14 +75,8 @@ int main(int argc, char **argv) {
 	RNG_Factories::register_nonrecommended_RNGs();
 	RNGs::vRNG *rng = RNG_Factories::create_rng(argv[1]);
 
-	if (argc == 3) rng->autoseed();
-	else {
-		Uint64 seed;
-		if (!interpret_seed(argv[3],seed)) {std::printf("\"%s\" is not a valid 64 bit hexadecimal seed\n", argv[3]); std::exit(0);}
-		rng->seed(seed);
-	}
-
 	if (!rng) {std::printf("unrecognized RNG name\n"); print_usage(argv[0]);}
+
 	double _n = atof(argv[2]);//should be atol, but on 32 bit systems that's too limited
 	if (_n <= 0) {
 		if (!strcmp(argv[2], "name")) {
@@ -88,6 +85,14 @@ int main(int argc, char **argv) {
 		}
 		std::printf("invalid number of output bytes\n"); print_usage(argv[0]);
 	}
+
+	if (argc == 3) rng->autoseed();
+	else {
+		Uint64 seed;
+		if (!interpret_seed(argv[3],seed)) {std::printf("\"%s\" is not a valid 64 bit hexadecimal seed\n", argv[3]); std::exit(0);}
+		rng->seed(seed);
+	}
+
 	Uint64 n = Uint64(_n);
 	Uint64 buffer[64];
 	while (n) {

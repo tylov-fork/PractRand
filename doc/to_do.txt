@@ -1,9 +1,11 @@
-post-0.88:
+post-0.90:
 	high priority items
 		review serialization & seeding interface
+		add regression tests for more RNGs
 	add more self-tests, regression tests, etc
 		checks that serialization works correctly
 		add self-test to SHA2-512 implementation (why isn't there one there already?)
+		add regression tests for a wider variety of recommended RNGs
 	review / reorganize header files
 		some headers protect against multiple inclusion, some don't
 		some headers protect against inclusion prior to dependencies, some don't
@@ -50,7 +52,7 @@ post-0.88:
 		should unseeded RNGs require explicit SEED_NONE flag?
 		change return type of RNG::get_name to something that doesn't require STL (ie write to buffer)?
 		should split add_entropy* methods off from vRNG in to a new child class?
-*		serialization interface needs more work & thought I think
+		serialization interface needs more work & thought I think
 			same for seeding of non-polymorphic RNGs
 		???
 	review and add to documentation
