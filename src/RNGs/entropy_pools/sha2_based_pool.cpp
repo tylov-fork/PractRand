@@ -74,6 +74,7 @@ void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::walk_state(Sta
 void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::empty_input_buffer() {
 	if (input_buffer_left == INPUT_BUFFER_SIZE) return;
 	state_phase++;
+	if (state_phase >= STATE_SIZE) state_phase -= STATE_SIZE;
 	PractRand::Crypto::SHA2_512 sha2;
 	sha2.handle_input(&state[0], STATE_SIZE);
 	sha2.handle_input(

@@ -1,3 +1,28 @@
+version 0.84
+	RNGs:
+		tweaked existing recommended RNGs:
+			jsf32 - made more conformant to Robert Jenkins code
+			jsf16 -	adjusted constants in jsf16 to improve avalanche properties
+			hc256 - fixed two bugs in hc256::walk_state (could cause autoseeding to crash)
+		added new recommended RNG:
+			sfc16 / sfc32 / sfc64:
+				relatively low quality, but very fast and small
+				uses only addition, xor, shift, and barrel-shift
+				state size is only 3 words
+		removed existing recommended RNG:
+			mwlac32 / mwlac64:
+				Redundant when compared to jsf32/jsf64 to justify inclusion.  
+		added new section to full version: "NonRecommended" aka "other"
+			these are RNGs that are not recommended for normal usage
+			they are intended for evaluating test effectiveness only
+			they offer polymorphic implementations only, no raw implementations
+	documentation:
+		added test results for some RNGs
+	example program:
+		changed how results are displayed
+	tests:
+		added new transform: "switching"
+
 version 0.83
 	fixed issues with randi_fast methods
 		missing symbol for one version, lack of return statement for another

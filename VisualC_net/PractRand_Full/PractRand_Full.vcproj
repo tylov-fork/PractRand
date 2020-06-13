@@ -106,7 +106,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				WholeProgramOptimization="false"
+				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="../../include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
@@ -208,6 +208,10 @@
 					RelativePath="..\..\src\RNGs\mwlac.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\..\src\RNGs\sfc.cpp"
+					>
+				</File>
 				<Filter
 					Name="entropy_pools"
 					>
@@ -221,6 +225,30 @@
 					</File>
 					<File
 						RelativePath="..\..\src\RNGs\entropy_pools\sha2_based_pool.cpp"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="other"
+					>
+					<File
+						RelativePath="..\..\src\RNGs\other\fibonacci.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\src\RNGs\other\indirection.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\src\RNGs\other\mult.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\src\RNGs\other\simple.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\src\RNGs\other\transform.cpp"
 						>
 					</File>
 				</Filter>
@@ -335,11 +363,27 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\include\PractRand\RNGs\mwlac16.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\include\PractRand\RNGs\mwlac32.h"
 					>
 				</File>
 				<File
 					RelativePath="..\..\include\PractRand\RNGs\mwlac64.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\include\PractRand\RNGs\sfc16.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\include\PractRand\RNGs\sfc32.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\include\PractRand\RNGs\sfc64.h"
 					>
 				</File>
 				<Filter
@@ -367,6 +411,34 @@
 					</File>
 					<File
 						RelativePath="..\..\include\PractRand\RNGs\inline\jsf32.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="other"
+					>
+					<File
+						RelativePath="..\..\include\PractRand\RNGs\other\fibonacci.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\include\PractRand\RNGs\other\indirection.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\include\PractRand\RNGs\other\mult.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\include\PractRand\RNGs\other\simple.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\include\PractRand\RNGs\other\special.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\include\PractRand\RNGs\other\transform.h"
 						>
 					</File>
 				</Filter>
@@ -455,6 +527,10 @@
 			</File>
 			<File
 				RelativePath="..\..\doc\Tests_overview.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\..\doc\Tests_results.txt"
 				>
 			</File>
 			<File

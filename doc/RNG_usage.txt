@@ -8,7 +8,8 @@ See installing.txt
 
 2.  Pick an RNG algorithm.  
 You can look RNG_engines.txt for information about which ones would be 
-best for you.  Or if you don't want to do that, then just use isaac32x256.  
+best for you.  Or if you don't want to do that, then just use 
+isaac32x256.  
 
 3.  Include the PractRand headers needed.  
 If all you're using is an RNG from PractRand then all you need to 
@@ -19,8 +20,8 @@ that you wish to use:
 #include "PractRand/RNGs/isaac32x256.h"
 
 If your program has multiple source files that need to be able 
-to use the RNG then you may to need #include those in each source 
-file, or in one of your own headers.  
+to use the RNG then you may need to #include those in each source 
+file, or inside one of your own headers.  
 
 4.  Decide how you want to seed your RNG.  
 Pseudo-random number generators need to be seeded.  A typical RNG in 
@@ -30,11 +31,10 @@ PractRand can be seeded by any of several methods:
 produce a different sequence on each run of your program.  You give 
 the RNGs constructor a parameter of PractRand::SEED_AUTO and it takes 
 care of the rest.  This is generally easy and effective.  It should 
-even work decently for most multithreaded programs.  It is *NOT* 
-sufficient for cryptographic usage though.  If your RNG has already 
-been constructed and you want to overrides its current state with an 
-automatic seeding then call the autoseed() method (only available on 
-polymorphic RNGs).  
+work for most multithreaded programs.  It is *NOT* sufficient for 
+cryptographic usage though.  If your RNG has already been constructed 
+and you want to overrides its current state with an automatic seeding 
+then call the autoseed() method (only available on polymorphic RNGs).  
 eg PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
 or rng.autoseed();
 
@@ -85,7 +85,7 @@ For a multi-threaded program this is typically done as:
 __thread PractRand::RNGs::Polymorphic::isaac32x256 my_rng( my_seed );
 or like this:
 __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 my_rng( my_seed );
-...depending upon what compiler you are using.  
+...depending upon what compiler you are using and how you intend to use the RNG.  
 
 6.  Get random numbers from your RNG.  
 You can see the full base class for polymorphic RNGs as PractRand::RNGs::vRNG in 
@@ -101,7 +101,8 @@ Uint64 raw64();
 //uniform 32 bit integers
 Uint32 randi(Uint32 max);//uniform random number in [0..max)
 Uint32 randi(Uint32 min, Uint32 max);//uniform random number in [min..max)
-//uniform 32 bit integers, fast but biased
+//uniform 32 bit integers, faster but biased
+//note: avoid using these two on low-end embedded CPUs - they use multiplication internally
 Uint32 randi_fast(Uint32 max);//uniform random number in [0..max), with bias
 Uint32 randi_fast(Uint32 min, Uint32 max);//uniform random number in [min..max), with bias
 //uniform 64 bit integers

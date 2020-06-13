@@ -1,9 +1,11 @@
-I release all of my work on PractRand to the public domain.  
+I, Chris Doty-Humphrey, release all of my work on PractRand to the 
+public domain.  
 
-All statistical tests in PractRand are wholly my own work, and 
-are public domain.  
+All statistical tests in PractRand are wholly my own work, and are 
+public domain.  
 
-All the auxillary code is by myself and thus public domain.  
+All the auxillary code, including the example program, is by myself 
+and thus public domain.  
 
 All of the recommended RNGs are unencumbered:
 	jsf* was designed by Robert Jenkins, and he has released it to 
@@ -14,7 +16,7 @@ All of the recommended RNGs are unencumbered:
 	the public domain.  The implementation is mostly his code with a 
 	little of my own.  
 
-	mwlac* was designed and coded by myself, and is public domain.  
+	sfc* was designed and coded by myself, and is public domain.  
 
 	efiix* was designed and coded by myself, and is public domain.  
 
@@ -34,8 +36,8 @@ All of the recommended RNGs are unencumbered:
 	the public domain.  The implementation is mostly his code with a 
 	little of my own.   
 
-The extra RNGs included in the research package... are more numerous, and 
-less important, since they mostly are not intended to actually ship with 
-any real product.  The code for them was either written by myself or 
-copied from a public location.  
-*extra RNGs not yet included in the research package
+The "NotRecommended" RNGs included in the full version... are more numerous, 
+and less important, since they mostly are not intended to actually ship 
+with any real product.  The code for them was either written by myself or 
+copied from a publicly accessible web page, paper, or book.  
+

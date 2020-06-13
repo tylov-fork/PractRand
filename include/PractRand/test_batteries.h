@@ -25,7 +25,7 @@ namespace PractRand {
 			//recommended tests
 			//recommended data transformations
 			//(which data transforms are recommended is a function of RNG metadata)
-			ListOfTests get_standard_tests(RNGs::vRNG *rng);
+			ListOfTests get_standard_tests(const RNGs::vRNG *rng);
 
 			//recommended tests
 			//no data transformations
@@ -42,7 +42,7 @@ namespace PractRand {
 			//extra tests
 			//recommended data transformations
 			//(which data transforms are recommended is a function of RNG metadata)
-			ListOfTests get_expanded_standard_tests(RNGs::vRNG *rng);
+			ListOfTests get_expanded_standard_tests(const RNGs::vRNG *rng);
 
 			//extra tests
 			//extra data transformations

@@ -1,25 +1,5 @@
 post-0.83:
 (* = high priority)
-	document quality of tests relative to other published test sets
-*		put together chart showing which RNGs fail which tests when
-			add some bad to mediocre RNGs to full version to allow chart to show detail
-				RNGs on list should include various qualities in each category:
-					simple w/o multiplication
-						bin48_16, sapparot, ...
-					simple w/ multiplication
-						lcg32_16, lcg48_16, cmwc, semigarth16, semigarth32, ...
-					cyclic buffer
-						mm, mwc4691, mt19937_unhashed, ...
-					indirection
-						rc4_weakened, ibaa8x4, ibaa16x4, rc4, isaac32x16, ...
-					special
-						icg32_16, ???
-				quality adjustments of various kinds
-					algorithm adapted to a different integer size
-					array size constants in algorithm changed
-					apply a simple shuffle to the algorithms output
-					output xored with a very low quality RNGs output
-					extend period via adding simply varying constants to internal state
 	add self-tests, regression tests, etc
 *		test vectors for MT19937, ISAAC, ISAAC64, HC-256, SHA2-512
 		???
@@ -33,6 +13,10 @@ post-0.83:
 			possibly split it in to two RNGs, one for speed one for security
 		MWLAC
 			some variants offer guarantees of no short cycles, but may be slower and/or lower quality
+			consider SFC:
+				lower quality, but faster
+				does not require multiplication
+				64 bit version has no short cycles
 	RNG testing
 		consider splitting in to a separate library
 			yes, it's already a semi-separate .lib file, but...

@@ -1,4 +1,4 @@
-#include <string.h>	/* memcpy()/memset() or bcopy()/bzero() */
+#include <string.h>
 #include "PractRand/config.h"
 #include "PractRand/endian.h"
 #include "PractRand/sha2.h"

@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand", "PractRand.vcproj", "{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand Console Test (integrated)", "PractRand Console Test (integrated)\PractRand Console Test (integrated).vcproj", "{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5036F8F4-679D-4B76-9465-BE2430AB1CF3} = {5036F8F4-679D-4B76-9465-BE2430AB1CF3}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand_Full", "PractRand_Full\PractRand_Full.vcproj", "{5036F8F4-679D-4B76-9465-BE2430AB1CF3}"
 EndProject

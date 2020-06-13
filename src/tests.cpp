@@ -58,24 +58,26 @@ int PractRand::Tests::count_bits64(Uint64 a) {
 
 void Tests::TestBlock::fill(RNGs::vRNG *rng, unsigned long numblocks) {
 	int b = rng->get_native_output_size();
-	numblocks *= SIZE;
+	unsigned long n = numblocks * SIZE;
 	switch (b) {
 		default:
 		case 8:
-			numblocks >>= 0;
-			for (unsigned long i = 0; i < numblocks; i++) as8[i] = rng->raw8();
+			n >>= 0;
+			for (unsigned long i = 0; i < n; i++) as8[i] = rng->raw8();
 			break;
 		case 16:
-			numblocks >>= 1;
-			for (unsigned long i = 0; i < numblocks; i++) as16[i] = rng->raw16();
+			n >>= 1;
+			for (unsigned long i = 0; i < n; i++) {
+				as16[i] = rng->raw16();
+			}
 			break;
 		case 32:
-			numblocks >>= 2;
-			for (unsigned long i = 0; i < numblocks; i++) as32[i] = rng->raw32();
+			n >>= 2;
+			for (unsigned long i = 0; i < n; i++) as32[i] = rng->raw32();
 			break;
 		case 64:
-			numblocks >>= 3;
-			for (unsigned long i = 0; i < numblocks; i++) as64[i] = rng->raw64();
+			n >>= 3;
+			for (unsigned long i = 0; i < n; i++) as64[i] = rng->raw64();
 			break;
 	}
 }
@@ -1341,10 +1343,12 @@ void PractRand::Tests::CoupGap::test_blocks(TestBlock *data, int numblocks) {
 
 
 PractRand::Tests::Transforms::multiplex::multiplex(const char *name_, const ListOfTests &testlist)
+:
+	subtests(testlist)
 {
-	for (unsigned int i = 0; i < testlist.tests.size(); i++) subtests.push_back(testlist.tests[i]);
+//	for (unsigned int i = 0; i < testlist.tests.size(); i++) subtests.push_back(testlist.tests[i]);
 	if (name_) name = name_;
-	else if (subtests.size() == 1) name = subtests[0]->get_name();
+	else if (subtests.tests.size() == 1) name = subtests.tests[0]->get_name();
 	else {
 		//std::ostringstream str;
 		//str << "{" << int(subtests.size()) << "}";
@@ -1355,24 +1359,24 @@ PractRand::Tests::Transforms::multiplex::multiplex(const char *name_, const List
 }
 
 void PractRand::Tests::Transforms::multiplex::deinit() {
-	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.begin(); it != subtests.end(); it++)
+	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.tests.begin(); it != subtests.tests.end(); it++)
 		(*it)->deinit();
 }
 void PractRand::Tests::Transforms::multiplex::init( RNGs::vRNG *known_good ) {
 	blocks_already = 0;
-	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.begin(); it != subtests.end(); it++)
+	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.tests.begin(); it != subtests.tests.end(); it++)
 		(*it)->init(known_good);
 }
 PractRand::Tests::Transforms::multiplex::~multiplex ( ) {
-	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.begin(); it != subtests.end(); it++)
+	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.tests.begin(); it != subtests.tests.end(); it++)
 		delete (*it);
-	subtests.clear();
+	subtests.tests.clear();
 }
 std::string PractRand::Tests::Transforms::multiplex::get_name() const {
 	return name.c_str();
 }
 void PractRand::Tests::Transforms::multiplex::test_blocks(TestBlock *data, int numblocks) {
-	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.begin(); it != subtests.end(); it++)
+	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.tests.begin(); it != subtests.tests.end(); it++)
 		(*it)->test_blocks(data, numblocks);
 	blocks_already += numblocks;
 }
@@ -1388,18 +1392,80 @@ double PractRand::Tests::Transforms::multiplex::get_result() {
 	}
 	return sqrt(sum) - subtests.size();*/
 	double highest = 0;
-	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.begin(); it != subtests.end(); it++) {
+	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.tests.begin(); it != subtests.tests.end(); it++) {
 		double r = (*it)->get_result();
 		if (fabs(r) > fabs(highest)) highest = r;
 	}
 	return highest;
 }
-int PractRand::Tests::Transforms::multiplex::get_num_children() const {return subtests.size();}
-Tests::TestBaseclass *PractRand::Tests::Transforms::multiplex::get_child  (int index) const {return subtests[index];}
+int PractRand::Tests::Transforms::multiplex::get_num_children() const {return subtests.tests.size();}
+Tests::TestBaseclass *PractRand::Tests::Transforms::multiplex::get_child  (int index) const {return subtests.tests[index];}
 //std::string PractRand::Tests::Transforms::multiplex::get_child_name  (int index) const {return subtests[index]->get_name();}
 //double      PractRand::Tests::Transforms::multiplex::get_child_result(int index) {return subtests[index]->get_result();}
 
+Uint64 PractRand::Tests::Transforms::multiplex::get_blocks_passed_through(int index) const {
+	return blocks_already;
+}
+Uint64 PractRand::Tests::Transforms::switching::get_blocks_passed_through(int index) const {
+	return blocks_already_per[index];
+}
 
+
+PractRand::Tests::Transforms::switching::switching(
+	const char *name_, 
+	const ListOfTests &testlist, 
+	std::vector<Uint64> lengths_)
+:
+	multiplex(name_, testlist),
+	lengths(lengths_),
+	phase(0),
+	which(0)
+{
+	if (lengths.size() != testlist.tests.size()) issue_error();
+	blocks_already_per.resize(lengths.size());
+	for (int i = 0; i < blocks_already_per.size(); i++)
+		blocks_already_per[i] = 0;
+	total_length = 0;
+	for (int i = 0; i < blocks_already_per.size(); i++) total_length += lengths[i];
+}
+PractRand::Tests::Transforms::switching::switching(
+	const char *name_, 
+	const ListOfTests &testlist, 
+	Uint64 length)
+:
+	multiplex(name_, testlist)
+{
+	lengths.resize(testlist.tests.size());
+	blocks_already_per.resize(lengths.size());
+	for (int i = 0; i < blocks_already_per.size(); i++)
+		lengths[i] = length;
+	total_length = length * blocks_already_per.size();
+}
+void PractRand::Tests::Transforms::switching::init( RNGs::vRNG *known_good ) {
+	for (int i = 0; i < blocks_already_per.size(); i++)
+		blocks_already_per[i] = 0;
+	phase = 0;
+	which = 0;
+	multiplex::init(known_good);
+}
+void PractRand::Tests::Transforms::switching::test_blocks( TestBlock *data, int numblocks_ ) {
+	Uint64 numblocks = numblocks_;
+	if (phase + numblocks < lengths[which]) {
+		phase += numblocks;
+		subtests.tests[which]->test_blocks(data, numblocks_);
+		return;
+	}
+	Uint64 part = lengths[which] - phase;
+	subtests.tests[which]->test_blocks(data, Uint32(part));
+	phase = 0;
+	if (++which == subtests.tests.size()) which = 0;
+	data += part;
+	numblocks_ -= part;
+	test_blocks(data, numblocks_);
+}
+//double PractRand::Tests::Transforms::switching::get_result() {
+//}
+	
 void PractRand::Tests::Transforms::Transform_Baseclass::init( RNGs::vRNG *known_good ) {
 	Transforms::multiplex::init(known_good);
 	leftovers = 0;

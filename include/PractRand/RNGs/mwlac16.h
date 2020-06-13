@@ -2,28 +2,25 @@ namespace PractRand {
 	namespace RNGs {
 		namespace Raw {
 			//implemented in RNGs/mwlac.cpp
-			class mwlac64 {
+			class mwlac16 {
 			public:
 				enum {
 					OUTPUT_TYPE = OUTPUT_TYPES::NORMAL_1,
-					OUTPUT_BITS = 64,
+					OUTPUT_BITS = 16,
 					FLAGS = FLAG::ENDIAN_SAFE | FLAG::USES_MULTIPLICATION
 				};
 			protected:
-				Uint64 a, b, c, counter;
+				Uint16 a, b, c, counter;
 			public:
-				Uint64 raw64();
+				Uint16 raw16();
 				void seed(Uint64 s);
-				void seed(Uint64 seed1, Uint64 seed2, Uint64 seed3, Uint64 seed4) {//custom seeding
-					a = seed1; b = seed2; c = seed3; counter = seed4;
-				}
 				void walk_state(StateWalkingObject *walker);
 			};
 		}
 		
 		namespace Polymorphic {
-			class mwlac64 : public vRNG64 {
-				PRACTRAND__POLYMORPHIC_RNG_BASICS_H(mwlac64)
+			class mwlac16 : public vRNG16 {
+				PRACTRAND__POLYMORPHIC_RNG_BASICS_H(mwlac16)
 				void seed(Uint64 s);
 			};
 		}

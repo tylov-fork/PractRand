@@ -8,7 +8,11 @@
 #include "PractRand/RNGs/efiix16x256.h"
 #include "PractRand/RNGs/efiix32x256.h"
 #include "PractRand/RNGs/efiix64x256.h"
-#include "PractRand/RNGs/jsf64.h"
+
+#include "PractRand/RNGs/entropy_pools/arbee.h"
+typedef PractRand::RNGs::Raw::EntropyPools::arbee SeederRNG;
+//#include "PractRand/RNGs/sfc64.h"
+//typedef PractRand::RNGs::Raw::mwlac64 SeederRNG;
 
 /*
 THIS ALGORITHM IS STILL A WORK-IN-PROGRESS
@@ -52,7 +56,7 @@ Uint8 PractRand::RNGs::Raw::efiix8x256::raw8() {
 	return temp;
 }
 void PractRand::RNGs::Raw::efiix8x256::seed(Uint64 s) {
-	PractRand::RNGs::Raw::jsf64 seeder;
+	SeederRNG seeder;
 	seeder.seed(s);
 	for (unsigned long w=0; w < SIZE; w++) table[w] = Word(seeder.raw64());
 	i = Word(seeder.raw64());
@@ -90,7 +94,7 @@ Uint16 PractRand::RNGs::Raw::efiix16x256::raw16() {
 	return temp;
 }
 void PractRand::RNGs::Raw::efiix16x256::seed(Uint64 s) {
-	PractRand::RNGs::Raw::jsf64 seeder;
+	SeederRNG seeder;
 	seeder.seed(s);
 	for (unsigned long w=0; w < SIZE; w++) table[w] = Word(seeder.raw64());
 	i = Word(seeder.raw64());
@@ -128,7 +132,7 @@ Uint32 PractRand::RNGs::Raw::efiix32x256::raw32() {
 	return temp;
 }
 void PractRand::RNGs::Raw::efiix32x256::seed(Uint64 s) {
-	PractRand::RNGs::Raw::jsf64 seeder;
+	SeederRNG seeder;
 	seeder.seed(s);
 	for (unsigned long w=0; w < SIZE; w++) table[w] = Word(seeder.raw64());
 	i = Word(seeder.raw64());
@@ -166,7 +170,7 @@ Uint64 PractRand::RNGs::Raw::efiix64x256::raw64() {
 	return temp;
 }
 void PractRand::RNGs::Raw::efiix64x256::seed(Uint64 s) {
-	PractRand::RNGs::Raw::jsf64 seeder;
+	SeederRNG seeder;
 	seeder.seed(s);
 	for (unsigned long w=0; w < SIZE; w++) table[w] = Word(seeder.raw64());
 	i = Word(seeder.raw64());

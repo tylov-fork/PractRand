@@ -56,7 +56,7 @@ namespace PractRand {
 				l.tests.push_back(new Tests::Transforms::lowbits(NULL, standard_foldings8(base_tests), 3, 3));
 				return l;
 			}
-			static Tests::ListOfTests apply_standard_foldings( RNGs::vRNG *rng, ListOfTests (*base_tests)() ) {
+			static Tests::ListOfTests apply_standard_foldings( const RNGs::vRNG *rng, ListOfTests (*base_tests)() ) {
 				switch (rng->get_native_output_size()) {
 					case 16: return standard_foldings16(base_tests);
 					case 32: return standard_foldings32(base_tests);
@@ -66,7 +66,7 @@ namespace PractRand {
 						return standard_foldings8(base_tests);
 				}
 			}
-			Tests::ListOfTests get_standard_tests( RNGs::vRNG *rng ) {
+			Tests::ListOfTests get_standard_tests( const RNGs::vRNG *rng ) {
 				return apply_standard_foldings(rng, get_core_tests);
 			}
 			static ListOfTests apply_extended_foldings(ListOfTests (*base_tests)()) {
@@ -100,7 +100,7 @@ namespace PractRand {
 					NULL
 				);
 			}
-			ListOfTests get_expanded_standard_tests(RNGs::vRNG *rng) {
+			ListOfTests get_expanded_standard_tests(const RNGs::vRNG *rng) {
 				return apply_standard_foldings(rng, get_expanded_core_tests);
 			}
 			ListOfTests get_expanded_folded_tests() {

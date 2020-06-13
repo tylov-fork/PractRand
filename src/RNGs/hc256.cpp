@@ -191,15 +191,15 @@ void PractRand::RNGs::Raw::hc256::walk_state(StateWalkingObject *walker) {
 
 	if (!(walker->get_properties() & StateWalkingObject::FLAG_READONLY)) {
 		if (used > OUTPUT_BUFFER_SIZE) used = OUTPUT_BUFFER_SIZE;
-		counter %= 1024 * 2;
+		counter &= 2047 & ~(OUTPUT_BUFFER_SIZE-1);
 		//to do: verify that this is correct
 		if (counter < 1024) {
-			for (unsigned int i = 0; i < 16; i++) X[i] = P[(counter-16+i) % 1024];
+			for (unsigned int i = 0; i < 16; i++) X[i] = P[(counter-16+i) & 1023];
 			for (unsigned int i = 0; i < 16; i++) Y[i] = Q[1024-16+i];
 		}
 		else {
 			for (unsigned int i = 0; i < 16; i++) X[i] = P[1024-16+i];
-			for (unsigned int i = 0; i < 16; i++) Y[i] = Q[(counter-16+i) % 1024];
+			for (unsigned int i = 0; i < 16; i++) Y[i] = Q[(counter-16+i) & 1023];
 		}
 	}
 	if (walker->get_properties() & StateWalkingObject::FLAG_CLUMSY) {

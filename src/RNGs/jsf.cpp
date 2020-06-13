@@ -11,6 +11,16 @@
 
 using namespace PractRand;
 
+//Jenkins small fast RNG
+//excellent:
+// 1. high quality... passes all statistical tests to date
+// 2. fast, much faster than most RNGs
+// 3. no multiplication or fancy stuff, should work well on embeded CPUs
+// 4. fairly small
+//Engine      quality speed   theory  output    word    size        statespace
+//jsf16       3***    4****   0       16 bit    16 bit  8 bytes     2**64-1 multicyclic
+//jsf32       4****   4****   0       32 bit    32 bit  16 bytes    2**128-4 multicyclic
+//jsf64       4****   4****   0       64 bit    64 bit  32 bytes    2**256-1 multicyclic
 
 //polymorphic:
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C64(jsf64)
@@ -29,7 +39,7 @@ Uint32 PractRand::RNGs::Raw::jsf32::raw32() {//LOCKED, do not change
 	b = c + d;
 	c = d + e;
 	d = e + a;
-	return b;
+	return d;
 }
 void PractRand::RNGs::Raw::jsf32::seed(Uint64 s) {//LOCKED, do not change
 	//LOCKED, do not change
@@ -67,7 +77,7 @@ void PractRand::RNGs::Raw::jsf32::walk_state(StateWalkingObject *walker) {
 	walker->handle(d);
 	if (!(walker->get_properties() & StateWalkingObject::FLAG_READONLY) && (d&0x80093300) == 0) {
 		//these block the cycles of length 1
-		//should search for cycles of lengths 2 to 2**64 to block them as well, but that's impractical at this time
+		//should search for cycles of lengths 2 to 2**56 to block them as well, but that's impractical at this time
 		if (!a && !b && !c && !d) a++;
 		if (a==0x77777777 && b==0x55555555 && c==0x11111111 && d==0x44444444 ) d++;
 		if (a==0x5591F2E3 && b==0x69EBA6CD && c==0x2A171E3D && d==0x3FD48890 ) d++;
@@ -81,7 +91,7 @@ Uint64 PractRand::RNGs::Raw::jsf64::raw64() {
 	b = c + d;
 	c = d + e;
 	d = e + a;
-	return b;
+	return d;
 }
 void PractRand::RNGs::Raw::jsf64::seed(Uint64 s) {
 	//LOCKED, do not change
@@ -98,12 +108,12 @@ void PractRand::RNGs::Raw::jsf64::walk_state(StateWalkingObject *walker) {
 	if (!(a|b) && !(c|d)) d = 1;
 }
 Uint16 PractRand::RNGs::Raw::jsf16::raw16() {
-	Uint16 e = a - ((b << 13) | (b >> 3));
-	a = b ^ ((c << 8) | (c >> 8));
+	Uint16 e = a - ((b << 14) | (b >> 2));
+	a = b ^ ((c << 5) | (c >> 11));
 	b = c + d;
 	c = d + e;
 	d = e + a;
-	return b;
+	return d;
 }
 void PractRand::RNGs::Raw::jsf16::seed(Uint64 s) {
 	a = Uint16(s);
@@ -127,7 +137,7 @@ void PractRand::RNGs::Raw::jsf16::walk_state(StateWalkingObject *walker) {
 	b = c + d;
 	c = d + e;
 	d = e + a;
-	return b;
+	return d;
 }
 void PractRand::RNGs::Raw::jsf8::seed(Uint64 s_) {
 	Uint32 s = Uint32(s_) ^ Uint32(s_>>32);

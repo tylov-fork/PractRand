@@ -8,7 +8,7 @@ public:
 		b = c + d;
 		c = d + e;
 		d = e + a;
-		return b;
+		return d;
 	}
 	Uint8  raw8()  {return (Uint8) raw32();}
 	Uint16 raw16() {return (Uint16)raw32();}

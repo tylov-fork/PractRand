@@ -1,30 +1,38 @@
 PractRand (Practically Random) is a C++ library of pseudo-random number 
 generators (PRNGs, or just RNGs) and statistical tests for RNGs.  
 
-version 0.80
+version 0.84
 
 1. Randon Number Generation with PractRand
+Most development platforms come with random number generators that have 
+major statistical flaws, are a bit slow, and/or have inconvenient 
+interfaces.  PractRand can help.  
 
 features:
 
 A. Very convenient interface for practical use, not just research.  
-A.1: Abstracts away details of the RNG algorithms native output format
-A.2: Natively supports uniform integer and floating point distributions, 
-compatible with the more complex distributions offered by Boost / C++0x TR1.  
-A.3: Automatic seeding, or seeding from any type you want.  
-A.4: Common interface available for a variety of RNG algorithms, making 
-switching underlying algorithms trivial.  
 
-C. A variety of very high quality RNG algorithms optimized for 
+A1: Abstraction layer hides details of the RNG algorithms native output 
+format, as users have better things to worry about.  
+A2: Natively supports uniform integer and floating point distributions, 
+compatible with the more complex distributions offered by Boost / C++0x TR1.  
+A3: Common interface available for a variety of RNG algorithms, making 
+switching underlying algorithms trivial.  
+A4: Automatic seeding, or seeding from any type(s) you want, with a simple 
+seeding interface for the common cases and powerful seeding helper objects 
+for exotic cases.  
+
+B. A variety of very high quality RNG algorithms optimized for 
 several different scenarios.  
-C.1: Lists of RNG algorithms and their strengths, to make it easy 
-to find one appropriate for specific circumstances quickly.  
-C.2: RNG algorithms that pass all statistical tests.  
-C.3: RNG algorithms that are very fast.  
-C.4: RNG algorithms that are cryptographically secure.  
-C.5: RNG algorithms that are easy to implement in hardware.  
-C.6: RNG algorithms that allow seeking / random access.  
-C.7: RNG algorithms appropriate just about any type of CPU (except 
+
+B1: Lists of RNG algorithms and their strengths, to make it easy to find 
+one appropriate for specific circumstances quickly.  
+B2: RNG algorithms that pass all statistical tests easily.  
+B3: RNG algorithms that are very fast.  
+B4: RNG algorithms that are cryptographically secure.  
+B5: RNG algorithms that are easy to implement in hardware.  
+B6: RNG algorithms that allow seeking / random access.  
+B7: RNG algorithms appropriate for just about any type of CPU (except 
 floating point DSPs... will add some for those later).  
 
 Other libraries including multiple RNG algorithms:
@@ -37,13 +45,44 @@ GSL - http://www.gnu.org/software/gsl/
 
 features:
 
-A. Includes a standard battery of tests, in the tradition of Diehard 
-and TestU01 Crush / BigCrush.  
+A. Includes a standard battery of tests, in the tradition of Diehard.  
+
 B. Standard battery of tests can detect bias in a wide variety of RNGs 
-quickly.  
+quickly.  See Tests_results.txt and/or Tests_engines.txt for more on 
+which biases it can detect how quickly relative to competing software 
+packages.  Basically, it can detect ~90% of biases that competing 
+software packages can detect, plus several categories of bias that 
+competitors cannot detect or have a very hard time detecting.  On 
+biases it can detect it is broadly comparable in speed (sometimes 
+slower, sometimes faster, but generally similar) to competitors, but 
+requires more bits.  
+
 C. Tests are provided as legally unencumbered source code and static 
 libraries, so that data can be passed directly to them bypassing the 
-hard disk speed and size limitations.  
+hard disk speed and size limitations.  To the best of my knowledge 
+PractRand is the *only* such software package (most competitors are 
+not intended to be linked with, and even those that are have license 
+restrictions on what they can be linked with and redistributed with).  
+
+D. No realistic maximum sequence length for testing.  Competing 
+software packages generally either have an interface that makes long 
+sequences impossible or crash if given a very long sequence, but 
+PractRand has been tested on sequence lengths over 100 terabytes and 
+is expected to work on sequence lengths up to a few exabytes.  
+
+E. Mostly original tests.  Competing software packages tend to mainly 
+use duplicates of tests that appeared in the literature decades ago, 
+with only a few unusual tests.  There is nothing wrong with that, but 
+it means that if you are testing with at least two test suites then 
+you are likely to have less redundancy (and better breadth) if one of 
+the test suites is PractRand.  
+
+F. PractRands testing interface allows preliminary results to be 
+requested at any time without having to start the testing over again.  
+Most competitors require that results be evaluated just once at the 
+end of a test.  If you are testing an RNG using dynamic test sequence 
+lengths - progressively longer until the RNG fails a test - then this 
+is a very important feature.  
 
 Other packages for testing PRNGs:
 TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
@@ -66,7 +105,14 @@ RNG_interface_variations.txt - while PractRand offers a common interface
 	to all RNGs in it, there are actually several minor variations on 
 	that common interface, ie polymorphic RNGs vs light-weight RNGs.  
 RNG_entropy_pools.txt - not yet written
-Tests.txt - brief discusion of how to use the statitical tests... 
-	examining the sample program is probably more useful in that regard.  
+Tests_usage.txt - brief discusion of how to use the statitical tests
+Tests_results.txt - tables showing the relative performance of 
+	PractRands standard tests vs TestU01 Rabbit and TestU01 Crush
+Tests_batteries.txt - a very brief look at the sets of tests that 
+	PractRand defines
+Tests_engines.txt - a list of the tests that PractRand defines, with 
+	brief descriptions of each
+Tests_overview.txt - a general description of statistical tests for 
+	randomness and a few thoughts.  
 versions.txt - what has changed between different versions of PractRand
 to_do.txt - Things left to do for PractRand.  There are lots.  

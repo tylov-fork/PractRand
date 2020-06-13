@@ -3,9 +3,10 @@
 *****************************************************************************
 0. Contents of this file
 1. Descriptions of recommended RNGs
-2. RNGs rated on various criteria in various categories
-3. Descriptions of the critera that RNGs were rated on
-4. Naming conventions for RNGs in PractRand
+2. Non-recommended RNGs ("other" RNGs)
+3. Quick comparison charts for recommended RNGs
+4. Descriptions of the critera used in the RNG comparison charts above
+5. Naming conventions for RNGs in PractRand
 
 
 *****************************************************************************
@@ -13,134 +14,188 @@
 *****************************************************************************
 
 A list of all recommended RNGs in PractRand, with descriptions:
-jsf16 / jsf32 / jsf64
-	This algorithm is included because of its combination of fast speed, 
-	good statistical properties, and small size.  
-	In addition, this algorithm is particularly good for implementation on 
-	exotic hardware like low-end embedded CPUs.  
-	This algorithm has an unknown number of bad cycles, though it is 
-	believed that the overwhelming majority of states lie on good cycles.  
-	As a special case, in addition to the usual raw and polymorphic 
-	implementations, PractRand also offers a light-weight implementation 
-	of jsf32 which supports almost all of the standard PractRand RNG 
-	interface while having no vtable.  Thus this light-weight implementation 
-	has faster performance and smaller size than the normal polymorphic 
-	version, with a more complete interface than the raw version.  
-isaac32x256 / isaac64x256
-	actual names: ISAAC, ISAAC64
-	This algorithm is included because of its combination of decent 
-	speed (it tends to be a bit faster than mt19937) with very good 
-	statistical quality.  It is also included as an option for fast 
-	cryptography - it is suspected of being less secure than hc256, but it 
-	is also signifcantly faster than hc256.  
-	This RNG uses buffered output, so some calls to it take much longer 
-	than other calls to it.  
-	This algorithm has no bad cycles.  
-hc256
-	actual name: HC-256
-	This algorithm is included because it is believed to be quite 
-	cryptographically secure.  It is a bit slow, and rather heavy-weight, 
-	but it does have excellent statistical properties.  
-	This RNG uses buffered output, so some calls to it take much longer 
-	than other calls to it.  
-	This algorithm is believed to have no bad cycles.  
-mwlac32 / mwlac64
-	This algorithm is included because of its combination of fast speed, 
-	good statistical properties, and small size.  
-	This algorithm has an unknown number of bad cycles, though it is 
-	believed that the overwhelming majority of states lie on good cycles.  
-	This algorithm was writen by myself.  So I might be prejudiced.  
-efiix8x256 / efiix16x256 / efiix32x256 / efiix64x256
-	This algorithm is included because of its combination of reasonable 
-	speed (it tends to be a tiny bit faster than isaac) with very 
-	good statistical quality (even better than isaac32/64, I believe).  
-	However, I'm not yet finished designing this algorithm, so it may 
-	be different in future versions.  
-	It is also included as an option for fast cryptography, though it is 
-	rather marginal in that capacity.  While it is believed to be quite 
-	difficult for an attack to figure out its internal state from its 
-	output alone, it is believed to be attackable with less plaintext 
-	and CPU power than isaac32/64, let alone hc256.  
-	This algorithm has an unknown number of bad cycles, though it is 
-	believed that the overwhelming majority of states lie on good cycles.  
-	This algorithm was writen by myself.  So I might be prejudiced.  
-mt19937
-	actual name: The Mersenne Twister
-	description: "a twisted LFSR with output hashing"
-	This algorithm is included because of its popularity - this RNG is widely 
-	used and widely recognized.  It also has an unusual combination of a 
-	reasonably well understood mathematical properties (corresponding to its 
-	good "theory" rating) with acceptable speed & statistcal properties.  So 
-	if you want an RNG that has a good theory rating and doesn't compromise 
-	speed or statistical properties too much then this is an okay choice.  
-	This algorithm has no bad cycles (it is single-cycle), though it does have 
-	bad regions of its cycle.  
-	This RNG uses buffered output, so some calls to it take much longer 
-	than other calls to it.  
-arbee
-	description: "an entropy mixing pool based upon a modified JSF"
-	This algorithm was included to be a light-weight entropy pool.  
-	In PractRand, an entropy pool is an RNG that accepts arbitrary 
-	input and produces as output a stream of pseudo-random numbers 
-	that is effectively an infinitely long hash of its input.  
-	This algorithm has no bad cycles.  
-	PractRand uses it internally in some seeding related purposes.  
-	This algorithm was writen by myself.  So I might be prejudiced.  
-isaac_with_sha2_pool
-	description: "an entropy mixing pool based upon SHA-2 and ISAAC"
-	This algorithm was included to be a cryptographically secure 
-	entropy pool that is still capable of producing output quickly.  
-	In PractRand, an entropy pool is an RNG that accepts arbitrary 
-	input and produces as output a stream of pseudo-random numbers 
-	that is effectively an inifinitely long hash of its input.  
-	This algorithm has no bad cycles.  
-sha2_based_pool
-	description: "an SHA-2 based entropy mixing pool"
-	This algorithm was included to be a cryptographically secure 
-	entropy pool.  
-	In PractRand, an entropy pool is an RNG that accepts arbitrary 
-	input and produces as output a stream of pseudo-random numbers 
-	that is effectively an inifinitely long hash of its input.  
-	This algorithm is believed to have no bad cycles.  
-lcg64_32
-	description: "a 64 bit LCG with output bits discarded down to 32 bits"
-	Not really recommended.  It's probably the simplest algorithm of any 
-	in this list from an assembly language perspective, but its statistical 
-	properties are the worst of the RNGs in here.  It does have the 
-	combination of a small size with well understood mathematical properties, 
-	and the ability to seek to an arbitrary point in its cycle.  
-	This algorithm has no bad cycles (it is single-cycle).  
-clcg96_32
-	description: "96 bits of two combined LCGs with 32 bit output"
-	This algorithm is included because it supports fast-forwarding / seeking 
-	/ random access / whatever you wish to call it.  
-	If you do not need seeking then do not use this - for any purpose that 
-	does not require seeking there are better RNGs included here.  
-	This algorithm has no bad cycles.  
+small fast RNGs:
+	jsf16 / jsf32 / jsf64
+		This algorithm is included because of its combination of fast speed, 
+		very good statistical properties, and small size.  
+		In addition, this algorithm is particularly good for implementation on 
+		exotic hardware like low-end embedded CPUs.  
+		This algorithm has an unknown number of bad cycles, though it is 
+		believed that the overwhelming majority of states lie on good cycles.  
+		As a special case, in addition to the usual raw and polymorphic 
+		implementations, PractRand also offers a light-weight implementation 
+		of jsf32 which supports almost all of the standard PractRand RNG 
+		interface while having no vtable.  Thus this light-weight implementation 
+		has faster performance and smaller size than the normal polymorphic 
+		version, with a more complete interface than the raw version.  
+	sfc16 / sfc32 / sfc64
+		This algorithm is included because of its combination of very fast 
+		speed, decent statistical properties, and small size.  
+		In addition, this algorithm is particularly good for implementation on 
+		exotic hardware like low-end embedded CPUs.  
+		Additionally, the 64 bit version of this has a guaranteed minimum 
+		cycle length of 2**64.  
+		This algorithm was writen by myself.  So I might be prejudiced.  
+	mwlac16 / mwlac32 / mwlac64
+		This algorithm is included because of its combination of fast speed, 
+		good statistical properties, and small size.  
+		Additionally, the 64 bit version of this has a guaranteed minimum 
+		cycle length of 2**64.  
+		This algorithm was writen by myself.  So I might be prejudiced.  
+ultra-high-quality RNGs:
+	isaac32x256 / isaac64x256
+		actual names: ISAAC, ISAAC64
+		This algorithm is included because of its combination of decent 
+		speed (it tends to be a bit faster than mt19937) with very good 
+		statistical quality.  It is also included as an option for fast 
+		cryptography - it is suspected of being less secure than hc256, but it 
+		is also signifcantly faster than hc256.  
+		This RNG uses buffered output, so some calls to it take much longer 
+		than other calls to it.  
+		This algorithm has no bad cycles.  
+	hc256
+		actual name: HC-256
+		This algorithm is included because it is believed to be quite 
+		cryptographically secure.  It is a bit slow, and rather heavy-weight, 
+		but it does have excellent statistical properties.  
+		This RNG uses buffered output, so some calls to it take much longer 
+		than other calls to it.  
+		This algorithm is believed to have no bad cycles.  
+	efiix8x256 / efiix16x256 / efiix32x256 / efiix64x256
+		This algorithm is included because of its combination of reasonable 
+		speed (it tends to be a tiny bit faster than isaac) with very 
+		good statistical quality (even better than isaac32/64, I believe).  
+		However, I'm not yet finished designing this algorithm, so it may 
+		be different in future versions.  
+		It is also included as an option for fast cryptography, though it is 
+		rather marginal in that capacity.  While it is believed to be quite 
+		difficult for an attacker to figure out its internal state from its 
+		output alone, it is believed to be attackable with less plaintext 
+		and CPU power than isaac32x256, let alone hc256.  
+		This algorithm was writen by myself.  So I might be prejudiced.  
+popular RNGs:
+	mt19937
+		actual name: The Mersenne Twister
+		description: "a twisted LFSR with output hashing"
+		This algorithm is included because of its popularity - this RNG is widely 
+		used and widely recognized.  It also has an unusual combination of 
+		reasonably well understood mathematical properties (corresponding to its 
+		good "theory" rating) with acceptable speed & statistical properties.  So 
+		if you want an RNG that has a good theory rating and doesn't compromise 
+		speed or statistical properties too much then this is a solid choice.  
+		This algorithm has no bad cycles (it is single-cycle), though it does have 
+		bad regions of its cycle.  
+		This RNG uses buffered output, so some calls to it take much longer 
+		than other calls to it.  
+entropy mixing RNGs:
+	arbee
+		description: "an entropy mixing pool based upon JSF64"
+		This algorithm was included to be a light-weight entropy pool.  
+		In PractRand, an entropy pool is an RNG that accepts arbitrary 
+		input and produces as output a stream of pseudo-random numbers 
+		that is effectively an infinitely long hash of its input.  
+		This algorithm has no bad cycles.  
+		PractRand uses it internally for some seeding related purposes.  
+	isaac_with_sha2_pool
+		description: "an entropy mixing pool based upon SHA-2 and ISAAC"
+		This algorithm was included to be a cryptographically secure 
+		entropy pool that is still capable of producing output quickly.  
+		In PractRand, an entropy pool is an RNG that accepts arbitrary 
+		input and produces as output a stream of pseudo-random numbers 
+		that is effectively an inifinitely long hash of its input.  
+		This algorithm has no bad cycles.  
+	sha2_based_pool
+		description: "an SHA-2 based entropy mixing pool"
+		This algorithm was included to be a cryptographically secure 
+		entropy pool.  
+		In PractRand, an entropy pool is an RNG that accepts arbitrary 
+		input and produces as output a stream of pseudo-random numbers 
+		that is effectively an inifinitely long hash of its input.  
+		This algorithm is believed to have no bad cycles.  
+random access / rewindable RNGs:
+	lcg64_32
+		description: "a 64 bit LCG with output bits discarded down to 32 bits"
+		Not really recommended.  It's probably the simplest algorithm of any 
+		in this list from an assembly language perspective, but its statistical 
+		properties are the worst of the RNGs in here.  It does have the 
+		combination of a small size with well understood mathematical properties, 
+		and the ability to seek to an arbitrary point in its cycle.  
+		This algorithm has no bad cycles (it is single-cycle).  
+	clcg96_32
+		description: "96 bits of two combined LCGs with 32 bit output"
+		This algorithm is included because it supports fast-forwarding / seeking 
+		/ random access / whatever you wish to call it.  
+		If you do not need seeking then do not use this - for any purpose that 
+		does not require seeking there are better RNGs included here.  
+		This algorithm has no bad cycles.  
 
 
 *****************************************************************************
-2. RNGs rated on various criteria in various categories
+2. Non-recommended RNGs ("other" RNGs)
 *****************************************************************************
 
-This document contains lists of RNG algorithms and variants included in the 
+The recommended RNGs are good for generating random numbers, but are not so 
+good for testing statistical tests on.  This is because they are too good - 
+most of them do not fail any statistical tests in any removely practical 
+amount of time (not counting cryptographic-style distinguishing attacks).  
+
+So, PractRand includes an additional set of RNGs.  These are not intended 
+for real-world usage, and are placed in a namespace named "NotRecommended" 
+to make sure that no one accidentally uses them for anything serious.  Their 
+code and headers are in subdirectories of the RNG directories named "other".  
+
+The quality of the non-recommended RNGs varies widely - some are simply 
+terrible, others are quite decent.  These algorithms are not well documented 
+in this package, and their implementations include only the minimum 
+necessary for them to work in the tests.  Some of them have brief descriptions 
+included in their header files.  
+
+They are organized in to 5 categories.  Each category has a single header 
+file for all such RNGs in that category:
+	simple
+		header file: include/PractRand/RNGs/other/simple.h
+		small simple RNGs that do not use multiplication
+	mult
+		header file: include/PractRand/RNGs/other/mult.h
+		small simple RNGs that use multiplication
+	fibonacci
+		header file: include/PractRand/RNGs/other/fibonacci.h
+		RNGs that use arrays with simple access patterns
+	indirection
+		header file: include/PractRand/RNGs/other/indirection.h
+		RNGs that use arrays with complex access patterns
+	transform
+		header file: include/PractRand/RNGs/other/transform.h
+		RNGs that are parameterized with another RNG that they use 
+		internally.  Currently only the Bays-Durham Shuffle is included.  
+	special
+		header file: include/PractRand/RNGs/other/special.h
+		RNGs with complex flow-control, slow math (sin/log/etc), or other 
+		stuff that doesn't belong in the other categories
+
+
+*****************************************************************************
+3. Quick comparison charts for recommended RNGs
+*****************************************************************************
+
+This section contains lists of RNG algorithms and variants included in the 
 PractRand library, rated from 0 to 5 stars on each of several broad criteria.  
 Each list is restricted to RNGs usable for a particular purpose; some RNGs 
 thus appear on multiple lists.  You can find descriptions of the categories 
-that they are rated on in section 3.  
+that they are rated on in section 4.  
 
 * The following RNGs are intended for normal usage on 32 and 64 bit computers.  
 They are listed more or less in order of quality, 
 Engine      quality speed   theory  output    word    size        statespace
-lcg64_32    1*      3***    5*****  32 bit    64 bit  8 bytes     2**64 single cycle
-clcg96_32   2**     2**     5*****  32 bit    64 bit  12 bytes    2**96 - 2**64 semi-multicyclic
-mt19937     3***    3***    4****   32 bit    32 bit  2500 bytes  2**19937-1 single cycle
-mwlac32     3***    4****   0       32 bit    32 bit  16 bytes    2**128 multicyclic
-mwlac64     4****   4****   0       64 bit    64 bit  32 bytes    2**256 multicyclic
 jsf32       4****   4****   0       32 bit    32 bit  16 bytes    2**128-4 multicyclic
 jsf64       4****   4****   0       64 bit    64 bit  32 bytes    2**256-1 multicyclic
+sfc32       2**     5*****  0       32 bit    32 bit  12 bytes    2**96 multicyclic
+sfc64       2**     5*****  1*      64 bit    64 bit  24 bytes    2**192 multicyclic (minimum cycle = 2**64)
+lcg64_32    1*      2**     5*****  32 bit    64 bit  8 bytes     2**64 single cycle
+clcg96_32   2**     1*      4****   32 bit    64 bit  12 bytes    2**96 - 2**64 semi-multicyclic
+mt19937     3***    3***    4****   32 bit    32 bit  2500 bytes  2**19937-1 single cycle
 isaac32x256 5*****  3***    2**     32 bit    32 bit  2064 bytes  2**8296 irreversible multicyclic
-isaac64x256 5*****  3***    2**     64 bit    64 bit  4128 bytes  2**16584 irreversible multicyclic
+isaac64x256 5*****  3***    2**     64 bit    64 bit  4128 bytes  2**16584 irreversible multicyclic (minimum cycle = 2**72)
 efiix32x256 5*****  3***    0       32 bit    32 bit  1040 bytes  2**8320 irreversible multicyclic
 efiix64x256 5*****  3***    0       64 bit    64 bit  2080 bytes  2**16640 irreversible multicyclic
 hc256       5*****  1*      3***    32 bit    32 bit  8580 bytes  2**65547 multicyclic
@@ -151,6 +206,7 @@ include/PractRand/RNGs directory.
 * There are a few RNGs supplied specifically for use on 8 and 16 bit computers, 
 though most of the 32 bit RNGs are also reasonably efficient on such computers:
 Engine      quality speed   theory  output    word    size        statespace
+sfc16       1*      5*****  0       16 bit    16 bit  6 bytes     2**48 multicyclic
 jsf16       3***    4****   0       16 bit    16 bit  8 bytes     2**64-1 multicyclic
 efiix8x256  5*****  3***    0       8 bit     8 bit   260 bytes   2**2080 irreversible multicyclic
 efiix16x256 5*****  3***    0       16 bit    16 bit  520 bytes   2**4160 irreversible multicyclic
@@ -171,6 +227,9 @@ Engine      quality speed   theory  output    word    size        statespace
 jsf16       3***    4****   0       16 bit    16 bit  8 bytes     2**64-1 multicyclic
 jsf32       4****   4****   0       32 bit    32 bit  16 bytes    2**128-4 multicyclic
 jsf64       4****   4****   0       64 bit    64 bit  32 bytes    2**256-1 multicyclic
+sfc16       1*      5*****  0       16 bit    16 bit  6 bytes     2**48 multicyclic
+sfc32       2**     5*****  0       32 bit    32 bit  12 bytes    2**96 multicyclic
+sfc64       2**     5*****  1*      64 bit    64 bit  24 bytes    2**192 multicyclic (minimum cycle = 2**64)
 mt19937     3***    3***    4****   32 bit    32 bit  2500 bytes  2**19937-1 single cycle
 isaac32x256 5*****  3***    2**     32 bit    32 bit  2064 bytes  2**8296 irreversible multicyclic
 isaac64x256 5*****  3***    2**     64 bit    64 bit  4128 bytes  2**16584 irreversible multicyclic
@@ -190,7 +249,7 @@ regular RNGs.  They are used internally to PractRand for some purposes, and
 may be of use to users who want to do complex seeding operations.  They 
 all generally do very well on statistical tests.  
 Engine                Out-Speed In-Speed Max-Entropy Other
-arbee                 3***      2**      ~256 bits   small & light-weight
+arbee                 3***      2**      256 bits    small & light-weight
 isaac_with_sha2_pool  3***      0        8256 bits   mostly cryptographically secure
 sha2_based_pool       0         0        832 bits    cryptographically secure
 Those RNGs are in the PractRand::RNGs::Polymorphic::EntropyPools 
@@ -204,7 +263,7 @@ entropy accumulation.
 of cryptographic security, with the following qualifications:
 Engine                 Security      Other
 hc256                  5*****        a little slow
-sha2_based_pool        5*****        slow; supports complex seeding
+sha2_based_pool        5*****        very slow; supports complex seeding
 isaac_with_sha2_pool   3***          supports complex seeding
 isaac*                 3***          -
 efiix*                 1*            -
@@ -254,7 +313,7 @@ PractRand::RNGs::Raw namespaces.  They correspond to headers in the
 include/PractRand/RNGs directory.  
 
 *****************************************************************************
-3. Descriptions of the critera that RNGs were rated on
+4. Descriptions of the critera used in the RNG comparison charts above
 *****************************************************************************
 
 The categories they are rated in include:
@@ -270,23 +329,29 @@ quality: (rated from 0 to 5 stars)
 		statistical tests eventually and fail some tests quickly.  
 	2 star RNGs are good enough for almost all uses, even many uses 
 		that are particularly sensitive to RNG quality.  However, they fail 
-		some statistical tests, and extremely sensitive programs 
-		might suffer from their small statistical flaws.  
+		some statistical tests eventually, and extremely sensitive programs 
+		might suffer from their small statistical flaws.  In addition, 2 
+		star RNGs must have a statespace of at least 2**52 and an expected 
+		average period of at least 2**44.  
 	3 star RNGs are good enough for almost all uses, even many uses 
 		that are particularly sensitive to RNG quality.  Some 3 star 
 		RNGs have been found to fail a few statistical tests, but some 
 		have not.  Generally any statistical test that a 3 star RNG 
 		fails either takes a very long time or is believed to be not 
-		very relevant for real world programs.  
-	4 star RNGs are good enough for almost all uses, even many uses 
-		that are particularly sensitive to RNG quality.  4 star RNGs 
-		do not fail any currently practical statistical tests.  
+		very relevant for real world programs.  In addition, 3 star 
+		RNGs must have a statespace of at least 2**80 and an expected 
+		average period of at least 2**48.  
+	4 star RNGs are good enough for almost all uses, even uses that are 
+		extremely sensitive to RNG quality.  4 star RNGs do not fail any 
+		currently practical statistical tests.  
 		Furthermore, if I have rated an RNG as 4 stars it means that 
 		I have designed a variant of that algorithm intended to have 
 		significantly worse statistical properties, and that variant 
-		*still* passed all statistical tests.  
+		*still* passed all statistical tests.  In addition, 4 star 
+		RNGs must have a statespace of at least 2**120 and an expected 
+		average period of at least 2**60.  
 	5 star RNGs are good enough for all non-cryptographic uses, even 
-		uses that are particularly sensitive to RNG quality.  5 star 
+		uses that are extremely sensitive to RNG quality.  5 star 
 		RNGs must satisify all of the requirements for 4 star RNGs, 
 		and in addition I must, after analyzing them, believe that 
 		they are unlikely to *ever* fail any statistical test that 
@@ -294,8 +359,9 @@ quality: (rated from 0 to 5 stars)
 		wrong).  Note that by "statistical tests" I am not including 
 		custom distinguishing attacks specifically designed to find 
 		flaws in that algorithm and only that algorithm.  In addition, 
-		5 star RNGs must be believed to have no bad cycles and a 
-		statespace of at least 2**180.  
+		5 star RNGs must be believed to have no bad cycles, a 
+		statespace of at least 2**180, and an expected average period 
+		of at least 2**80.  
 
 speed: (rated from 0 to 5 stars)
 	Speed is in arbitrary units.  It's a bit subjective since actual 
@@ -306,7 +372,14 @@ speed: (rated from 0 to 5 stars)
 	per call then fewer calls will be necessary for many purposes.  
 	Also take note of the word size - if an RNG is run on a computer 
 	with general purpose registers of a different size than its word 
-	size then it may run slower.  
+	size then it may run slower than expected.  
+	Broadly:
+		0 stars - very slow - too slow for normal use
+		1 star - slow
+		2 stars - medium-slow
+		3 stars - medium-fast
+		4 stars - fast
+		5 stars - very fast
 
 theory: (rated from 0 to 5 stars)
 	This rating corresponds to how much the RNG or the math it uses 
@@ -390,7 +463,7 @@ security: (rated from 0 to 5 stars)
 
 
 *****************************************************************************
-4. Naming conventions for RNGs in PractRand
+5. Naming conventions for RNGs in PractRand
 *****************************************************************************
 
 The naming convention for RNG algorithms is:

@@ -4,7 +4,7 @@ namespace PractRand {
 		namespace Transforms {
 			class multiplex : public TestBaseclass {
 			protected:
-				std::vector<TestBaseclass*> subtests;
+				ListOfTests subtests;
 				std::string name;
 				Uint64 blocks_already;//# of blocks outputed to subtests
 			public:
@@ -18,9 +18,26 @@ namespace PractRand {
 
 				virtual int get_num_children() const;
 				virtual TestBaseclass *get_child(int index) const;
-				Uint64 get_blocks_passed_through() const {return blocks_already;}
+				const ListOfTests &_get_children() const {return subtests;}
+				virtual Uint64 get_blocks_passed_through(int index) const;// {return blocks_already;}
 				//virtual std::string get_child_name  (int index) const;
 				//virtual double      get_child_result(int index);
+			};
+			class switching : public multiplex {
+				std::vector<Uint64> lengths;
+				std::vector<Uint64> blocks_already_per;
+				Uint64 total_length;
+				Uint64 phase;
+				int which;
+			public:
+				switching( const char *name_, const ListOfTests &testlist, 
+					std::vector<Uint64> lengths_ );
+				switching( const char *name_, const ListOfTests &testlist, 
+					Uint64 length );
+				virtual void init( RNGs::vRNG *known_good );
+				virtual void test_blocks(TestBlock *data, int numblocks);
+			//	virtual double get_result();
+				virtual Uint64 get_blocks_passed_through(int index) const;
 			};
 			class Transform_Baseclass : public multiplex {
 			private:

@@ -59,7 +59,7 @@ namespace PractRand {
 			if (!initialized) initialize();
 			
 			//item 1: pointer at RNG being autoseeded
-			//if the RNG being seeded is not on the heap then this should be unique to it
+			//if the RNG being seeded is global or static then this should be unique to it
 			seeder.add_entropy64((Uint64)ptr1);
 
 			//item 2: pointer at an address on the stack

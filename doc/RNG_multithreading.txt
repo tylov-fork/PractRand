@@ -17,7 +17,7 @@ of those two.
 
 Also, when picking an RNG for a multithreaded application, it may be 
 wise to go slightly higher on statistical quality and statespace size 
-than you would for an equivalent single-threaded application.  See the 
+than you would for an equivalent single-threaded application.  See 
 RNG_engines.txt for more on that subject.  
 
 The next question is, how do you seed each threads RNG?  The simple 
@@ -49,7 +49,7 @@ local storage, just ordinary global variables.
 3. Before the RNG is used, and before any other threads are launched, 
 initialize the entropy pool with one or more calls to the add_entropy 
 methods.  The standard method is to call add_entropy_automatically(), 
-though that current is a poor implementation, particularly on 
+though that currently is a poor implementation, particularly on 
 non-windows platforms.  Then seed the RNG in the main thread from the 
 entropy pool.  
 4. Each time another thread is created, lock the mutex, use the 

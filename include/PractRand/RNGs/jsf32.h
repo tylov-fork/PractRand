@@ -20,6 +20,10 @@ namespace PractRand {
 		}
 		class jsf32 : public Raw::jsf32 {
 		public:
+			enum {
+				OUTPUT_TYPE = OUTPUT_TYPES::NORMAL_ALL,
+			};
+		public:
 			Uint8  raw8 () {return Uint8( raw32());}
 			Uint16 raw16() {return Uint16(raw32());}
 			Uint64 raw64() {Uint32 r = raw32(); return (Uint64(raw32()) << 32) | r;}

@@ -1,0 +1,257 @@
+*****************************************************************************
+columns:
+	RNG
+		The name of the RNG algorithm used;
+		The name used is the name it is called in PractRand, not necessarily 
+		its real full name - for instance, hc256 instead of HC-256.  
+	PractRand standard
+		The PractRand standard tests are those returned by 
+		PractRand::Tests::Batteries::get_standard_tests().  
+		quirks:
+			test set is (slightly) dependent upon RNG metadata
+			p-values are *very* crudely aproximated
+		speed on a fast RNG on my computer:
+			1 GB: ~15 seconds
+			1 TB: ~4 hours
+		format:
+			The length of sequence required for the PractRand standard tests 
+			to detect bias.  If multiple seeds were tested, and bias was 
+			found in them at different sequence lengths, then the median 
+			result is used.  If bias was not found then the length of the 
+			longest sequence tested is recorded, with a ">" prefixed in 
+			front of it.  
+			Bias is considered to have been found when the p-value 
+			approaches zero or one to within 1.0e-10.  
+			The length is recorded as a number followed by KB, MB, GB, or 
+			TB.  Those stand for kilobyte, megabyte, gigabyte, or terabyte 
+			respectively.  
+			All lengths are rounded up to the nearest power of 2.  
+	TestU01 *Crush
+		This refers to the batteries "SmallCrush", "Crush", and "BigCrush" 
+		in TestU01.
+		quirks:
+			does not accept a sequence length parameter
+			works on RNGs outputing 31 bits per call:
+				on 32 bit RNGs it works but disregards the lowest bit
+				on 8/16 bit RNGs, I concatonate multiple outputs together to produce a 32 bit output
+				on 64 bit RNGs... I am currently discarding the upper 32 bits to produce a 32 bit output
+					might, in the future, change that to returning half and buffering half for the next call
+			does not print any results until all are ready
+		speed on a fast RNG on my computer:
+			SmallCrush: 9 seconds
+			Crush:      40 minutes
+			BigCrush:   5 hours
+		format:
+			If all 3 are passed then the result is recorded as "pass".  
+			Otherwise, the result is recorded as X/Y/Z, where X is the 
+			number of tests failed in SmallCrush, Y is the number failed in 
+			Crush, and Z is the number failed in BigCrush.  
+			Failure is defined as a p-value <= 1.0e-10 or >= (1 - 1.0e-10)
+	
+	If a result is listed as "?" that means that that test has not been run 
+	on that RNG.  If a result has a normal value followed by a "?" that 
+	means that either that result is strongly implied by tests on nearly 
+	equivalent RNGs, or that the test was run and is believed to have 
+	produced that result but the record-keeping involved was incomplete and 
+	I can't be sure without re-running the test.  
+
+
+*****************************************************************************
+
+tests that were not included:
+	PractRand expanded standard
+		This test was not used because:
+			p-values are unavailable on most tests, justs pass/fail results
+	TestU01 Rabbit
+		This test was not used because:
+			A. It consistently crashes if used on a long sequence
+			B. Its time to complete a test does not increase linearly with 
+				sequence length - in some cases it actually decreases with 
+				length.  This appears to be partially caused by the test 
+				set being a function of the testing length.  
+			C. Its results do not seem to improve in power with sequence 
+				length consistently enough.  
+	TestU01 Pseudo-diehard
+		This test was not used because it is too low quality.  
+	NIST RNG tests
+		???
+	RaBiGeTe, default configuration
+		This test was not used because:
+			A. The currently released code is incapable of multiple test 
+				runs on RNGs linked with it in a single run, making 
+				administering the tests somewhat difficult.  
+
+*****************************************************************************
+
+recommended RNGs
+	RNG             Quality     PractRand   TestU01
+	                rating      standard    *Crush
+	hc256           5           > 1 TB      pass
+	efiix64x256     5           > 1 TB      pass?
+	efiix32x256     5           > 2 TB      pass
+	efiix16x256     5           > 1 TB      pass
+	efiix8x256      5           > 2 TB      pass
+	isaac64x256     5           > 1 TB?     pass?
+	isaac32x256     5           > 4 TB      pass
+	arbee           4           > 1 TB      pass?
+	jsf64           4           > 2 TB      pass?
+	jsf32           4           > 4 TB      pass
+	jsf16           3           > 2 TB      pass
+	mwlac64         4           > 1 TB?     pass?
+	mwlac32         4           > 1 TB?     pass
+	mwlac16         3           > 2 TB      pass
+	mt19937         3           > 4 TB      0/2/2
+	clcg96_32       2           > 4 TB      pass
+	lcg64_32        1           32 GB       0/4/?
+	sfc64           2-4         > 2 TB      pass?
+	sfc32           2-3         > 4 TB      pass
+	sfc16           1-2         128 GB      pass
+
+mediocre RNGs - simple
+	RNG             Quality     PractRand   TestU01
+	                rating      standard    *Crush
+	sapparot        0           128 MB      0/0/1
+	sap48_16        0           1 GB        0/3/2
+	sap96_32        2           > 4 TB      pass
+	flea32x1        2           > 1 TB      pass
+	sfc_v1_16       1           4 GB        pass
+	sfc_v1_32       1-2         > 4 TB      pass
+	sfc_v1_64       1-2         > 1 TB      pass?
+	sfc_v2_16       0-1         1 GB        pass
+	sfc_v2_32       2           > 2 TB      0/0/1
+	sfc_v2_64       2           > 2 TB      pass?
+
+mediocre RNGs - multiplication based
+	RNG              Quality     PractRand   TestU01
+	                 rating      standard    *Crush
+	lcg32_16         0           16 MB       6/48/??
+	clcg64_16        0           4 GB        0/4/5
+	binarymult16     0-1         2 GB        1/31/2
+	binarymult32     1-2         32 GB       pass
+	garthy16         0-2         32 MB       0/15/?
+	garthy32         1-2         256 GB      pass
+	rxmult16         0-1         512 MB      1/72/135
+	multish3x32      1-2         16 GB       0/0/1
+	multish4x16      1-2         64 GB       0/2/1
+	old_mwlac16      2           128 GB      pass
+
+mediocre RNGs - cyclic buffer based
+	RNG              Quality     PractRand   TestU01
+	                 rating      standard    *Crush
+	mm32             0           4 MB        1/8/12
+	mm32_16          1           1 GB        0/0/2
+	mm32_awc         1           8 GB        0/8/11
+	mwc4691          1           1 GB        pass
+	cbuf_accum       1           4 GB        pass
+	dual_cbuf        2           128 GB      pass
+	dual_cbuf_accum  3           1 TB        pass
+	mt19937_unhashed 1           32 GB       0/2/2
+
+mediocre RNGs - indirection based
+	RNG              Quality     PractRand   TestU01
+	                 rating      standard    *Crush
+	ibaa8x2          0-1         2 GB        0/8/19
+	ibaa8x4          1-2         128 GB ?    pass
+	ibaa8x8          2-3         > 1 TB      pass
+	ibaa16x2         1-2         16 GB       pass
+	ibaa16x4         2-3         > 2 TB      pass?
+	ibaa32x2         1-3         2 TB        pass?
+	rc4_weakened     1-2         32 GB       0/1/1
+	rc4              2-3         4 TB        pass
+	isaac32x4        0-2         8 GB        pass
+	isaac32x8        1-2         64 GB       pass
+	isaac32x16       3           16 TB       pass?
+
+Bays-Durham Shuffle applied to various low quality RNGs
+	RNG                       PractRand   TestU01
+	                          standard    *Crush
+	[BDS256]lcg32_16          64 MB       0/0/20
+	[BDS256]clcg64_16         16 GB       pass
+	[BSD256]mm32              128 MB      0/0/6
+	[BSD256]mm32_16           > 1 TB      0/0/3
+	[BSD256]mm32_awc          > 1 TB      0/0/6
+	[BSD1]sapparot            128 MB      pass
+	[BSD2]sapparot            1 GB        pass?
+	[BSD4]sapparot            16 GB       pass?
+	[BSD8]sapparot            256 GB      pass?
+
+
+*****************************************************************************
+
+========= Summary results of Crush =========
+
+ Version:          TestU01 1.2.3
+ Generator:        isaac32_large
+ Number of statistics:  1152
+ Total CPU time:   05:39:55.29
+ The following tests gave p-values outside [0.001, 0.9990]:
+ (eps  means a value < 1.0e-300):
+ (eps1 means a value < 1.0e-015):
+
+       Test                          p-value
+ ----------------------------------------------
+ 25  SimpPoker, d = 64              7.2e-04
+ 91  Run of bits, r = 0             1.4e-04
+ ----------------------------------------------
+ All other tests were passed
+
+
+
+
+========= Summary results of Crush * 8 =========
+
+ Version:          TestU01 1.2.3
+ Generator:        mwlac32
+ Number of statistics:  1152
+ Total CPU time:   05:16:49.15
+ The following tests gave p-values outside [0.001, 0.9990]:
+ (eps  means a value < 1.0e-300):
+ (eps1 means a value < 1.0e-015):
+
+       Test                          p-value
+ ----------------------------------------------
+  9  CollisionOver, t = 20           0.9994
+ 18  ClosePairs mNP2, t = 2         2.9e-04
+ 60  MatrixRank, 1200 x 1200        8.0e-04
+ 68  RandomWalk1 C (L = 1000)       2.3e-05
+ 91  Run of bits, r = 0             2.9e-04
+ ----------------------------------------------
+ All other tests were passed
+ 
+========= Summary results of Crush * 8 =========
+
+ Version:          TestU01 1.2.3
+ Generator:        mwlac32
+ Number of statistics:  1152
+ Total CPU time:   05:20:42.57
+ The following tests gave p-values outside [0.001, 0.9990]:
+ (eps  means a value < 1.0e-300):
+ (eps1 means a value < 1.0e-015):
+
+       Test                          p-value
+ ----------------------------------------------
+ 66  RandomWalk1 C (L = 90)         6.8e-04
+ 69  RandomWalk1 M (L = 10000)      2.5e-04
+ 80  HammingWeight2, r = 0           0.9998
+ ----------------------------------------------
+ All other tests were passed
+
+
+
+
+========= Summary results of BigCrush * 8 =========
+
+ Version:          TestU01 1.2.3
+ Generator:        mwlac32
+ Number of statistics:  1280
+ Total CPU time:   37:18:03.76
+ The following tests gave p-values outside [0.001, 0.9990]:
+ (eps  means a value < 1.0e-300):
+ (eps1 means a value < 1.0e-015):
+
+       Test                          p-value
+ ----------------------------------------------
+ 11  CollisionOver, t = 21          7.2e-04
+ 31  CouponCollector, r = 10         0.9995
+ ----------------------------------------------
+ All other tests were passed
