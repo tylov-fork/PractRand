@@ -1,23 +1,23 @@
-post-0.83:
-(* = high priority)
-	add self-tests, regression tests, etc
-*		test vectors for MT19937, ISAAC, ISAAC64, HC-256, SHA2-512
-		???
+post-0.85:
+	high priority items
+		test & fix trivium implementation
+		adaptor to produce a polymorphic RNG from a raw RNG automatically
+			(to simplify users sticking their own RNG in to the test program at full performance)
+		multithreaded testing program
+		revise basic testing interface
+		review serialization interface
+	add more self-tests, regression tests, etc
+		test vectors for ISAAC64, SHA2-512, jsf32, & trivium (which is likely broken atm)
+		checks that fast-forward / rewind works correctly
+		checks that entropy pooling works correctly
 	review / reorganize header files
 		some headers protect against multiple inclusion, some don't
 		some headers protect against inclusion prior to dependencies, some don't
 		test_helpers should probably be split in two
-	revise the RNG algorithms of my own creation
-		not other RNG algorithms as they tend to have defined correct behaviors
-		EFIIX
-			possibly split it in to two RNGs, one for speed one for security
-		MWLAC
-			some variants offer guarantees of no short cycles, but may be slower and/or lower quality
-			consider SFC:
-				lower quality, but faster
-				does not require multiplication
-				64 bit version has no short cycles
 	RNG testing
+		revise basic interface
+			allow RNG tests to report multiple results
+			ie have internal subtests, like a multiplex transform but not addressable
 		consider splitting in to a separate library
 			yes, it's already a semi-separate .lib file, but...
 			maybe it should also have separate:
@@ -25,6 +25,7 @@ post-0.83:
 		revise specific RNG testing algorithms
 			Gap16
 				possible minor bug in get_result, fix and recalibrate
+				possibly count sequential identical gaps
 			DC6
 				investigate Bob Jenkins suggestion of applying to x^(x>>1)
 			BCFN
@@ -40,22 +41,24 @@ post-0.83:
 			...others
 				most of the others don't appear to be worth the effort
 		create new tests
+			as BCFN, but calc the avg # of 1s in blocks after each sequence of #s of 1s
+			something gapish on more than 16 bits at a time
 			consider more autowindowing / leveling
 			investigate idea: design a test for running on GPUs
 		possible modifications to test interfaces
 			allow a single test to be multithread?
 		increase automation & quality of calibration process
+	test program(s)
+*		add multithreading (using SDL?  or native WIN32?)
 		improve clarity & quality of example code (TestManager)
 			possibly move TestManager class in to library
-	test program(s)
-		add multithreading (using SDL?  or maybe native WIN32?)
 	choices in library to be reconsidered:
 		names of randlf, randli
 		ranges to randf, randi, randlf, randli: [min..max) or [min..max]
 		should unseeded RNGs require explicit SEED_NONE flag?
-		should rename vRNG to PolymorphicRNG?
 		change return type of RNG::get_name to something that doesn't require STL (ie write to buffer)?
 		should split add_entropy* methods off from vRNG in to a new child class?
+*		serialization interface needs more work & thought I think
 		???
 	review and add to documentation
 		detailed descriptions of RNGs, particularly recommended RNGs

@@ -38,7 +38,6 @@ namespace PractRand {
 			int warmup;
 			Uint32 last_index;
 			VariableSizeCount<Uint8> counts;
-			Uint64 blocks;
 			//internal helpers:
 			enum { ENABLE_REORDER = 1 };
 			virtual int transform_bitcount ( int bit_count ) const ;

@@ -16,7 +16,8 @@ void PractRand::RNGs::Polymorphic::mt19937::flush_buffers() {implementation.flus
 
 //raw:
 static inline unsigned long twist32( unsigned long m, unsigned long s0, unsigned long s1 ) {
-	static const Uint32 gfsr_twist_table[2] = {0, 0x9908b0dful};
+	static const unsigned long gfsr_twist_table[2] = {0, 0x9908b0dful};
+//	unsigned long y = (((s0&0x80000000ul)|(s1&0x7ffffffful))>>0);
 	return m ^ gfsr_twist_table[s1&1] ^ (((s0&0x80000000ul)|(s1&0x7ffffffful))>>1);
 }
 void PractRand::RNGs::Raw::mt19937::_advance_state() {//LOCKED, do not change
@@ -31,17 +32,7 @@ void PractRand::RNGs::Raw::mt19937::_advance_state() {//LOCKED, do not change
 	used = 0;
 }
 Uint32 PractRand::RNGs::Raw::mt19937::raw32() {//LOCKED, do not change
-	//it might seem to make sense to arrange the array backwards
-	//so that the comparison could be with 0 instead of ARRAY_SIZE
-	//but in testing arranging the array backwards was 5% slower
-	//so I didn't do it
-	Uint32 r;
-	if ( used >= ARRAY_SIZE ) {
-		_advance_state();
-		r = state[used++];
-	}
-	else r = state[used++];
-	
+	Uint32 r = untempered_raw32();
 	r ^= (r >> 11);
 	r ^= (r <<  7) & 0x9d2c5680u;
 	r ^= (r << 15) & 0xefc60000u;
@@ -49,7 +40,7 @@ Uint32 PractRand::RNGs::Raw::mt19937::raw32() {//LOCKED, do not change
 }
 void PractRand::RNGs::Raw::mt19937::seed(Uint64 s) {//LOCKED, do not change
 	if (s < (Uint64(1) << 32)) {
-		state[0]= Uint32(s);
+		state[0] = Uint32(s);
 		for (long i=1; i < ARRAY_SIZE; i++) {
 			state[i] = 1812433253UL * (state[i-1] ^ (state[i-1] >> 30)) + i; 
 		}
@@ -64,7 +55,25 @@ void PractRand::RNGs::Raw::mt19937::seed(Uint64 s) {//LOCKED, do not change
 }
 void PractRand::RNGs::Raw::mt19937::walk_state(StateWalkingObject *walker) {
 	//LOCKED, do not change
+	//exception - in version 0.85 added check for invalid state
 	walker->handle(used);
-	for (unsigned int i = 0; i < ARRAY_SIZE; i++) walker->handle(state[i]);
+	for (unsigned long i = 0; i < ARRAY_SIZE; i++) walker->handle(state[i]);
 	if (used > ARRAY_SIZE) used = ARRAY_SIZE;
+	unsigned long successive_zeroes;
+	if (walker->is_clumsy()) {
+		for (successive_zeroes = 0; successive_zeroes < ARRAY_SIZE; successive_zeroes++)
+			if (state[successive_zeroes]) break;
+		if (successive_zeroes == ARRAY_SIZE) state[0] = 1;
+	}
+}
+void PractRand::RNGs::Raw::mt19937::self_test() {
+	const Uint64 expected = 0x7d9883055dc1141ull;
+	Raw::mt19937 rng; rng.seed(1371941);
+	Uint64 checksum = 0;
+	for (int i = 0; i < 8192; i++) {
+		checksum ^= checksum << 24;
+		checksum ^= checksum >> 27;
+		checksum += rng.raw32();
+	}
+	if (checksum != expected) issue_error("mt19937::self_test() failed");
 }

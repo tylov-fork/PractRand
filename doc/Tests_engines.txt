@@ -8,8 +8,9 @@ Recommended tests:
 		rely upon large lags to defeat other statistical tests; 
 		only a single integer parameter is needed, it is the 
 		log-base-2 of the size of the table is uses internally - 
-		recommended values are 10 to 15, or larger values if cache 
-		is VERY large and/or main memory is VERY low latency.  
+		recommended values are 10 to 15, larger values if cache is 
+		large and/or main memory is low latency, lower values if 
+		cache is small and/or main memory is high latency.  
 	DC6 - checks for short range linear correlations (bit counting); 
 		takes several parameters that determine the size of 
 		integers it operates on internally, the number of adjacent 
@@ -25,6 +26,7 @@ Transforms:
 		or 32 bits and routes them to the wrapped tests)
 	shrink - 
 	FirstNofM - 
+	BWT - 
 Non-recommended tests:
 	FPF - "floating point frequency" test; contrary to the name 
 		it's purely integer math.  Can be very slow on some settings.  

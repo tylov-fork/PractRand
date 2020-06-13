@@ -1,4 +1,4 @@
-#include <string.h>
+#include <cstring>
 #include "PractRand/config.h"
 #include "PractRand/endian.h"
 #include "PractRand/sha2.h"
@@ -197,7 +197,7 @@ namespace PractRand {
 			unsigned long space_left = Constants::INPUT_SIZE - leftover_input_bytes;
 			//start in middle of block, finish it
 			if (input_left >= space_left) {
-				memcpy(input_buffer.as_byte + leftover_input_bytes, input, space_left);
+				std::memcpy(input_buffer.as_byte + leftover_input_bytes, input, space_left);
 				input += space_left;
 				input_left -= space_left;
 				endianness_input();
@@ -206,7 +206,7 @@ namespace PractRand {
 			}
 			//start at begining of block, finish it
 			while (input_left >= Constants::INPUT_SIZE) {
-				memcpy(input_buffer.as_byte, input, Constants::INPUT_SIZE);
+				std::memcpy(input_buffer.as_byte, input, Constants::INPUT_SIZE);
 				input += Constants::INPUT_SIZE;
 				input_left -= Constants::INPUT_SIZE;
 				endianness_input();
@@ -214,7 +214,7 @@ namespace PractRand {
 			}
 			//buffer any leftovers
 			if (input_left) {
-				memcpy(input_buffer.as_byte + leftover_input_bytes, input, input_left);
+				std::memcpy(input_buffer.as_byte + leftover_input_bytes, input, input_left);
 				leftover_input_bytes += (int)input_left;
 			}
 		}
@@ -222,11 +222,11 @@ namespace PractRand {
 			typedef SHA2_512_constants Constants;
 			enum { EXTRAS = sizeof(Word) * 2 + 1 };
 			input_buffer.as_byte[leftover_input_bytes] = 0x80;
-			memset( input_buffer.as_byte + leftover_input_bytes + 1, 0, Constants::INPUT_SIZE - leftover_input_bytes - 1);
+			std::memset( input_buffer.as_byte + leftover_input_bytes + 1, 0, Constants::INPUT_SIZE - leftover_input_bytes - 1);
 			if (leftover_input_bytes > Constants::INPUT_SIZE - EXTRAS) {
 				endianness_input();
 				process_block();
-				memset(input_buffer.as_byte, 0, Constants::INPUT_SIZE - EXTRAS + 1);
+				std::memset(input_buffer.as_byte, 0, Constants::INPUT_SIZE - EXTRAS + 1);
 			}
 			input_buffer.as_word[Constants::INPUT_WORDS-1] = endianness_word(Word(length << 3));
 			if (sizeof(Word) < sizeof(Uint64)) {
@@ -241,7 +241,7 @@ namespace PractRand {
 			typedef SHA2_512_constants Constants;
 			process_final_block();
 			endianness_state();
-			memcpy(destination, state, RESULT_LENGTH);
+			std::memcpy(destination, state, RESULT_LENGTH);
 		}
 	}//Crypto
 }//PractRand

@@ -1,14 +1,21 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand", "PractRand.vcproj", "{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand", "PractRand.vcxproj", "{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand Console Test (integrated)", "PractRand Console Test (integrated)\PractRand Console Test (integrated).vcproj", "{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand Console Test (integrated)", "PractRand Console Test (integrated)\PractRand Console Test (integrated).vcxproj", "{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand_Full", "PractRand_Full\PractRand_Full.vcxproj", "{5036F8F4-679D-4B76-9465-BE2430AB1CF3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNG benchmark", "RNG benchmark\RNG benchmark.vcxproj", "{D726E59A-5C63-47BA-AAE9-A35D7D8085A3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3} = {5036F8F4-679D-4B76-9465-BE2430AB1CF3}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand_Full", "PractRand_Full\PractRand_Full.vcproj", "{5036F8F4-679D-4B76-9465-BE2430AB1CF3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNG_output", "RNG_output\RNG_output.vcxproj", "{58408775-C7A9-4742-8C08-F6A781549E81}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5036F8F4-679D-4B76-9465-BE2430AB1CF3} = {5036F8F4-679D-4B76-9465-BE2430AB1CF3}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,6 +35,14 @@ Global
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Debug|Win32.Build.0 = Debug|Win32
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Release|Win32.ActiveCfg = Release|Win32
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Release|Win32.Build.0 = Release|Win32
+		{D726E59A-5C63-47BA-AAE9-A35D7D8085A3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D726E59A-5C63-47BA-AAE9-A35D7D8085A3}.Debug|Win32.Build.0 = Debug|Win32
+		{D726E59A-5C63-47BA-AAE9-A35D7D8085A3}.Release|Win32.ActiveCfg = Release|Win32
+		{D726E59A-5C63-47BA-AAE9-A35D7D8085A3}.Release|Win32.Build.0 = Release|Win32
+		{58408775-C7A9-4742-8C08-F6A781549E81}.Debug|Win32.ActiveCfg = Debug|Win32
+		{58408775-C7A9-4742-8C08-F6A781549E81}.Debug|Win32.Build.0 = Debug|Win32
+		{58408775-C7A9-4742-8C08-F6A781549E81}.Release|Win32.ActiveCfg = Release|Win32
+		{58408775-C7A9-4742-8C08-F6A781549E81}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

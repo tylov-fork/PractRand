@@ -80,15 +80,47 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-
-				class green_hammer : public vRNG8 {
-					enum {SIZE = 71, LAG = 6};
-					Uint8 table[SIZE];
-					static Uint8 mash(Uint8 *ptr);
-					void mix();
-					void _seed(Uint8 *s, int len);
+				class ranrot32 : public vRNG32 {
+					enum {LAG1 = 17, LAG2 = 9, ROT1 = 9, ROT2 = 13};
+					Uint32 buffer[LAG1]; // LAG1 > LAG2 > 0
+					Uint8 position;
 				public:
-					Uint8 raw8();
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class fibmul32_16 : public vRNG16 {// 31 @ 17/9
+					enum {LAG1 = 17, LAG2 = 5};
+					Uint32 buffer[LAG1]; // LAG1 > LAG2 > 0
+					Uint8 position;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class fibmul64_32 : public vRNG32 {// 35 @ 3/2, 39 @ 7/5
+					enum {LAG1 = 7, LAG2 = 5};
+					Uint64 buffer[LAG1]; // LAG1 > LAG2 > 0
+					Uint8 position;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class ranrot3tap32 : public vRNG32 {
+					enum {LAG1 = 17, LAG2 = 5, LAG3 = 1, ROT1 = 3, ROT2 = 17, ROT3 = 9};
+					Uint32 buffer[LAG1]; // LAG1 > LAG2 > LAG3, LAG3 = 1
+					Uint8 position;
+					static Uint32 func(Uint32 a, Uint32 b, Uint32 c);
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mt19937_unhashed : public vRNG32 {// 
+					PractRand::RNGs::Raw::mt19937 implementation;
+				public:
+					Uint32 raw32();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};

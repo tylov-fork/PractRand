@@ -18,7 +18,11 @@ namespace PractRand {
 				void _do_batch();
 			public:
 				void flush_buffers() {used = OUTPUT_BUFFER_SIZE;}
-				Uint32 raw32();
+				Uint32 raw32() {//LOCKED, do not change
+					if (used < OUTPUT_BUFFER_SIZE) return outbuf[used++];
+					_do_batch();
+					return outbuf[used++];
+				}
 				void walk_state(StateWalkingObject *walker);
 
 				//The standard seeding algorithm for HC-256 uses a sequence 
@@ -28,6 +32,7 @@ namespace PractRand {
 				//  32 bit value.  Seeding is very slow.  
 				void seed(Uint32 key_and_iv[16]);
 				void seed(Uint64 s);
+				static void self_test();
 			};
 		}
 		
@@ -39,5 +44,6 @@ namespace PractRand {
 				void flush_buffers();
 			};
 		}
+		PRACTRAND__LIGHT_WEIGHT_RNG(hc256)
 	}
 }

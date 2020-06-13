@@ -1,5 +1,5 @@
-#ifndef __SHA2_H__
-#define __SHA2_H__
+#ifndef __PRACTRAND_SHA2_H__
+#define __PRACTRAND_SHA2_H__
 
 #ifndef __PRACTRAND_CONFIG_H__
 #include "PractRand/config.h"
@@ -13,7 +13,7 @@ namespace PractRand {
 			Uint64 length;
 			union InputBlock {
 				Word as_word[16];
-				Uint8 as_byte[16 * 8];
+				Uint8 as_byte[16 * sizeof(Word)];
 			};
 			InputBlock input_buffer;
 			unsigned long leftover_input_bytes;
@@ -32,5 +32,5 @@ namespace PractRand {
 	}//Crypto
 }//PractRand
 
-#endif /* __SHA2_H__ */
+#endif /* __PRACTRAND_SHA2_H__ */
 

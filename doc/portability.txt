@@ -11,36 +11,41 @@
 
 2. Portability of PractRand itself:
 	I have built PractRand on:
-		VC 2008 x86 (32-bit)
+		gcc 4.6.1 / x86-64 (64-bit) / Ubuntu Linux
+		gcc 4.5.4 / MinGW x64 (64-bit)
 		gcc 3.4.5 / MinGW x86 (32-bit) - though TLS was not supported
+		VC 2010 x86 (32-bit)
 
 	When compiling on a other platform, the first thing that must be done 
 		is a few minor edits in include/PractRand/config.h
 
 	In addition to that, the basic version of PractRand requires:
+		note:
+			if you don't know what any of these means, don't freak;
+			this stuff all basically just translates to a reasonably 
+			compliant C++ compiler and a normal hardware environment 
+			typical of modern PCs and most embedded chips.  
 		support for 8, 16, 32, and 64 bit signed and unsigned integers
 		memory be addressed in 8-bit units (sizeof(Uint8) == 1)
-		basic C++ support
-		the C++ variant of the C standard library
+		basic C++ support including namespaces and templates
+			 all decent C++ compilers qualify
+		the standard C/C++ library, including STL
+			 all decent C++ compilers support this
 		endianness must be either big endian or little endian
 			all remotely modern architectures qualify
-		auto-seeding & automatic entropy currently work best with WIN32
+		auto-seeding & automatic entropy work best on either Windows or *nix
 			see automatic_entropy.cpp
 			You can add code there for your platform
-			If you just use the generic code there will be an increased chance 
-				that it will produce duplicate seeds between two different runs
+			If you just use the generic code on an unrecognized platform there 
+				will be an increased chance that autoseeding will produce 
+				duplicate seeds
 		IEEE floating point
 			only required for randf & randlf methods
 				and even then nothing very bad happens if it's not compliant
 				and it can be adjusted for non-IEEE formats in RNG_internals.h
-		STL strings (I may remove this requirement soon...)
-		TLS support is recommended if you plan to used PractRand in multithreaded programs
 
-	In addition to that, the full version of PractRand requires:
-		general support for C++ templates
-		STL containers
 
-	In addition to that, the example program requires:
-		RTTI
+	In addition to that, the example programs may require:
+		C++ RTTI (part of the C++ language)
 
 

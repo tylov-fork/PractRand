@@ -1,0 +1,9 @@
+PractRand example programs:
+1. test
+	Applies the PractRand standard suite of statistical tests to an RNG.  The RNG is specified at compile time atm.  
+2. RNG_output
+	Takes an RNG name and number of bytes on the command line, prints that many raw bytes of random numbers.  
+	For use in unix-like environments where the output might be piped somewhere useful.  
+3. RNG_benchmark
+	measures speeds of all recommended RNGs and all candidate RNGs
+

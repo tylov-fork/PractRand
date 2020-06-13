@@ -5,6 +5,14 @@ namespace PractRand {
 	namespace RNGs {
 		namespace Polymorphic {
 			namespace NotRecommended {
+				class Transform64 : public vRNG64 {
+				public:
+					vRNG64 *base_rng;
+					void seed(Uint64 seed);
+					Uint64 get_flags() const;
+					Transform64(vRNG64 *rng) : base_rng(rng) {}
+					~Transform64();
+				};
 				class Transform32 : public vRNG32 {
 				public:
 					vRNG32 *base_rng;
@@ -30,6 +38,19 @@ namespace PractRand {
 					~Transform8();
 				};
 
+				class BaysDurhamShuffle64 : public Transform64 {
+					Uint64 table[256];
+					Uint8 prev;
+					Uint8 index_mask;
+					Uint8 index_shift;
+				public:
+					Uint64 raw64();
+					void seed(Uint64 s);
+					void walk_state(StateWalkingObject *);
+					std::string get_name() const ;
+					BaysDurhamShuffle64(vRNG64 *rng, int table_size_L2, int shift=0) 
+						: Transform64(rng), index_mask((1<<table_size_L2)-1), index_shift(shift) {}
+				};
 				class BaysDurhamShuffle32 : public Transform32 {
 					Uint32 table[256];
 					Uint8 prev;

@@ -1,0 +1,151 @@
+For a typical application any recommended RNG in PractRand (except sha2_based_pool) 
+is more than fast enough.  If your program needs more speed though, here are some 
+guidelines:
+1. If you are on a 64 bit CPU & compiler, use a 64 bit RNG.  Likewise if you are on 
+	a 32 bit CPU & compiler use a 32 bit RNG, etc.  In most cases the RNGs name 
+	should make it obvious what word size it uses.  Among the recommended RNGs the 
+	only exceptions are clcg96_32 which uses 64 bit words internally but only 
+	outputs 32 bits at a time, hc256 which uses 32 bit words, and the entropy 
+	pooling RNGs (arbee is 64 bit, sha2_based_pool uses 64 bit words, and 
+	isaac_with_sha2 uses 64 bit words).  
+2. If you need extra speed and don't need polymorphism, consider using the raw or 
+	light-weight versions of the RNGs.  They are available for almost all RNGs and 
+	are usually faster than their polymorphic equivalents.  
+3. The fastest recommended RNGs are jsf and sfc.  If you're on 64-bit then arbee is 
+	also good (and it also offers entropy pooling and a guarantee of no short 
+	cycles).  
+
+Notes on entropy pools:
+	Entropy pools are listed twice in the results.  The section titled 
+	"entropy pooling RNGs:" lists the speed at which they generate random numbers.  
+	It includes both polymorphic and light-weight results for those few 
+	entropy pools that have both.  
+	The section titled "Entropy pool input speeds:" lists the speed at which 
+	entropy can be added to them.  It is listed in MEGABYTES per second, not 
+	gigabytes per second like all other numbers.  It lists seperate speeds for 
+	add_entropy8 / add_entropy16 / etc.  For entropy pools that buffer input, 
+	the results are usually the same regardless of whether the entropy is 
+	handed to it in 8 or 16 or 32 or 64 bit units, but for entropy pools that 
+	do not buffer input this can make a big difference.  
+
+64 bit gcc
+	notes:
+		CPU: Intel Core i5 2500
+		compiler: g++ (GCC) 4.5.4 20111030 (prerelease) [svn/rev.180676 - mingw-w64/oz]
+		OS: Windows 7 (64 bit)
+		comments: The "canidate" RNGs (VeryFast* & RanrotVariant*) were in the same 
+			compilation unit as the benchmark.  It appears that some gcc optimizations 
+			are refusing to cross compilation unit boundaries, giving the candidate RNGs 
+			an large unfair advantage.  
+		The command line used to build was:
+		g++ -o bin/RNG_benchmark-gcc-x64.exe src/*.cpp src/RNGs/*.cpp test/RNG_benchmark.cpp -Iinclude -O3
+		Random number generation speeds:
+		  light-weight   polymorphic    name
+		small fast RNGs:
+		  1.162 GB/s  :  1.092 GB/s  :  jsf32
+		  2.313 GB/s  :  2.245 GB/s  :  jsf64
+		  1.271 GB/s  :  1.249 GB/s  :  sfc32
+		  2.447 GB/s  :  2.434 GB/s  :  sfc64
+		random access RNGs:
+		  0.974 GB/s  :  0.960 GB/s  :  xsm32
+		  1.937 GB/s  :  1.871 GB/s  :  xsm64
+		entropy pooling RNGs:
+		  2.003 GB/s  :  1.948 GB/s  :  arbee
+		  ----- GB/s  :  0.060 GB/s  :  sha2_based_pool
+		crypto / high quality RNGs:
+		  0.834 GB/s  :  0.560 GB/s  :  hc256
+		  0.698 GB/s  :  0.486 GB/s  :  isaac32x256
+		  1.402 GB/s  :  0.992 GB/s  :  isaac64x256
+		  0.946 GB/s  :  0.697 GB/s  :  efiix32x384
+		  1.951 GB/s  :  1.564 GB/s  :  efiix64x384
+		popular RNGs:
+		  0.732 GB/s  :  0.648 GB/s  :  mt19937
+		16 bit variants:
+		  0.516 GB/s  :  0.655 GB/s  :  jsf16
+		  0.499 GB/s  :  0.648 GB/s  :  sfc16
+		  0.323 GB/s  :  0.463 GB/s  :  efiix16x384
+		8 bit variants:
+		  0.170 GB/s  :  0.291 GB/s  :  efiix8x384
+		candidate RNGs: (not recommended, but almost)
+		  3.454 GB/s  :  1.307 GB/s  :  VeryFast32
+		  6.956 GB/s  :  2.580 GB/s  :  VeryFast64
+		  2.808 GB/s  :  1.226 GB/s  :  sfc_alternative32
+		  5.617 GB/s  :  2.460 GB/s  :  sfc_alternative64
+		  2.327 GB/s  :  0.804 GB/s  :  ranrot_variant32
+		  5.112 GB/s  :  1.539 GB/s  :  ranrot_variant64
+		16 & 8 bit candidate RNGs: (not recommended, but almost)
+		  0.815 GB/s  :  0.317 GB/s  :  ranrot_variant16
+		  0.397 GB/s  :  0.167 GB/s  :  ranrot_variant8
+		  1.054 GB/s  :  0.415 GB/s  :  sfc_alternative16
+		Entropy pool input speeds:
+		  arbee
+			add_entropy8  : 236.7 MB/s
+			add_entropy16 : 449.6 MB/s
+			add_entropy32 : 600.9 MB/s
+			add_entropy64 : 727.9 MB/s
+			add_entropy_N : 573.4 MB/s
+		  sha2_based_pool
+			add_entropy8  :  65.6 MB/s
+			add_entropy16 :  62.1 MB/s
+			add_entropy32 :  63.8 MB/s
+			add_entropy64 :  63.8 MB/s
+			add_entropy_N :  66.2 MB/s
+32 bit MSVC
+	notes:
+		CPU: Intel Core i5 2500
+		compiler: Microsoft Visual C++ 2010 Express, 10.0.30319.1
+		OS: Windows 7 (64 bit)
+		comments: 32 bit executable despite the 64 bit CPU & OS, so the 64 bit RNGs 
+			were penalized.  
+		Random number generation speeds:
+		  light-weight   polymorphic    name
+		small fast RNGs:
+		  2.283 GB/s  :  1.057 GB/s  :  jsf32
+		  1.304 GB/s  :  1.099 GB/s  :  jsf64
+		  2.112 GB/s  :  1.216 GB/s  :  sfc32
+		  1.387 GB/s  :  1.453 GB/s  :  sfc64
+		random access RNGs:
+		  1.444 GB/s  :  0.862 GB/s  :  xsm32
+		  0.615 GB/s  :  0.606 GB/s  :  xsm64
+		entropy pooling RNGs:
+		  1.060 GB/s  :  0.854 GB/s  :  arbee
+		  ----- GB/s  :  0.028 GB/s  :  sha2_based_pool
+		crypto / high quality RNGs:
+		  0.622 GB/s  :  0.568 GB/s  :  hc256
+		  0.577 GB/s  :  0.531 GB/s  :  isaac32x256
+		  0.895 GB/s  :  0.832 GB/s  :  isaac64x256
+		  1.041 GB/s  :  0.786 GB/s  :  efiix32x384
+		  0.813 GB/s  :  0.722 GB/s  :  efiix64x384
+		popular RNGs:
+		  0.941 GB/s  :  0.786 GB/s  :  mt19937
+		16 bit variants:
+		  0.503 GB/s  :  0.534 GB/s  :  jsf16
+		  0.619 GB/s  :  0.661 GB/s  :  sfc16
+		  0.373 GB/s  :  0.334 GB/s  :  efiix16x384
+		8 bit variants:
+		  0.126 GB/s  :  0.121 GB/s  :  efiix8x384
+		candidate RNGs: (not recommended, but almost)
+		  3.004 GB/s  :  1.239 GB/s  :  VeryFast32
+		  1.509 GB/s  :  1.148 GB/s  :  VeryFast64
+		  2.656 GB/s  :  1.204 GB/s  :  sfc_alternative32
+		  1.389 GB/s  :  0.847 GB/s  :  sfc_alternative64
+		  1.152 GB/s  :  1.141 GB/s  :  ranrot_variant32
+		  1.411 GB/s  :  1.309 GB/s  :  ranrot_variant64
+		16 & 8 bit candidate RNGs: (not recommended, but almost)
+		  0.623 GB/s  :  0.478 GB/s  :  ranrot_variant16
+		  0.205 GB/s  :  0.252 GB/s  :  ranrot_variant8
+		  0.630 GB/s  :  0.466 GB/s  :  sfc_alternative16
+		Entropy pool input speeds:
+		  arbee
+			add_entropy8  :  75.3 MB/s
+			add_entropy16 : 150.6 MB/s
+			add_entropy32 : 179.7 MB/s
+			add_entropy64 : 214.2 MB/s
+			add_entropy_N : 209.7 MB/s
+		  sha2_based_pool
+			add_entropy8  :  32.3 MB/s
+			add_entropy16 :  32.0 MB/s
+			add_entropy32 :  32.2 MB/s
+			add_entropy64 :  32.4 MB/s
+			add_entropy_N :  32.5 MB/s
+

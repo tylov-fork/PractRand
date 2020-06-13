@@ -15,6 +15,7 @@ namespace PractRand {
 				Uint16 raw16();
 				void seed(Uint64 s);
 				void walk_state(StateWalkingObject *walker);
+				//static void self_test();
 			};
 		}
 		
@@ -24,5 +25,6 @@ namespace PractRand {
 				void seed(Uint64 s);
 			};
 		}
+		PRACTRAND__LIGHT_WEIGHT_RNG(jsf16)
 	}
 }

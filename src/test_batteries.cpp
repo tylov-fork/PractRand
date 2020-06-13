@@ -6,6 +6,8 @@
 #include <set>
 #include <map>
 #include <cmath>
+#include <cstdlib>
+
 #include "PractRand/config.h"
 #include "PractRand/rng_basics.h"
 #include "PractRand/rng_helpers.h"
@@ -35,6 +37,13 @@ namespace PractRand {
 					new Tests::Gap16()
 				);
 			}
+			static Tests::ListOfTests standard_foldings_generic(ListOfTests (*base_tests)()) {
+				Tests::ListOfTests l = base_tests();
+				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 0, 0));
+				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 1, 1));
+				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 2, 2));
+				return l;
+			}
 			static Tests::ListOfTests standard_foldings8(ListOfTests (*base_tests)()) {
 				Tests::ListOfTests l = base_tests();
 				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 0, 0));
@@ -42,8 +51,10 @@ namespace PractRand {
 			}
 			static Tests::ListOfTests standard_foldings16(ListOfTests (*base_tests)()) {
 				Tests::ListOfTests l = base_tests();
-				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 2, 1));
-				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 0, 1));
+				Tests::ListOfTests sub4 = base_tests();
+				sub4.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 0, -1));
+				//sub4.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 1, -1));
+				l.tests.push_back(new Tests::Transforms::lowbits(NULL, sub4, 2, 1));
 				return l;
 			}
 			static Tests::ListOfTests standard_foldings32(ListOfTests (*base_tests)()) {
@@ -53,17 +64,21 @@ namespace PractRand {
 			}
 			static Tests::ListOfTests standard_foldings64(ListOfTests (*base_tests)()) {
 				Tests::ListOfTests l = base_tests();
-				l.tests.push_back(new Tests::Transforms::lowbits(NULL, standard_foldings8(base_tests), 3, 3));
+				Tests::ListOfTests sub16 = base_tests();
+				Tests::ListOfTests sub4 = base_tests();
+				sub4.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 0, -1));
+				//sub4.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 1, -1));
+				sub16.tests.push_back(new Tests::Transforms::lowbits(NULL, sub4, 2, 1));
+				l.tests.push_back(new Tests::Transforms::lowbits(NULL, sub16, 4, 3));
 				return l;
 			}
 			static Tests::ListOfTests apply_standard_foldings( const RNGs::vRNG *rng, ListOfTests (*base_tests)() ) {
-				switch (rng->get_native_output_size()) {
+				switch (rng ? rng->get_native_output_size() : 0) {
 					case 16: return standard_foldings16(base_tests);
 					case 32: return standard_foldings32(base_tests);
 					case 64: return standard_foldings64(base_tests);
-					default:
-					case 8:
-						return standard_foldings8(base_tests);
+					case  8: return standard_foldings8(base_tests);
+					default: return standard_foldings_generic(base_tests);
 				}
 			}
 			Tests::ListOfTests get_standard_tests( const RNGs::vRNG *rng ) {

@@ -15,7 +15,7 @@ using namespace PractRand;
 //excellent:
 // 1. high quality... passes all statistical tests to date
 // 2. fast, much faster than most RNGs
-// 3. no multiplication or fancy stuff, should work well on embeded CPUs
+// 3. no multiplication or fancy stuff, should work well on embedded CPUs, PLDs, etc
 // 4. fairly small
 //Engine      quality speed   theory  output    word    size        statespace
 //jsf16       3***    4****   0       16 bit    16 bit  8 bytes     2**64-1 multicyclic
@@ -75,9 +75,9 @@ void PractRand::RNGs::Raw::jsf32::walk_state(StateWalkingObject *walker) {
 	walker->handle(b);
 	walker->handle(c);
 	walker->handle(d);
-	if (!(walker->get_properties() & StateWalkingObject::FLAG_READONLY) && (d&0x80093300) == 0) {
+	if (!(walker->get_properties() & StateWalkingObject::FLAG_READ_ONLY) && (d&0x80093300) == 0) {
 		//these block the cycles of length 1
-		//should search for cycles of lengths 2 to 2**56 to block them as well, but that's impractical at this time
+		//should search for all cycles with length less than 2**56, but that's impractical at this time
 		if (!a && !b && !c && !d) a++;
 		if (a==0x77777777 && b==0x55555555 && c==0x11111111 && d==0x44444444 ) d++;
 		if (a==0x5591F2E3 && b==0x69EBA6CD && c==0x2A171E3D && d==0x3FD48890 ) d++;
@@ -131,42 +131,5 @@ void PractRand::RNGs::Raw::jsf16::walk_state(StateWalkingObject *walker) {
 	if (!(a|b) && !(c|d)) d++;
 }
 
-/*Uint8 PractRand::RNGs::Raw::jsf8::raw8() {
-	Uint8 e = a - ((b << 7) | (b >> 1));
-	a = b ^ ((c << 4) | (c >> 4));
-	b = c + d;
-	c = d + e;
-	d = e + a;
-	return d;
-}
-void PractRand::RNGs::Raw::jsf8::seed(Uint64 s_) {
-	Uint32 s = Uint32(s_) ^ Uint32(s_>>32);
-	a = Uint8(s);
-	b = Uint8(s >> 8);
-	c = Uint8(s >> 16);
-	d = Uint8(s >> 24);
-	if (!(a|b) && !(c|d)) d++;
-	for (int i = 0; i < 20; i++) raw8();
-}
-void PractRand::RNGs::Raw::jsf8::walk_state(StateWalkingObject *walker) {
-	walker->handle(a);
-	walker->handle(b);
-	walker->handle(c);
-	walker->handle(d);
-	if (!(a|b) && !(c|d)) d++;
-}*/
 
-//light-weight:
-Uint32 PractRand::RNGs::jsf32::randi(Uint32 max) {
-	PRACTRAND__RANDI_IMPLEMENTATION(max)
-}
-Uint64 PractRand::RNGs::jsf32::randli(Uint64 max) {
-	PRACTRAND__RANDLI_IMPLEMENTATION(max)
-}
-float PractRand::RNGs::jsf32::randf() {
-	PRACTRAND__RANDF_IMPLEMENTATION(*this)
-}
-double PractRand::RNGs::jsf32::randlf() {
-	PRACTRAND__RANDLF_IMPLEMENTATION(*this)
-}
 

@@ -5,7 +5,11 @@
 #include "PractRand/rng_helpers.h"
 #include "PractRand/rng_internals.h"
 
+#include "PractRand/RNGs/mt19937.h"
 #include "PractRand/RNGs/other/fibonacci.h"
+
+using namespace PractRand;
+using namespace PractRand::Internals;
 
 namespace PractRand {
 	namespace RNGs {
@@ -142,44 +146,104 @@ namespace PractRand {
 				}
 
 
-
-				Uint8 green_hammer::mash( Uint8 *ptr ) {
-					Uint32 tmp = 0;
-					for (int i = 0; i < LAG; i++) {
-						tmp = (tmp << 1) + *ptr++;
+				Uint32 ranrot32::raw32() {
+					if (position) return buffer[--position];
+					for (unsigned long i = 0; i < LAG2; i++) {
+						buffer[i] = 
+							((buffer[i+LAG1-LAG1] << ROT1) | (buffer[i+LAG1-LAG1] >> (sizeof(buffer[0])*8-ROT1))) +
+							((buffer[i+LAG1-LAG2] << ROT2) | (buffer[i+LAG1-LAG2] >> (sizeof(buffer[0])*8-ROT2)));
 					}
-					return Uint8(tmp+(tmp>>8));
-				}
-				void green_hammer::mix() {
-					int i;
-					Uint8 tmp = table[SIZE-1];
-					for(i=0; i<(SIZE-LAG); i++) table[i+LAG] += table[i];
-					for(   ; i<SIZE; i++) table[i-(SIZE-LAG)] += table[i];
-				}
-				void green_hammer::_seed(Uint8 *s, int len) {
-					for(int i=0; i<SIZE; i++) table[i] = 0;
-					for(int i=0; i<len; i++) {
-						Uint8 tmp = *s++;
-						for (int j = 0; j < 8; j++) {
-							table[j] += tmp;
-							tmp >>= 1;
-						}
-						mix();
+					for (unsigned long i = LAG2; i < LAG1; i++) {
+						buffer[i] = 
+							((buffer[i-   0] << ROT1) | (buffer[i-   0] >> (sizeof(buffer[0])*8-ROT1))) +
+							((buffer[i-LAG2] << ROT2) | (buffer[i-LAG2] >> (sizeof(buffer[0])*8-ROT2)));
 					}
-					for(int i=0; i<50; i++) mix();
+					position = LAG1;
+					return buffer[--position];
 				}
-				Uint8 green_hammer::raw8() {
-					mix();
-					enum {SP2M = (SIZE >= 64 + LAG) ? 63 : ((SIZE >= 32 + LAG) ? 31 : ((SIZE >= 16 + LAG) ? 15 : ((SIZE >= 8 + LAG) ? 7 : ((SIZE >= 4 + LAG) ? 3 : ((SIZE >= 2 + LAG) ? 1 : -1)))))};
-				//	static int assertion[SP2M == 63 ? 1 : -1];
-					//return mash(&table[mash(&table[SIZE-LAG])&SP2M]);
-					return table[mash(&table[SIZE-LAG])&SP2M];
-				}
-				std::string green_hammer::get_name() const {return "green_hammer";}
-				void green_hammer::walk_state(StateWalkingObject *walker) {
-					for (int i = 0; i < SIZE; i++) walker->handle(table[i]);
+				std::string ranrot32::get_name() const {return "ranrot32";}
+				void ranrot32::walk_state(StateWalkingObject *walker) {
+					walker->handle(position);
+					for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
+					if (position >= LAG1) position %= LAG1;
 				}
 
+				Uint16 fibmul32_16::raw16() {
+					if (position) return Uint16(buffer[--position] >> 16);
+					for (unsigned long i = 0; i < LAG2; i++) {
+						buffer[i] = buffer[i+LAG1-LAG1] * buffer[i+LAG1-LAG2];
+					}
+					for (unsigned long i = LAG2; i < LAG1; i++) {
+						buffer[i] = buffer[i] * buffer[i-LAG2];
+					}
+					position = LAG1;
+					return Uint16(buffer[--position] >> 16);
+				}
+				std::string fibmul32_16::get_name() const {return "fibmul32_16";}
+				void fibmul32_16::walk_state(StateWalkingObject *walker) {
+					walker->handle(position);
+					for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
+					if (position >= LAG1) position %= LAG1;
+					for (int i = 0; i < LAG1; i++) buffer[i] |= 1;
+				}
+				Uint32 fibmul64_32::raw32() {
+					if (position) return Uint32(buffer[--position] >> 32);
+					for (unsigned long i = 0; i < LAG2; i++) {
+						buffer[i] = buffer[i+LAG1-LAG1] * buffer[i+LAG1-LAG2];
+					}
+					for (unsigned long i = LAG2; i < LAG1; i++) {
+						buffer[i] = buffer[i] * buffer[i-LAG2];
+					}
+					position = LAG1;
+					return Uint32(buffer[--position] >> 32);
+				}
+				std::string fibmul64_32::get_name() const {return "fibmul64_32";}
+				void fibmul64_32::walk_state(StateWalkingObject *walker) {
+					walker->handle(position);
+					for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
+					if (position >= LAG1) position %= LAG1;
+					for (int i = 0; i < LAG1; i++) buffer[i] |= 1;
+				}
+
+
+
+				Uint32 ranrot3tap32::func(Uint32 a, Uint32 b, Uint32 c) {
+//					return rotate(a, 3) + rotate(b, 17) + rotate(c, 9);
+//					return (rotate(a, 0) * 293) ^ rotate(b, 17) ^ rotate(c, 9);// 33 @ 7/5
+//					return (a ^ rotate(b, 9)) + c;// >40 @ 17/9, 34 @ 7/5, 35 @ 8/5, 35 @ 9/7, 38 @ 11/7
+//					return (a ^ rotate(b, 1)) + c;// 33 @ 7/5
+//					return (a ^ rotate(b, 2)) + c;// 34 @ 7/5
+//					return (a ^ rotate(b, 3)) + c;// 34 @ 7/5
+//					return (a ^ b) + rotate(c,9);// 34 @ 7/5, 38 @11/7
+//					return (a ^ rotate(b,13)) + rotate(c,9);// 34 @ 7/5, 38 @11/7
+					return rotate(a, ROT1) + rotate(b, ROT2) + rotate(c, ROT3);//30 @ 7/5, 36 @ 11/7, 36 @ 17/9
+				}
+				Uint32 ranrot3tap32::raw32() {
+					if (position) return buffer[--position];
+					Uint32 old = buffer[LAG1-1];
+					for (unsigned long i = 0; i < LAG2; i++) {
+						buffer[i] = old = func(buffer[i+LAG1-LAG1], buffer[i+LAG1-LAG2], old);
+					}
+					for (unsigned long i = LAG2; i < LAG1; i++) {
+						buffer[i] = old = func(buffer[i], buffer[i-LAG2], old);
+					}
+					position = LAG1;
+					return buffer[--position];
+				}
+				std::string ranrot3tap32::get_name() const {return "ranrot3tap32";}
+				void ranrot3tap32::walk_state(StateWalkingObject *walker) {
+					walker->handle(position);
+					for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
+					if (position >= LAG1) position %= LAG1;
+				}
+
+				Uint32 mt19937_unhashed::raw32() {
+					return implementation.untempered_raw32();
+				}
+				std::string mt19937_unhashed::get_name() const {return "mt19937_unhashed";}
+				void mt19937_unhashed::walk_state(StateWalkingObject *walker) {
+					implementation.walk_state(walker);
+				}
 			}
 		}
 	}

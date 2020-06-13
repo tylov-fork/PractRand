@@ -65,8 +65,8 @@ namespace PractRand {
 			}
 			void set_size(int size_) {
 				size = size_;
-				low = (LowIntType*)realloc(low, sizeof(LowIntType) * size);
-				high = (Uint64*)realloc(high, sizeof(Uint64) * size);
+				low = (LowIntType*)std::realloc(low, sizeof(LowIntType) * size);
+				high = (Uint64*)std::realloc(high, sizeof(Uint64) * size);
 				reset_counts();
 			}
 			VariableSizeCount() : size(0), low(NULL), high(NULL) {}

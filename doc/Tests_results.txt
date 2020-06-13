@@ -38,9 +38,9 @@ columns:
 					might, in the future, change that to returning half and buffering half for the next call
 			does not print any results until all are ready
 		speed on a fast RNG on my computer:
-			SmallCrush: 9 seconds
-			Crush:      40 minutes
-			BigCrush:   5 hours
+			SmallCrush: ~8 seconds
+			Crush:      ~35 minutes
+			BigCrush:   ~4 hours
 		format:
 			If all 3 are passed then the result is recorded as "pass".  
 			Otherwise, the result is recorded as X/Y/Z, where X is the 
@@ -80,6 +80,29 @@ tests that were not included:
 			A. The currently released code is incapable of multiple test 
 				runs on RNGs linked with it in a single run, making 
 				administering the tests somewhat difficult.  
+	Dieharder, default set of tests (-a)
+		Not used because it was too inefficient.  
+
+*****************************************************************************
+
+A brief analysis of relative performance of PractRand standard battery & 
+	TestU01 SmallCrush / Crush / BigCrush, by RNG category:
+
+recommended RNGs: looks like a tie to me; both test suites have severe 
+	difficulty finding any bias in the recommended RNGs
+
+simple RNGs: PractRand seems to outperform TestU01, but only barely
+
+multiplication based RNGs: PractRand tends to outperform TestU01 on the 
+	multi-cyclic ones, TestU01 seems to barely outperform PractRand on the 
+	single-cycle ones.  
+
+cyclic buffer based RNGs: PractRand outperforms TestU01 here.  
+
+indirection based RNGs: PractRand outperforms TestU01 here.  
+
+Bays-Durham shuffles applied to low quality RNGs: TestU01 outperforms here, 
+	at least on single-cycle RNGs.  
 
 *****************************************************************************
 
@@ -97,45 +120,79 @@ recommended RNGs
 	jsf64           4           > 2 TB      pass?
 	jsf32           4           > 4 TB      pass
 	jsf16           3           > 2 TB      pass
-	mwlac64         4           > 1 TB?     pass?
-	mwlac32         4           > 1 TB?     pass
-	mwlac16         3           > 2 TB      pass
-	mt19937         3           > 4 TB      0/2/2
-	clcg96_32       2           > 4 TB      pass
-	lcg64_32        1           32 GB       0/4/?
-	sfc64           2-4         > 2 TB      pass?
+	sfc64           3           > 2 TB      pass?
 	sfc32           2-3         > 4 TB      pass
 	sfc16           1-2         128 GB      pass
+	mt19937         3           > 4 TB      0/2/2
+	mcx32           3           > 8 TB      pass
+	mcx64           4           > 1 TB      pass?
 
-mediocre RNGs - simple
+
+candidate RNGs
+	ranrotvar64     2-3         ?           ?
+	ranrotvar32     2-3         ?           ?
+	ranrotvar16     1-3         ?           ?
+	ranrotvar8      0-3         ?           ?
+	veryfast64      2-4         ?           ?
+	veryfast32      2-4         2 TB        pass?
+	sfc64_v4cand                ?           ?
+	sfc32_v4cand                ?           ?
+	sfc16_v4cand                32 TB !!    ?
+	clcg96_32       2-3         > 4 TB      pass
+	lcg64_32        1           32 GB       0/4/?
+
+other RNGs - simple
 	RNG             Quality     PractRand   TestU01
 	                rating      standard    *Crush
+	xorshift64                  8 MB        ?
+	xorshift32                  ?           5/53/?
+	xorshift64_32               512 KB      6/50/?
+	xorshift128_32              > 1 TB      0/6/?
+	xorshift32x4                8 GB        0/8/?
 	sapparot        0           128 MB      0/0/1
 	sap48_16        0           1 GB        0/3/2
 	sap96_32        2           > 4 TB      pass
 	flea32x1        2           > 1 TB      pass
 	sfc_v1_16       1           4 GB        pass
 	sfc_v1_32       1-2         > 4 TB      pass
-	sfc_v1_64       1-2         > 1 TB      pass?
 	sfc_v2_16       0-1         1 GB        pass
-	sfc_v2_32       2           > 2 TB      0/0/1
-	sfc_v2_64       2           > 2 TB      pass?
+	sfc_v2_32       1-2         > 2 TB      0/0/1
+	simpleA         0-1         2 GB        pass
+	simpleB         0           64 MB       1/6/2
+	simpleC         0-2         16 GB       1/6/2
+	simpleD         0-3         64 GB       pass
+	simpleE         0-3         ?           pass
 
-mediocre RNGs - multiplication based
+other RNGs - multiplication based
 	RNG              Quality     PractRand   TestU01
 	                 rating      standard    *Crush
 	lcg32_16         0           16 MB       6/48/??
-	clcg64_16        0           4 GB        0/4/5
+	lcg40_16         0           16 MB       1/29/??
+	lcg48_16         0-1         4 GB        1/7/??
+	lcg56_16         0-1         256 GB      1/6/??
+	lcg64_16         1-2         > 2 TB      0/3/4
+	xlcg32_16        0           16 MB       10/?/?
+	xlcg40_16        0?          64 MB       1/11/?
+	xlcg48_16        0-1         8 GB        0/2/3
+	xlcg56_16        1?          512 GB      pass
+	xlcg64_16        1-3?        > 8 TB      pass
+	clcg64_16        0-2         1 GB        0/4/?
+	clcg68_16        0-2         32 GB       ?
+	clcg72_16        0-3         1 TB        0/1/1
+	clcg80_16        1-3         > 2 TB      pass
+	cxlcg64_16       ?           1 GB        0/1/2
+	cxlcg68_16       ?           64 GB       pass
+	cxlcg72_16       ?           1 TB        pass
 	binarymult16     0-1         2 GB        1/31/2
 	binarymult32     1-2         32 GB       pass
-	garthy16         0-2         32 MB       0/15/?
+	garthy16         0-1         32 MB       0/15/?
 	garthy32         1-2         256 GB      pass
 	rxmult16         0-1         512 MB      1/72/135
 	multish3x32      1-2         16 GB       0/0/1
 	multish4x16      1-2         64 GB       0/2/1
 	old_mwlac16      2           128 GB      pass
 
-mediocre RNGs - cyclic buffer based
+other RNGs - cyclic buffer based
 	RNG              Quality     PractRand   TestU01
 	                 rating      standard    *Crush
 	mm32             0           4 MB        1/8/12
@@ -145,9 +202,13 @@ mediocre RNGs - cyclic buffer based
 	cbuf_accum       1           4 GB        pass
 	dual_cbuf        2           128 GB      pass
 	dual_cbuf_accum  3           1 TB        pass
+	fibmul32_16      0-2         2 GB        pass
+	fibmul64_32      1-3         512 GB      pass
+	ranrot32         2           4 GB        pass
+	ranrot3tap32     2-3         64 GB       pass?
 	mt19937_unhashed 1           32 GB       0/2/2
 
-mediocre RNGs - indirection based
+other RNGs - indirection based
 	RNG              Quality     PractRand   TestU01
 	                 rating      standard    *Crush
 	ibaa8x2          0-1         2 GB        0/8/19
@@ -156,102 +217,59 @@ mediocre RNGs - indirection based
 	ibaa16x2         1-2         16 GB       pass
 	ibaa16x4         2-3         > 2 TB      pass?
 	ibaa32x2         1-3         2 TB        pass?
-	rc4_weakened     1-2         32 GB       0/1/1
-	rc4              2-3         4 TB        pass
+	rc4_weakened     0-2         32 GB       0/1/1
+	rc4              3           4 TB        pass
 	isaac32x4        0-2         8 GB        pass
 	isaac32x8        1-2         64 GB       pass
 	isaac32x16       3           16 TB       pass?
+	isaac64x4        ?           ?           ?
 
 Bays-Durham Shuffle applied to various low quality RNGs
 	RNG                       PractRand   TestU01
 	                          standard    *Crush
+	[BDS16]lcg32_16           ?           ?
 	[BDS256]lcg32_16          64 MB       0/0/20
+	[BDS4]clcg64_16           ?           ?
+	[BDS16]clcg64_16          ?           ?
 	[BDS256]clcg64_16         16 GB       pass
-	[BSD256]mm32              128 MB      0/0/6
-	[BSD256]mm32_16           > 1 TB      0/0/3
-	[BSD256]mm32_awc          > 1 TB      0/0/6
-	[BSD1]sapparot            128 MB      pass
-	[BSD2]sapparot            1 GB        pass?
-	[BSD4]sapparot            16 GB       pass?
-	[BSD8]sapparot            256 GB      pass?
+	[BDS4]cxlcg64_16          ?           ?
+	[BDS16]cxlcg64_16         ?           ?
+	[BDS256]cxlcg64_16        16 GB       ?
+	[BDS4]mm32                ?           ?
+	[BDS16]mm32               ?           ?
+	[BDS256]mm32              128 MB      0/0/6
+	[BDS4]mm32_16             ?           ?
+	[BDS16]mm32_16            ?           ?
+	[BDS256]mm32_16           > 1 TB      0/0/3
+	[BDS4]mm32_awc            ?           ?
+	[BDS16]mm32_awc           ?           ?
+	[BDS256]mm32_awc          > 1 TB      0/0/6
+	[BDS4]xorshift32          64 MB       1/26/?
+	[BDS16]xorshift32         1 GB        0/4/9
+	[BDS256]xorshift32        16 GB       0/4/9
+	[BDS4]xorshift64_32       8 MB        2/21/?
+	[BDS16]xorshift64_32      128 GB      0/14/8
+	[BDS256]xorshift64_32     > 1 TB      0/0/2
+	[BDS4]xorshift32x4        8 GB        0/7/5
+	[BDS16]xorshift32x4       1 TB        0/0/1
+	[BDS256]xorshift32x4      > 1 TB      pass
+	[BDS4]xorshift64          16 GB       ?
+	[BDS16]xorshift64         16 GB       ?
+	[BDS256]xorshift64        ?           ?
+	[BDS4]sapparot            16 GB       pass?
+	[BDS16]sapparot           > 1 TB      pass?
 
 
 *****************************************************************************
 
-========= Summary results of Crush =========
+An interesting pattern in the results: TestU01 seems to do better finding 
+bias in single-cycle / linear RNGs while PractRand seems to do better on 
+multicyclic / chaotic RNGs.  Not really enough information to establish 
+significance though.  
+The single-cycle / linear RNGs on that list include all the LCGs and LCG 
+variants, all the xorshifts, mt19937, mt19937_unhashed, mm32, mm32_16, 
+cmwc4691, and rarns.  Rarns uses a non-linear output function but a linear 
+state transition function; all of the other single-cycle RNGs there use both 
+linear state transition functions and linear output functions.  
 
- Version:          TestU01 1.2.3
- Generator:        isaac32_large
- Number of statistics:  1152
- Total CPU time:   05:39:55.29
- The following tests gave p-values outside [0.001, 0.9990]:
- (eps  means a value < 1.0e-300):
- (eps1 means a value < 1.0e-015):
-
-       Test                          p-value
- ----------------------------------------------
- 25  SimpPoker, d = 64              7.2e-04
- 91  Run of bits, r = 0             1.4e-04
- ----------------------------------------------
- All other tests were passed
-
-
-
-
-========= Summary results of Crush * 8 =========
-
- Version:          TestU01 1.2.3
- Generator:        mwlac32
- Number of statistics:  1152
- Total CPU time:   05:16:49.15
- The following tests gave p-values outside [0.001, 0.9990]:
- (eps  means a value < 1.0e-300):
- (eps1 means a value < 1.0e-015):
-
-       Test                          p-value
- ----------------------------------------------
-  9  CollisionOver, t = 20           0.9994
- 18  ClosePairs mNP2, t = 2         2.9e-04
- 60  MatrixRank, 1200 x 1200        8.0e-04
- 68  RandomWalk1 C (L = 1000)       2.3e-05
- 91  Run of bits, r = 0             2.9e-04
- ----------------------------------------------
- All other tests were passed
- 
-========= Summary results of Crush * 8 =========
-
- Version:          TestU01 1.2.3
- Generator:        mwlac32
- Number of statistics:  1152
- Total CPU time:   05:20:42.57
- The following tests gave p-values outside [0.001, 0.9990]:
- (eps  means a value < 1.0e-300):
- (eps1 means a value < 1.0e-015):
-
-       Test                          p-value
- ----------------------------------------------
- 66  RandomWalk1 C (L = 90)         6.8e-04
- 69  RandomWalk1 M (L = 10000)      2.5e-04
- 80  HammingWeight2, r = 0           0.9998
- ----------------------------------------------
- All other tests were passed
-
-
-
-
-========= Summary results of BigCrush * 8 =========
-
- Version:          TestU01 1.2.3
- Generator:        mwlac32
- Number of statistics:  1280
- Total CPU time:   37:18:03.76
- The following tests gave p-values outside [0.001, 0.9990]:
- (eps  means a value < 1.0e-300):
- (eps1 means a value < 1.0e-015):
-
-       Test                          p-value
- ----------------------------------------------
- 11  CollisionOver, t = 21          7.2e-04
- 31  CouponCollector, r = 10         0.9995
- ----------------------------------------------
- All other tests were passed
+*****************************************************************************

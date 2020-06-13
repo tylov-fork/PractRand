@@ -1,4 +1,8 @@
 
+Note: this information applies to RNG algorithms used through either a 
+"Polymorphic" or a "LightWeight" interface.  Those used through a "Raw" 
+interface only suport a subset of the interface described here.  
+
 ========================================================================
 Using PractRand for pseudo-random number generation:
 ========================================================================
@@ -7,9 +11,10 @@ Using PractRand for pseudo-random number generation:
 See installing.txt
 
 2.  Pick an RNG algorithm.  
-You can look RNG_engines.txt for information about which ones would be 
-best for you.  Or if you don't want to do that, then just use 
-isaac32x256.  
+You can look at RNG_engines.txt for information about which ones would 
+be best for you.  Or if you don't want to do that, then just use hc256, 
+the polymorphic version of it.  That is:
+	PractRand::RNGs::Polymorphic::hc256  
 
 3.  Include the PractRand headers needed.  
 If all you're using is an RNG from PractRand then all you need to 
@@ -27,6 +32,9 @@ file, or inside one of your own headers.
 Pseudo-random number generators need to be seeded.  A typical RNG in 
 PractRand can be seeded by any of several methods:
 
+Note: most seeding interfaces are not available on "raw" RNGs.  See 
+RNG_interface_variants.txt for details on raw RNGs.  
+
 4a. automatic seeding: Easy to use, attempts to make the RNG 
 produce a different sequence on each run of your program.  You give 
 the RNGs constructor a parameter of PractRand::SEED_AUTO and it takes 
@@ -34,7 +42,7 @@ care of the rest.  This is generally easy and effective.  It should
 work for most multithreaded programs.  It is *NOT* sufficient for 
 cryptographic usage though.  If your RNG has already been constructed 
 and you want to overrides its current state with an automatic seeding 
-then call the autoseed() method (only available on polymorphic RNGs).  
+then call the autoseed() method.  
 eg PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
 or rng.autoseed();
 
@@ -47,7 +55,8 @@ integer seeding then call the seed() method and pass it an integer.
 The integer type it expects is a 64 bit unsigned value.  If you 
 pass it the literal value "0" then it may get confused because 0 is 
 also NULL, which could be a pointer of the type used for seeding 
-in 4c below.  
+in 4c below.  Note that seeding from a single integer is NEVER 
+sufficient for cryptographic usage.  
 eg PractRand::RNGs::Polymorphic::isaac32x256 rng(13);
 or rng.seed(13);
 
@@ -72,10 +81,15 @@ such an RNG produces undefined results (depending upon which RNG is
 used it will likely either return not-very-random numbers or crash).  
 However you can then seed it later using the seed() or autoseed() 
 methods.  
+Exception: Some RNGs have a default state.  Those RNGs, if no seed is 
+used, start out in their default state, which does have defined 
+results when used.  
 
 4e. entropy pools: Certain special RNGs, called entropy pools, are 
-intended for use in more specialized seeding scenarios.  See 
-RNG_entropy_pools.txt
+intended for use in more specialized seeding scenarios.  They support 
+all the options that non-entropy-pooling RNGs support, but have 
+additional functionality relating to seeding.  See RNG_entropy_pools.txt
+for more information on them.  
 
 5.  Declare an instance of your RNG.  
 For single-threaded programs this is generally done as:
@@ -85,11 +99,15 @@ For a multi-threaded program this is typically done as:
 __thread PractRand::RNGs::Polymorphic::isaac32x256 my_rng( my_seed );
 or like this:
 __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 my_rng( my_seed );
-...depending upon what compiler you are using and how you intend to use the RNG.  
+...depending upon what compiler you are using.  
 
 6.  Get random numbers from your RNG.  
 You can see the full base class for polymorphic RNGs as PractRand::RNGs::vRNG in 
 PractRand/rng_basics.h
+That class is also available under a number of other aliases:
+	PractRand::RNGs::Polymorphic::vRNG
+	PractRand::RNGs::PolymorphicRNG
+	PractRand::RNGs::Polymorphic::PolymorphicRNG
 
 Every PractRand RNG that is not designated as "raw" includes support 
 for the following methods:
@@ -105,14 +123,14 @@ Uint32 randi(Uint32 min, Uint32 max);//uniform random number in [min..max)
 //note: avoid using these two on low-end embedded CPUs - they use multiplication internally
 Uint32 randi_fast(Uint32 max);//uniform random number in [0..max), with bias
 Uint32 randi_fast(Uint32 min, Uint32 max);//uniform random number in [min..max), with bias
-//uniform 64 bit integers
+//uniform 64 bit integers (long integer)
 Uint64 randli(Uint64 max);//uniform random number in [0..max)
 Uint64 randli(Uint64 min, Uint64 max);//uniform random number in [min..max)
 //uniform random floats
 float randf(); //uniform random number in [0..1)
 float randf(float max); //uniform random number in [0..max)
 float randf(float min, float max); //uniform random number in [min..max)
-//uniform random doubles
+//uniform random doubles (long floating point)
 double randlf(); //uniform random number in [0..1)
 double randlf(double max); //uniform random number in [0..max)
 double randlf(double min, double max); //uniform random number in [min..max)
@@ -120,5 +138,7 @@ double randlf(double min, double max); //uniform random number in [min..max)
 That covers all the basic uniform distributions.  If you want a non-uniform 
 distribution such as a gaussian distribution, then you will need another 
 package.  One option is Boost / C++0x TR1, which offers several distributions 
-as template objects.  PractRand polymorphic RNGs are compatible with those 
-distributions.  
+as template objects.  PractRand RNGs are compatible with those distributions 
+if the symbol PRACTRAND_BOOST_COMPATIBILITY is defined prior to the inclusion 
+of PractRands headers.  
+

@@ -1,3 +1,5 @@
+//#include <vector>
+
 #define PRACTRAND__RANDF_IMPLEMENTATION(RNG)  {return  float(((RNG).raw32() & ((PractRand::Uint32(1) << 24)-1)) *  float(1.0/16777216.0));}
 #define PRACTRAND__RANDLF_IMPLEMENTATION(RNG)  {return double(((RNG).raw64() & ((PractRand::Uint64(1) << 53)-1)) * double(1.0/9007199254740992.0));}
 
@@ -89,6 +91,41 @@ namespace PractRand {
 		class vRNG;
 	}
 	namespace Internals {
-		void add_entropy_automatically( PractRand::RNGs::vRNG *rng, int milliseconds=0 );
+		//inline
+		static inline Uint8  rotate8 (Uint8  value, int bits) {return (value << bits) | (value >> (8 -bits));}
+		static inline Uint16 rotate16(Uint16 value, int bits) {return (value << bits) | (value >> (16-bits));}
+		static inline Uint32 rotate32(Uint32 value, int bits) {return (value << bits) | (value >> (32-bits));}
+		static inline Uint64 rotate64(Uint64 value, int bits) {return (value << bits) | (value >> (64-bits));}
+		static inline Uint8  rotate(Uint8  value, int bits) {return rotate8 (value, bits);}
+		static inline Uint16 rotate(Uint16 value, int bits) {return rotate16(value, bits);}
+		static inline Uint32 rotate(Uint32 value, int bits) {return rotate32(value, bits);}
+		static inline Uint64 rotate(Uint64 value, int bits) {return rotate64(value, bits);}
+		//rand.cpp
+		void test_seeking64( PractRand::RNGs::vRNG *rng, Uint64 period_minus_1 );
+		void test_seeking128( PractRand::RNGs::vRNG *rng, Uint64 period_minus_1_low, Uint64 period_minus_1_high );
+		//automatic_entropy.cpp
+		bool add_entropy_automatically( PractRand::RNGs::vRNG *entropy_pool, int milliseconds=0 );
+		//math.cpp
+		void fast_forward_lcg128 ( Uint64 how_far_low, Uint64 how_far_high, Uint64 &value_low, Uint64 &value_high, Uint64 mul_low, Uint64 mul_high, Uint64 add_low, Uint64 add_high );
+		Uint64 fast_forward_lcg64 ( Uint64 how_far, Uint64 val, Uint64 mul, Uint64 add );
+		Uint32 fast_forward_lcg32 ( Uint32 how_far, Uint32 val, Uint32 mul, Uint32 add );
+		Uint32 fast_forward_lcg32c ( Uint32 how_far, Uint32 val, Uint32 mul, Uint32 add, Uint32 mod );
+		/*class XorshiftMatrix {
+			//matrix representing a state transition function for an RNG that uses only shifts and xors
+			std::vector<bool> bits;
+			int size;
+		public:
+			XorshiftMatrix(int size_, bool identity);
+			void apply(const std::vector<bool> &input, std::vector<bool> &output);
+			XorshiftMatrix operator*(const XorshiftMatrix &other) const;
+			bool operator==(const XorshiftMatrix &other) const;
+			bool operator!=(const XorshiftMatrix &other) const {return !(*this == other);}
+			XorshiftMatrix exponent(Uint64 exponent_value) const;
+			XorshiftMatrix exponent2Xminus1(Uint64 X) const;
+			bool verify_period_factorization(const std::vector<Uint64> &factors) const;
+			bool get(int in_index, int out_index) const {return bits[in_index + out_index * size];}
+			void set(int in_index, int out_index, bool value) {bits[in_index + out_index * size] = value;}
+			void toggle(int in_index, int out_index, bool value) {bits[in_index + out_index * size] = !bits[in_index + out_index * size];}
+		};*/
 	}
 }

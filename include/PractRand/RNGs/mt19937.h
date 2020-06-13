@@ -21,6 +21,15 @@ namespace PractRand {
 				//seeds < 2**32 use the standard MT19937 seeding algorithm
 				//seeds >= 2**32 use a nonstandard MT19937 seeding algorithm
 				void seed(Uint64 s);
+
+				Uint32 untempered_raw32() {
+					if ( used >= ARRAY_SIZE ) {
+						_advance_state();
+						return state[used++];
+					}
+					else return state[used++];
+				}
+				static void self_test();
 			};
 		}
 		
@@ -31,5 +40,6 @@ namespace PractRand {
 				void flush_buffers();
 			};
 		}
+		PRACTRAND__LIGHT_WEIGHT_RNG(mt19937)
 	}
 }

@@ -6,6 +6,9 @@
 #include <set>
 #include <map>
 #include <cmath>
+#include <cstdlib>
+#include <cstring>
+
 #include "PractRand/config.h"
 #include "PractRand/rng_basics.h"
 #include "PractRand/rng_helpers.h"
@@ -108,6 +111,9 @@ Tests::ListOfTests::ListOfTests(
 	if (test16) tests.push_back(test16);
 }
 
+bool PractRand::Tests::TestBaseclass::recommend_subtest_tree_descent() const {return false;}
+int PractRand::Tests::TestBaseclass::get_num_subtests() const {return 1;}
+std::string PractRand::Tests::TestBaseclass::get_subtest_name(int index) const {return "";}
 double PractRand::Tests::TestBaseclass::result_to_pvalue ( Uint64 blocks, double r ) {
 	return -1;
 }
@@ -122,11 +128,10 @@ void PractRand::Tests::Gap16::init( PractRand::RNGs::vRNG *known_good ) {
 	}
 	counts.reset_counts();
 	autofail = 0;
-	blocks = 0;
+	blocks_tested = 0;
 }
-
 void PractRand::Tests::Gap16::test_blocks(TestBlock *data, int numblocks) {
-	Sint32 ofs = Uint32(blocks) * TestBlock::SIZE / 2;
+	Sint32 ofs = Uint32(blocks_tested) * TestBlock::SIZE / 2;
 	unsigned long max = TestBlock::SIZE * numblocks / 2;
 	for (unsigned long i = 0; i < max; i++, ofs++) {
 		int a = data[0].as16[i];
@@ -150,9 +155,9 @@ void PractRand::Tests::Gap16::test_blocks(TestBlock *data, int numblocks) {
 
 		counts.increment(index);
 	}
-	Uint64 oblocks = blocks;
-	blocks += numblocks;
-	if ((oblocks>>18) != (blocks>>18)) {//once every 256 megabytes or so... prevent overflow
+	Uint64 oblocks = blocks_tested;
+	blocks_tested += numblocks;
+	if ((oblocks>>19) != (blocks_tested>>19)) {//once every 512 megabytes or so... prevent overflow
 		for (int i = 0; i < 65536; i++) {
 			int n = last[i];
 			if (n == -1) continue;
@@ -170,7 +175,7 @@ double PractRand::Tests::Gap16::get_result() {
 	if (autofail) return 9876543210.;
 	//correct probs for startup region:
 	double lopped = 0;
-	double inv_total_samples = 1.0 / (blocks * (TestBlock::SIZE/2.));
+	double inv_total_samples = 1.0 / (blocks_tested * (TestBlock::SIZE/2.));
 	for (int i = 0; i < TSIZE; i++) {
 		int first, last;
 		if (i < SIZE1) {
@@ -208,14 +213,14 @@ double PractRand::Tests::Gap16::get_result() {
 	double r1, r2;
 	int reduced_size = simplify_prob_table(
 		TSIZE, 
-		(blocks * TestBlock::SIZE/2.) / 40., 
+		(blocks_tested * TestBlock::SIZE/2.) / 40., 
 		&probs[0], count, true, true
 	);
 	r1 = g_test(reduced_size, &probs[0], count);
 	r1 = math_chisquared_to_normal(r1, reduced_size-1);
 	reduced_size = simplify_prob_table(
 		reduced_size, 
-		sqrt(blocks * TestBlock::SIZE/2.), 
+		sqrt(blocks_tested * TestBlock::SIZE/2.), 
 		&probs[0], count, true, true
 	);
 	r2 = g_test(reduced_size, &probs[0], count);
@@ -226,6 +231,7 @@ double PractRand::Tests::Gap16::get_result() {
 	else r = r2;
 	return r;
 }
+
 
 static double apply_callibration_data( double points[21], double value ) {
 	//TO DO: this whole function needs more work
@@ -356,7 +362,7 @@ void PractRand::Tests::DistC6::init( PractRand::RNGs::vRNG *known_good ) {
 		lookup_table[i] = reorder_bits(reorder_codes(transform_bitcount(i)));
 	}
 	warmup = length-1;
-	blocks = 0;
+	blocks_tested = 0;
 }
 void PractRand::Tests::DistC6::deinit( ) {
 }
@@ -425,7 +431,7 @@ void PractRand::Tests::DistC6::test_blocks(TestBlock *data, int numblocks) {
 		break;
 	}
 	last_index = index;
-	blocks += numblocks;
+	blocks_tested += numblocks;
 }
 
 void PractRand::Tests::DistC6::generate_reorder_codes ( ) {
@@ -533,16 +539,9 @@ double PractRand::Tests::DistC6::get_result() {
 		}
 	}
 
-/*	Uint32 counts_hash = complex_hash32( tmp_counts, size * sizeof(Sint64));
-//	std::sort(&tmp_counts[0], &tmp_counts[size]);
-	Uint32 counts_hash2 = complex_hash32( tmp_counts, size * sizeof(Sint64));
-	Uint32 probs_hash  = complex_hash32( probs, size * sizeof(double));
-	Sint64 ts = 0; for (int i = 0; i < size; i++) {ts += tmp_counts[i];}
-	printf(" %3d %3d %3d %3d\n", counts_hash % 1000, counts_hash2 % 1000, probs_hash % 1000, int(ts % 1000));//*/
-
 	//finishing
 	int reduced_size = simplify_prob_table(size, 
-		blocks * (TestBlock::SIZE >> unitsL) / 25.0,
+		blocks_tested * (TestBlock::SIZE >> unitsL) / 25.0,
 		probs, tmp_counts, true, true);
 	double r = g_test(reduced_size, probs, tmp_counts);
 	r = math_chisquared_to_normal(r, reduced_size - 1);
@@ -600,11 +599,6 @@ double PractRand::Tests::DistC6::result_to_pvalue ( Uint64 blocks, double r ) {
 		}
 	}
 	return -1;
-	/*else if (0) {//closer aproximations:
-//1.0,		0.9999999,	0.999999,	0.99999,	0.9999,		0.999,		0.99,
-//0.9,		0.75,		0.6,		0.5,		0.4,		0.25,		0.1,
-//0.01,		0.001,		0.0001,		0.00001,	0.000001,	0.0000001,	0
-	}*/
 }
 
 
@@ -647,7 +641,7 @@ void PractRand::Tests::BCFN::init( PractRand::RNGs::vRNG *known_good ) {
 		counts[i].reset_counts();
 	}
 	autofail = false;
-	blocks = 0;
+	blocks_tested = 0;
 }
 void PractRand::Tests::BCFN::deinit() {
 	for (int i = 0; i < LEVELS; i++) {
@@ -668,7 +662,7 @@ double PractRand::Tests::BCFN::get_result() {
 	for (int level = 0; level < LEVELS; level++) {
 		rs[level] = 0;
 		int N = int(log(mask[level]+1.) / log(2.) + 0.5);
-		double samples = blocks * TestBlock::SIZE * pow(0.5, level+unitsL2) - N + 1;
+		double samples = blocks_tested * TestBlock::SIZE * pow(0.5, level+unitsL2) - N + 1;
 		if (samples < 0) samples = 0;
 		int size = 1 << N;
 		//double E = samples / size;
@@ -729,13 +723,13 @@ void PractRand::Tests::BCFN::handle_high_levels ( int level, int bits ) {
 	handle_high_levels(level+1, bits);
 }
 void PractRand::Tests::BCFN::test_blocks(TestBlock *data, int numblocks) {
-	if (!blocks && numblocks > 1) {
+	if (!blocks_tested && numblocks > 1) {
 		test_blocks(data, 1);
 		data += 1;
 		numblocks -= 1;
 	}
 	if (autofail) return;
-	if (!blocks) {
+	if (!blocks_tested) {
 #define GET_BITS8(pos)  (count_bits8 (data[0].as8 [i+(pos)]) - 4)
 #define GET_BITS16(pos) (count_bits16(data[0].as16[i+(pos)]) - 8)
 #define GET_BITS32(pos) (count_bits32(data[0].as32[i+(pos)]) - 16)
@@ -791,7 +785,7 @@ void PractRand::Tests::BCFN::test_blocks(TestBlock *data, int numblocks) {
 		}
 #undef HANDLE_BITS
 		if (warmup[4]) autofail = true;
-		blocks += 1;
+		blocks_tested += 1;
 		if (numblocks > 1) test_blocks(data+1,numblocks-1);
 		return;
 	}
@@ -972,7 +966,7 @@ void PractRand::Tests::BCFN::test_blocks(TestBlock *data, int numblocks) {
 				issue_error();
 		}
 	}
-	blocks += numblocks;
+	blocks_tested += numblocks;
 }
 double PractRand::Tests::BCFN::result_to_pvalue ( Uint64 blocks, double r ) {
 	if (tbits == 13) {//very crude aproximation:
@@ -1070,7 +1064,7 @@ void PractRand::Tests::FPF::init( RNGs::vRNG *known_good ) {
 			count_leading_zeroes_table[i] = k;
 		}
 	}
-	blocks = 0;
+	blocks_tested = 0;
 }
 void PractRand::Tests::FPF::deinit( ) {
 	counts.set_size(0);
@@ -1101,7 +1095,7 @@ double PractRand::Tests::FPF::get_result() {
 	unsigned long stride_bits = 1 << stride_bits_L2;
 
 	int total_size = (max_sig + 1) * (max_exp + 1);
-	double samples = (blocks * TestBlock::SIZE * 8.0 + 1 - footprint) / stride_bits;
+	double samples = (blocks_tested * TestBlock::SIZE * 8.0 + 1 - footprint) / stride_bits;
 	if (samples < 0) return 0;
 	std::vector<double> probs; probs.resize(total_size);
 	const Uint64 *counts_ = counts.get_array();
@@ -1163,7 +1157,7 @@ void PractRand::Tests::FPF::test_blocks(TestBlock *data, int numblocks) {
 			long max32 = numblocks * (TestBlock::SIZE / 4);
 			Uint32 cur;
 			long start;
-			if (blocks) {
+			if (blocks_tested) {
 				cur = reverse_bits32(data->as32[-1]);
 				start = 0;
 			}
@@ -1198,7 +1192,7 @@ void PractRand::Tests::FPF::test_blocks(TestBlock *data, int numblocks) {
 		if (stride_bits >= 32) {//large footprint, long stride
 			long stride32 = 1 << (stride_bits_L2 - 5);
 			long max = numblocks * (TestBlock::SIZE / 4) - 1;
-			for (long i = blocks ? -1 : 0; i < max; i += stride32) {
+			for (long i = blocks_tested ? -1 : 0; i < max; i += stride32) {
 				Uint32 cur = data->as32[i];
 				unsigned long e = count_leading_zeroes32(cur);
 				unsigned long sig;
@@ -1223,7 +1217,7 @@ void PractRand::Tests::FPF::test_blocks(TestBlock *data, int numblocks) {
 			long max32 = numblocks * (TestBlock::SIZE / 4) - 1;
 			long start;
 			Uint32 cur;
-			if (blocks) {
+			if (blocks_tested) {
 				cur = reverse_bits32(data->as32[-2]);
 				start = -1;
 			}
@@ -1260,13 +1254,13 @@ void PractRand::Tests::FPF::test_blocks(TestBlock *data, int numblocks) {
 			}
 		}
 	}
-	blocks += numblocks;
+	blocks_tested += numblocks;
 }
 
 
 void PractRand::Tests::CoupGap::init( RNGs::vRNG *known_good ) {
 	autofail = 0;
-	blocks = 0;
+	blocks_tested = 0;
 	symbols_ready = 0;
 	for (int i = 0; i < 256; i++) {
 		sym_has_appeared[i] = false;
@@ -1283,7 +1277,7 @@ std::string PractRand::Tests::CoupGap::get_name( ) const {
 }
 double PractRand::Tests::CoupGap::get_result() {
 	if (autofail) return 9876543210.;
-	if (blocks < 256) return 0;
+	if (blocks_tested < 256) return 0;
 
 	std::vector<double> probs;
 	probs.resize(65536);
@@ -1296,7 +1290,7 @@ double PractRand::Tests::CoupGap::get_result() {
 void PractRand::Tests::CoupGap::test_blocks(TestBlock *data, int numblocks) {
 	if (autofail) return;
 	int i;
-	Uint32 ofs = Uint32(blocks) * TestBlock::SIZE;
+	Uint32 ofs = Uint32(blocks_tested) * TestBlock::SIZE;
 	int max = TestBlock::SIZE * numblocks;
 	for (i = 0; i < max; i++, ofs++) {
 		unsigned long sym = data[0].as8[i];
@@ -1323,9 +1317,9 @@ void PractRand::Tests::CoupGap::test_blocks(TestBlock *data, int numblocks) {
 		next_younger_sym[youngest_sym] = Uint8(sym);
 		youngest_sym = sym;
 	}
-	Uint64 oblocks = blocks;
-	blocks += numblocks;
-//	if ((oblocks>>17) != (blocks>>17)) {//once every 128 megabytes or so... prevent overflow
+	Uint64 oblocks = blocks_tested;
+	blocks_tested += numblocks;
+//	if ((oblocks>>17) != (blocks_tested>>17)) {//once every 128 megabytes or so... prevent overflow
 //		for (i = 0; i < 256; i++) {
 //			int n = last_sym_pos[i];
 //			if (n == -1) continue;
@@ -1357,7 +1351,9 @@ PractRand::Tests::Transforms::multiplex::multiplex(const char *name_, const List
 	}
 //	else name = make_string("");
 }
-
+bool PractRand::Tests::Transforms::multiplex::recommend_subtest_tree_descent() const {
+	return true;
+}
 void PractRand::Tests::Transforms::multiplex::deinit() {
 	for (std::vector<Tests::TestBaseclass*>::iterator it = subtests.tests.begin(); it != subtests.tests.end(); it++)
 		(*it)->deinit();
@@ -1423,10 +1419,10 @@ PractRand::Tests::Transforms::switching::switching(
 {
 	if (lengths.size() != testlist.tests.size()) issue_error();
 	blocks_already_per.resize(lengths.size());
-	for (int i = 0; i < blocks_already_per.size(); i++)
+	for (unsigned long i = 0; i < blocks_already_per.size(); i++)
 		blocks_already_per[i] = 0;
 	total_length = 0;
-	for (int i = 0; i < blocks_already_per.size(); i++) total_length += lengths[i];
+	for (unsigned long i = 0; i < blocks_already_per.size(); i++) total_length += lengths[i];
 }
 PractRand::Tests::Transforms::switching::switching(
 	const char *name_, 
@@ -1437,12 +1433,12 @@ PractRand::Tests::Transforms::switching::switching(
 {
 	lengths.resize(testlist.tests.size());
 	blocks_already_per.resize(lengths.size());
-	for (int i = 0; i < blocks_already_per.size(); i++)
+	for (unsigned long i = 0; i < blocks_already_per.size(); i++)
 		lengths[i] = length;
 	total_length = length * blocks_already_per.size();
 }
 void PractRand::Tests::Transforms::switching::init( RNGs::vRNG *known_good ) {
-	for (int i = 0; i < blocks_already_per.size(); i++)
+	for (unsigned long i = 0; i < blocks_already_per.size(); i++)
 		blocks_already_per[i] = 0;
 	phase = 0;
 	which = 0;
@@ -1486,7 +1482,7 @@ void PractRand::Tests::Transforms::Transform_Baseclass::flush(bool aggressive) {
 	if (!blocks_to_move) return;
 	int how_far = buffered.size() - blocks_to_move;
 	if (!how_far) return;
-	memmove(&buffered[0], &buffered[how_far], blocks_to_move * TestBlock::SIZE);
+	std::memmove(&buffered[0], &buffered[how_far], blocks_to_move * TestBlock::SIZE);
 	buffered.resize(blocks_to_move);
 }
 
@@ -1524,7 +1520,7 @@ void PractRand::Tests::Transforms::FirstNofM::test_blocks(TestBlock *data, int n
 	}
 	Uint8 *outptr = &buffered[old_blocks].as8[0] - leftovers;
 
-	if (begin_out) memcpy(outptr, inptr, begin_out);
+	if (begin_out) std::memcpy(outptr, inptr, begin_out);
 	outptr += begin_out;
 	inptr += begin_length;
 	max -= begin_length;
@@ -1548,14 +1544,14 @@ void PractRand::Tests::Transforms::FirstNofM::test_blocks(TestBlock *data, int n
 		}
 		else {
 			while (max > bytes_stride) {
-				memcpy(outptr, inptr, bytes_used);
+				std::memcpy(outptr, inptr, bytes_used);
 				outptr += bytes_used;
 				inptr += bytes_stride;
 				max -= bytes_stride;
 			}
 		}
 	}
-	if (end_out) memcpy(outptr, inptr, end_out);
+	if (end_out) std::memcpy(outptr, inptr, end_out);
 	outptr += end_out;
 	inptr += end_length;
 	max -= end_length;
@@ -1576,8 +1572,21 @@ void PractRand::Tests::Transforms::lowbits::init( RNGs::vRNG *known_good ) {
 	}
 }
 void PractRand::Tests::Transforms::lowbits::test_blocks(TestBlock *data, int numblocks) {
-	int max = numblocks * (TestBlock::SIZE >> unitsL);
-	int lowbits = 1 << lowbitsL;
+	enum {MAX_BLOCKS_AT_ONCE = 16384};
+	while (numblocks > MAX_BLOCKS_AT_ONCE) {
+		test_blocks(data, MAX_BLOCKS_AT_ONCE);
+		data += MAX_BLOCKS_AT_ONCE;
+		numblocks -= MAX_BLOCKS_AT_ONCE;
+	}
+	int max, lowbits;
+	if (unitsL != -1) {
+		max = numblocks * (TestBlock::SIZE >> unitsL);
+		lowbits = 1 << lowbitsL;
+	}
+	else {
+		max = numblocks * TestBlock::SIZE;
+		lowbits = 2 << lowbitsL;
+	}
 	Uint32 *dest_ptr;
 	if (1) {//allocate space in vector:
 		int spare_words = (TestBlock::SIZE/4 - leftovers) & (TestBlock::SIZE/4-1);
@@ -1589,7 +1598,32 @@ void PractRand::Tests::Transforms::lowbits::test_blocks(TestBlock *data, int num
 		leftovers = (leftovers + needed_words) & (TestBlock::SIZE/4-1);
 	}
 	switch (unitsL) {
-		case 0: {
+		case -1: {//4 bit words
+			static Uint8 table0[256] = {
+				0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,2,3,2,3,2,3,2,3,2,3,2,3,2,3,2,3,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,2,3,2,3,2,3,2,3,2,3,2,3,2,3,2,3,
+				0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,2,3,2,3,2,3,2,3,2,3,2,3,2,3,2,3,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,2,3,2,3,2,3,2,3,2,3,2,3,2,3,2,3,
+				0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,2,3,2,3,2,3,2,3,2,3,2,3,2,3,2,3,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,2,3,2,3,2,3,2,3,2,3,2,3,2,3,2,3,
+				0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,2,3,2,3,2,3,2,3,2,3,2,3,2,3,2,3,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,2,3,2,3,2,3,2,3,2,3,2,3,2,3,2,3
+			};
+			static Uint8 table1[256] = {
+				0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,4,5,6,7,4,5,6,7,4,5,6,7,4,5,6,7,8,9,10,11,8,9,10,11,8,9,10,11,8,9,10,11,12,13,14,15,12,13,14,15,12,13,14,15,12,13,14,15,
+				0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,4,5,6,7,4,5,6,7,4,5,6,7,4,5,6,7,8,9,10,11,8,9,10,11,8,9,10,11,8,9,10,11,12,13,14,15,12,13,14,15,12,13,14,15,12,13,14,15,
+				0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,4,5,6,7,4,5,6,7,4,5,6,7,4,5,6,7,8,9,10,11,8,9,10,11,8,9,10,11,8,9,10,11,12,13,14,15,12,13,14,15,12,13,14,15,12,13,14,15,
+				0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,4,5,6,7,4,5,6,7,4,5,6,7,4,5,6,7,8,9,10,11,8,9,10,11,8,9,10,11,8,9,10,11,12,13,14,15,12,13,14,15,12,13,14,15,12,13,14,15
+			};
+			Uint8 *table = lowbitsL ? table1 : table0;
+			int i = 0;
+			while (i < max) {
+				Uint32 word = table[data->as8[i++]];
+				for (int j = lowbits; j < 32; j+=lowbits) {
+					word |= Uint32(table[data->as8[i++]]) << j;
+				}
+				*dest_ptr = word;
+				dest_ptr++;
+			}
+		}
+		break;
+		case 0: {//8 bit words
 			Uint32 mask = (1 << lowbits) - 1;
 			int i = 0;
 			while (i < max) {

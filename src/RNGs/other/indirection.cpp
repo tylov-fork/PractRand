@@ -1,12 +1,14 @@
 #include <string>
 #include <sstream>
+#include <cstdlib>
 #include "PractRand/config.h"
 #include "PractRand/rng_basics.h"
 #include "PractRand/rng_helpers.h"
 #include "PractRand/rng_internals.h"
 
 #include "PractRand/RNGs/other/indirection.h"
-#include "PractRand/test_helpers.h"
+#include "PractRand/RNGs/arbee.h"
+//#include "PractRand/test_helpers.h"
 
 namespace PractRand {
 	namespace RNGs {
@@ -21,21 +23,48 @@ namespace PractRand {
 				}
 				std::string rc4::get_name() const {return "rc4";}
 				void rc4::walk_state(StateWalkingObject *walker) {
-					walker->handle(a);walker->handle(b);
-					for (int i = 0; i < 256; i++) walker->handle(arr[i]);
+					walker->handle(a);
+					walker->handle(b);
+					if (walker->is_clumsy() && !walker->is_read_only()) {
+						Uint64 seed;
+						walker->handle(seed);
+						PractRand::RNGs::Raw::arbee seeder(seed);
+						for (int i = 0; i < 256; i++) arr[i] = i;
+						for (int i = 0; i < 256; i++) {
+							Uint8 ai = i, bi = seeder.raw8();
+							Uint8 tmp = arr[ai]; arr[ai] = arr[bi]; arr[bi] = tmp;
+						}
+					}
+					else {
+						for (int i = 0; i < 256; i++) walker->handle(arr[i]);
+					}
 				}
 
 				Uint8 rc4_weakened::raw8() {
 					b += arr[a];
 					Uint8 tmp = arr[b];
 					arr[b] = arr[a];
-					arr[a] = tmp;
-					return tmp;// + b;
+					arr[a++] = tmp;
+					return tmp;
 				}
 				std::string rc4_weakened::get_name() const {return "rc4_weakened";}
 				void rc4_weakened::walk_state(StateWalkingObject *walker) {
-					walker->handle(a);walker->handle(b);
-					for (int i = 0; i < 256; i++) walker->handle(arr[i]);
+					walker->handle(a);
+					walker->handle(b);
+					if (walker->is_clumsy() && !walker->is_read_only()) {
+						Uint64 seed;
+						walker->handle(seed);
+						PractRand::RNGs::Raw::arbee seeder(seed);
+						seeder.walk_state(walker);
+						for (int i = 0; i < 256; i++) arr[i] = i;
+						for (int i = 0; i < 256; i++) {
+							Uint8 ai = i, bi = seeder.raw8();
+							Uint8 tmp = arr[ai]; arr[ai] = arr[bi]; arr[bi] = tmp;
+						}
+					}
+					else {
+						for (int i = 0; i < 256; i++) walker->handle(arr[i]);
+					}
 				}
 
 				Uint8 ibaa8::raw8() {
@@ -137,8 +166,8 @@ namespace PractRand {
 				}
 				void ibaa32::walk_state(StateWalkingObject *walker) {
 					walker->handle(a);walker->handle(b);
-					int table_size = 1<<table_size_L2;
-					for (int i = 0; i < table_size; i++) walker->handle(table[i]);
+					unsigned long table_size = 1<<table_size_L2;
+					for (unsigned long i = 0; i < table_size; i++) walker->handle(table[i]);
 					if (left >= table_size) left = 0;
 				}
 				ibaa32::ibaa32(int table_size_L2_) : table_size_L2(table_size_L2_) {

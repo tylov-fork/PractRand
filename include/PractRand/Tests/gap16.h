@@ -11,7 +11,7 @@ namespace PractRand {
 		protected:
 			enum { 
 				SIZE1 = 1<<18, //handles the common case, tracks sets of (1 << SET1_SHIFT) gaps
-				SIZE2 = 1<<16, //handles the uncommon cases, tracks each set of (1 << SET2_SHIFT) gaps
+				SIZE2 = 1<<17, //handles the uncommon cases, tracks each set of (1 << SET2_SHIFT) gaps
 				SIZE3 = 1<<10, //handles the rare cases, tracks a number of sets which double in size after the second one - the smallest is SET3_BASE in size
 				SET1_SHIFT = 1,
 				SET2_SHIFT = 4,
@@ -20,7 +20,6 @@ namespace PractRand {
 			FixedSizeCount<Uint8, SIZE1 + SIZE2 + SIZE3> counts;
 			Sint32 autofail;
 			Sint32 last[65536];
-			Uint64 blocks;
 		};
 	}//Tests
 }//PractRand

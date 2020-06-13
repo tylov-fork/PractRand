@@ -1,24 +1,13 @@
 
 PractRand offers several closely related interfaces to RNGs.  
 The interface types are:
-1. Raw RNGs
-2. Polymorphic RNGs
-3. Light-weight RNGs
+1. Polymorphic RNGs
+2. Light-weight RNGs
+3. Raw RNGs
 4. Entropy Pools (which are RNGs that can accumulate entropy)
-5. Inline RNGs
-6. RNG Adaptors
+5. Non-recommended RNGs (aka other RNGs)
 
-1. Raw RNGs:
-A raw RNG is the minimal type necessary to define an RNG algorithm.  They 
-lack a lot of the basic PractRand RNG interface features.  They have only 
-the minimum necessary to define an RNG algorithm.  A normal user will 
-generally not use raw RNGs.  Mostly the raw version of an RNG is used 
-internally to PractRand in the definition of non-raw forms of that RNG.  
-Raw RNGs go in the namespace PractRand::RNGs::Raw.  
-Every RNG in PractRand is available in a Raw form.  
-Raw RNGs have no constructors.  
-
-2. Polymorphic RNGs:
+1. Polymorphic RNGs:
 A polymorphic RNG supports the full standard PractRand RNG interface.  And, 
 as the name implies they are polymorphic - they have a vtable, so you can 
 use base class pointers to point to any polymorphic RNG.  In addition to the 
@@ -27,33 +16,40 @@ a number of methods that are optional extensions that most RNG algorithms do
 not support.  These are present in the interface for all Polymorphic RNGs in 
 order to simplify inheritance.  On RNGs that do not support them, calling 
 them has no effect.  
-Most RNGs in PractRand are available in a Polymorphic form.  
-The base class for Polymorphic RNGs is vRNG (for virtual RNG), in the 
-namespace PractRand::RNGs and also in the namespace 
-PractRand::RNGs::Polymorphic.  
+Every RNG in PractRand is available in a Polymorphic form.  
+The base class for Polymorphic RNGs is PractRand::vRNG (for virtual RNG).  
+The same class is also known under several aliases:
+	PractRand::RNGs::vRNG
+	PractRand::RNGs::PolymorphicRNGs::vRNG
+Polymorphic RNGs are in the PractRand::RNGs::Polymorphic namespace.  
 
-3. Light-weight RNGs:
-Polymorphic RNGs take up an extra 4 or 8 bytes each, and can be a 
-little slower than raw RNGs.  If those costs are too high, the suggested 
-alternative is a light-weight RNG.  There are very few light-weight RNGs 
-built in to PractRand natively, because each must re-implement several 
-bits of the interface from scratch.  However, there is a template 
-available to convert any Raw RNG in to a Light-weight RNG.  See #6 below 
-for that.  
-The only RNG in the current version of PractRand to offer a native (ie 
-non-templated) light-weight implementation is jsf32.  The light-weight 
-version of jsf32 is in the namespace PractRand::RNGs.  
+2. Light-weight RNGs:
+Polymorphic RNGs are slower and larger than they strictly need to be, in 
+order to allow them to be polymorphic.  If those costs are too high, the 
+suggested alternative is a light-weight RNG, which is basically the same 
+thing only without polymorphism.  
+Light-weight RNGs are in the PractRand::RNGs::LightWeight namespace.  
+
+3. Raw RNGs:
+A raw RNG is the minimal type necessary to define an RNG algorithm.  They 
+define the mandatory stuff - state variables, core algorithm, a small amount 
+of metadata, and optionally anything else specific to the algorithm (custom 
+seeding methods, etc).  But they do not provide a nice interface, just a 
+small subset of the normal PractRand RNG interface.  
+Normally users will not use raw RNGs directly.  However, it is possible if 
+you desire to do so for some reason.  Raw RNGs are declared in the 
+PractRand::RNGs::Raw namespace.  
 
 4. Entropy-accumulating RNGs:
 Convential RNGs have a single simple seeding process - you give them a seed, 
 then they are seeded.  Entropy-accumulating RNGs, called "entropy pools" in 
 PractRand, have the ability to support more complex seeding practices.  The 
 special characteristics of an entropy pool are:
-A. Entropy Pools in PractRand have default constructors.  The default 
+A. Entropy Pools in PractRand all have default constructors.  The default 
 constructors effectively seed them to a single specific state.  
 B. Entropy Pools in PractRand have a set of methods of the form 
 add_entropy*.  These include add_entropy8, add_entropy16, add_entropy32, 
-add_entropy64, add_entropyN, and, on polymorphic Entropy Pools, 
+add_entropy64, add_entropy_N, and, on polymorphic Entropy Pools, 
 add_entropy_automatically().  Each of these methods performs basically a 
 progressive seeding - that is, the Entropy Pool changes to a new state that 
 is dependent upon an entropic function of the old state and the value passed 
@@ -65,22 +61,20 @@ added and when flush_buffers() was called.
 C. Entropy Pools have a method flush_buffers().  On an entropy pool, after 
 adding entropy with add_entropy* calls as described above you must call 
 flush_buffers(), otherwise the entropy added may just wait in a buffer 
-somewhere indefinitely without effecting the output.  
+somewhere indefinitely without effecting the output, or might not be 
+thoroughly mixed in to the state.  
 
-5. Inline RNGs:
-PractRand offers two RNGs that are implemented entirely in header files.  
-They are not intended for normal users.  But, if someone wants to use 
-PractRand but not actually link to PractRand, this lets them do so, at 
-least to a limited extent.  
+For more information about entropy pools, see RNG_entropy_pools.txt
 
-6. RNG Adaptors:
-In include/rng_adaptors.h is a template named:
-PractRand::RNGs::Adaptors::RAW_TO_LIGHT_WEIGHT_RNG
-That template is a light-weight variant of any Raw RNG that is 
-used as a template parameter to it.  I don't normally recommend use 
-of templates like that as I keep running in to either compiler bugs 
-or compile-time performance issues when I use templates to that 
-degree, but it is there as an option to users who may want a 
-light-weight version of an RNG other than jsf32.  
-In the future I will look at adding an comparable template to 
-convert a raw RNG in to a polymorphic RNG as well.  
+5. Non-recommended RNGs (aka other RNGs)
+
+These RNGs are intended only for use in testing - they are chosen for their 
+flaws, not their lack of flaws.  They are used when attempting to determine 
+how wide a variety of flaws a statistical test can find, and how quickly.  
+They are needed because most of the recommended RNGs in PractRand do not fail 
+any known statistical tests, and even the ones that do often take a long time.  
+
+They are technically Polymorphic RNGs, but they have no constructors.  
+Effectively they always act like a polymorphic RNG seeded with 
+PractRand::SEED_NONE.  This is to minimize the amount of code needed for each 
+one, so that it's very easy to add more of them.  

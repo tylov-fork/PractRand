@@ -7,8 +7,14 @@
 //#define PRACTRAND_TARGET_IS_BIG_ENDIAN 1
 
 /*2.  Thread-local-storage: choose one, or neither */
+#if defined _MSC_VER
 #define PRACTRAND_THREAD_LOCAL_STORAGE __declspec(thread)
-//#define PRACTRAND_THREAD_LOCAL_STORAGE __thread
+#elif __GNUC__
+#define PRACTRAND_THREAD_LOCAL_STORAGE __thread
+#else
+//either leave PRACTRAND_THREAD_LOCAL_STORAGE undefined, 
+//or define it to something that makes sense for your compiler
+#endif
 
 /*3.  Integer sizes: reconfigure if needed*/
 namespace PractRand {
@@ -63,7 +69,7 @@ undefined.  PractRand autoseeding will not work as well in multithreaded
 programs, but it will still work.  
 
 3.  Integer type sizes
-	If you know C/C++ program this one should be self-explanatory.  The 
+	If you know C/C++ programing this one should be self-explanatory.  The 
 default configuration should work for most 32 bit and 64 bit platforms.  
 If you are on a 16 bit or 8 bit platform then you will have to 
 reconfigure it.  PractRand does not use the C99 standard for this because 

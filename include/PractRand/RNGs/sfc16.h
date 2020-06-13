@@ -24,5 +24,6 @@ namespace PractRand {
 				void seed(Uint64 s);
 			};
 		}
+		PRACTRAND__LIGHT_WEIGHT_RNG(sfc16)
 	}
 }

@@ -11,6 +11,7 @@ namespace PractRand {
 				multiplex ( const char *name_, const ListOfTests &testlist );
 				virtual void init( RNGs::vRNG *known_good );
 				virtual double get_result();
+				virtual bool recommend_subtest_tree_descent() const;
 				virtual void deinit();
 				virtual ~multiplex ( );
 				virtual std::string get_name() const;
@@ -75,7 +76,7 @@ namespace PractRand {
 			class lowbits : public Transform_Baseclass {
 			protected:
 				int lowbitsL;//0 = 1 bit of output per input word, 1 = 2 bits of output per input word, 2=4,3=8,4=15,5=32
-				int unitsL;//0= 8 bit input words, 1 = 16 bit input words, 2 = 32, 3 = 64
+				int unitsL;//-1= 4 bit input words, 0= 8 bit input words, 1 = 16 bit input words, 2 = 32, 3 = 64
 			public:
 				lowbits ( const char *name_, const ListOfTests &testlist, int lowbitsL_=1, int unitsL_=0 )
 				:

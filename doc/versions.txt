@@ -1,3 +1,98 @@
+version 0.85
+	fixed various issues preventing compilation on recent versions of gcc
+		tested on gcc 4.6.1
+	improved portability
+		no config.h changes needed now when switching between the most common compilers
+	RNG interfaces:
+		light-weight RNGs:
+			namespace changed: PractRand::RNGs -> PractRand::RNGs::LightWeight
+			now available for all RNGs
+			now defaults to using templates to implement light-weight RNGs
+			can be disabled by defining PRACTRAND_NO_LIGHT_WEIGHT_RNGS
+				(definition must occur prior to the #include of PractRand headers)
+		polymorphic RNGs:
+			fixed lack of virtual destructor (oops!)
+		entropy pooling RNGs:
+			namespace changed: PractRand::RNGs::Polymorphic::EntropyPools -> PractRand::RNGs::Polymorphic
+			namespace changed: PractRand::RNGs::Raw::EntropyPools -> PractRand::RNGs::Raw
+		serialization:
+			Polymorphic RNGs now have serialization & deserialization methods
+			other RNGs can be serialized as well, but no convenient interface atm
+		random access aka seeking:
+			now allows 128 bit seek distances (passed as two 64 bit numbers)
+		Boost / C++0x TR1 compatibility:
+			now ONLY available if PRACTRAND_BOOST_COMPATIBILITY is defined
+				(must be defined before PractRand headers are included)
+			now available on base class vRNG in addition to vRNG8/vRNG16/vRNG32/vRNG64
+	RNGs algorithms:
+		new algorithms:
+			trivium
+				*NOT ENABLED YET* (it's failing validation atm)
+				all previous crypto RNG in PractRand were large-state indirection-based RNGs
+				so I added a small-state non-indirection-based crypto RNG
+				unfortunately it is somewhat slow
+			xsm64
+				the old random access algorithms (lcg64_32 and clcg96_32) sucked
+				xsm64 is intended to replace clcg96_32
+				like clcg96_32 it uses 64 bit math internally
+				but unlike clcg96_32 it outputs a full 64 bits, not 32 bits
+				and unlike clcg96_32 it is acceptable for parallel uses
+			xsm32
+				the old random access algorithms (lcg64_32 and lcg96_32) sucked
+				xsm32 is intended to replace lcg64_32
+				it is not as fast, but comparable on 32 bit CPUs
+				and has significantly better quality and statespace
+				in particular, 
+		changes to specific RNGs:
+			sha2_based_pool
+				fixed a bug that could produce crashes
+				now in the PractRand::RNGs::Polymorphic namespace instead of PractRand::RNGs::Polymorphic::EntropyPools
+			arbee
+				changed input mixing algorithm; flush_buffers() now meaningful
+				namespace changed (see RNG category changes)
+				namespace changed: PractRand::RNGs::Polymorphic::EntropyPools -> PractRand::RNGs::Polymorphic
+				namespace changed: PractRand::RNGs::Raw::EntropyPools -> PractRand::RNGs::Raw
+			sfc32, sfc64
+				tweaked integer seeding to reduce chances of any 2 seeds being nearby in a cycle
+			isaac_with_sha2_pool
+				removed - if you want something comparable, use sha2_based_pool to seed a faster RNG
+			efiix8x256, efiix16x256, efiix32x256, efiix64x256
+				renamed to efiix8x384, efiix16x384, efiix32x384, efiix64x384
+				tweaked algorithm to improve security
+			isaac32x256, isaac64x256
+				tweaked implementation to improve speed on some compilers
+				changed seeding - now closer to reference algorithm & higher quality
+				validation code was added to make sure that this is working correctly
+			hc256
+				tweaked implementation to improve speed on some compilers
+				validation code was added to make sure that this is working correctly
+			mwlac64, mwlac32, mwlac16
+				removed, for real this time (was supposed to be removed in the prior version)
+			mt19937
+				validation code was added to make sure that this is working correctly
+			lcg64_32
+				removed - use xsm32 instead
+			clcg96_32
+				removed - use xsm64 instead
+	documentation:
+		added entropy pools documentation
+		numerous revisions to old documentation
+	example program:
+		split example program in to two example programs:
+			program 1: RNG_benchmark
+				RNG speed testing
+			program 2: RNG_output
+				specify RNG algorithm by name on the command line
+				dump RNG output to stdout
+			program 3:
+				use statistical tests on an RNGs output
+		changed how speed test results are displayed
+	new example program:
+		multithreaded RNG testing, currently WIN32 only
+	tests:
+		revised existing transforms:
+			lowbits - can now operate on 4 bit units in addition to 8/16/32/64
+
 version 0.84
 	RNGs:
 		tweaked existing recommended RNGs:
@@ -12,7 +107,7 @@ version 0.84
 		removed existing recommended RNG:
 			mwlac32 / mwlac64:
 				Redundant when compared to jsf32/jsf64 to justify inclusion.  
-		added new section to full version: "NonRecommended" aka "other"
+		added new section to full version: "other" aka "NotRecommended"
 			these are RNGs that are not recommended for normal usage
 			they are intended for evaluating test effectiveness only
 			they offer polymorphic implementations only, no raw implementations
@@ -20,6 +115,8 @@ version 0.84
 		added test results for some RNGs
 	example program:
 		changed how results are displayed
+		added performance measuring
+		moved lists of tests out of example program, in to the library
 	tests:
 		added new transform: "switching"
 

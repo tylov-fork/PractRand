@@ -6,34 +6,33 @@
 
 #include "PractRand/sha2.h"
 
-#include "PractRand/RNGs/entropy_pools/sha2_based_pool.h"
+#include "PractRand/RNGs/sha2_based_pool.h"
 
 
 using namespace PractRand;
 
-std::string PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::get_name() const {
+std::string PractRand::RNGs::Polymorphic::sha2_based_pool::get_name() const {
 	return std::string("sha2_based_pool");
 }
-Uint8 PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::raw8() {
-	if (output_buffer_left) return output_buffer[--output_buffer_left];
-	refill_output_buffer();
+Uint8 PractRand::RNGs::Polymorphic::sha2_based_pool::raw8() {
+	if (!output_buffer_left) refill_output_buffer();
 	return output_buffer[--output_buffer_left];
 }
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::add_entropy8(Uint8 value) {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::add_entropy8(Uint8 value) {
 	input_buffer[--input_buffer_left] = value;
 	if (!input_buffer_left) empty_input_buffer();
 }
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::add_entropy16(Uint16 value) {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::add_entropy16(Uint16 value) {
 	add_entropy8(Uint8(value   ));
 	add_entropy8(Uint8(value>>8));
 }
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::add_entropy32(Uint32 value) {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::add_entropy32(Uint32 value) {
 	add_entropy8(Uint8(value    ));
 	add_entropy8(Uint8(value>>8 ));
 	add_entropy8(Uint8(value>>16));
 	add_entropy8(Uint8(value>>24));
 }
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::add_entropy64(Uint64 value) {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::add_entropy64(Uint64 value) {
 	add_entropy8(Uint8(value   ));
 	add_entropy8(Uint8(value>>8));
 	add_entropy8(Uint8(value>>16));
@@ -44,12 +43,12 @@ void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::add_entropy64(
 	add_entropy8(Uint8(value>>56));
 }
 
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::flush_buffers() {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::flush_buffers() {
 	if (input_buffer_left != INPUT_BUFFER_SIZE) empty_input_buffer();
 	if (output_buffer_left != 0) output_buffer_left = 0;//refill_output_buffer();
 }
 
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::seed(Uint64 s) {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::seed(Uint64 s) {
 	unsigned long i;
 	for (i = 0; i < 8; i++) state[i] = Uint8(s >> (i*8));
 	for (; i < STATE_SIZE; i++) state[i] = 0;
@@ -57,10 +56,10 @@ void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::seed(Uint64 s)
 	output_buffer_left = 0;
 	state_phase = 0;
 }
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::reset_state() {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::reset_state() {
 	seed(Uint64(0));
 }
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::walk_state(StateWalkingObject *walker) {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::walk_state(StateWalkingObject *walker) {
 	for (int i = 0; i < STATE_SIZE; i++) walker->handle(state[i]);
 	for (int i = 0; i < 128; i++) walker->handle(input_buffer[i]);
 	for (int i = 0; i < 64; i++) walker->handle(output_buffer[i]);
@@ -71,7 +70,7 @@ void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::walk_state(Sta
 	if (output_buffer_left > OUTPUT_BUFFER_SIZE) output_buffer_left = OUTPUT_BUFFER_SIZE;
 	if (state_phase >= STATE_SIZE) state_phase %= STATE_SIZE;
 }
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::empty_input_buffer() {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::empty_input_buffer() {
 	if (input_buffer_left == INPUT_BUFFER_SIZE) return;
 	state_phase++;
 	if (state_phase >= STATE_SIZE) state_phase -= STATE_SIZE;
@@ -80,10 +79,10 @@ void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::empty_input_bu
 	sha2.handle_input(
 		&input_buffer[input_buffer_left], 
 		INPUT_BUFFER_SIZE - input_buffer_left);
-	sha2.finish(&state[(state_phase&1) * (STATE_SIZE-64)] );
+	sha2.finish(&state[(state_phase&1) ? (STATE_SIZE-64) : 0] );
 	input_buffer_left = INPUT_BUFFER_SIZE;
 }
-void PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool::refill_output_buffer() {
+void PractRand::RNGs::Polymorphic::sha2_based_pool::refill_output_buffer() {
 	PractRand::Crypto::SHA2_512 sha2;
 	sha2.handle_input(&state[0], STATE_SIZE);
 	sha2.finish(&output_buffer[0]);

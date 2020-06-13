@@ -13,7 +13,6 @@ namespace PractRand {
 			unsigned int sig_bits, exp_bits;
 			unsigned int stride_bits_L2;
 			VariableSizeCount<Uint8> counts;
-			Uint64 blocks;
 		public:
 			FPF(int stride_bits_L2_ = 3, int sig_bits_ = 8, int exp_bits_ = 4);
 			virtual void init( PractRand::RNGs::vRNG *known_good );

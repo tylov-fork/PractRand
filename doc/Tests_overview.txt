@@ -12,7 +12,7 @@ been produced at random.  A few tests can produce an exact probability
 rough estimates or pass / fail results (fail means the data was extremely 
 unlikely, pass means it wasn't).  Different sources have different 
 standards for what degree of unlikelyhood qualifies as a failure - some 
-consider 1-in-100 levels a failure, while others don't call a result on a 
+consider 1-in-20 levels a failure, while others don't call a result on a 
 test failure until it reaches the level of 1-in-ten-billion.  
 
 PractRand tests tend to produce only very crude evaluations - pass/fail or 
@@ -22,16 +22,16 @@ billion, though the crude nature of the results means that the targeting
 of that level ends up rather imprecise.  
 
 In empirical testing, another classic is the Diehard program by Marsaglia.  
-That program is badly outdated today, and should not be used anymore, but 
-it was, so far as I know, the first real standardized battery of such tests. 
+That program is badly outdated today and should not be used anymore, but it 
+was, so far as I know, the first real standardized battery of such tests.  
 A standardized battery of tests is just a more clearly defined (and usually 
 more convenient) version of running multiple tests on a block of data.  The 
 basic results of a standardized battery of tests can be communicated quickly 
 and effectively with just the name and version of the standard battery of 
-tests length of sequence tested (though some batteries operate on fixed-size 
-sequence lengths and don't need the last).  That is much easier to interpret 
-(not to mention more concise) than a listing of every major test name / 
-version / implementation / sequence length tried.  
+tests and the length of sequence tested (though some batteries operate on 
+fixed-size sequence lengths and don't need the last).  That is much easier 
+to interpret (not to mention more concise) than a listing of every major 
+test name / version / implementation / sequence length tried.  
 
 
 *****************************************************************************

@@ -13,7 +13,7 @@
 // 1. no multiplication or fancy stuff, should work well on embeded CPUs
 // 2. does decently on statistical tests
 // 3. very fast... faster than jsf
-// 4. no short cycles for 64 bit version, no seeds that are near each other on any cycle
+// 4. for 64 bit version: no short cycles & no seeds that are near each other on any cycle
 // 5. fairly small
 //Engine      quality speed   theory  output    word    size        statespace
 //sfc16       1*      5*****  0       16 bit    16 bit  6 bytes     2**48 multicyclic
@@ -50,7 +50,7 @@ void PractRand::RNGs::Raw::sfc16::seed(Uint64 s) {
 void PractRand::RNGs::Raw::sfc16::walk_state(StateWalkingObject *walker) {
 	walker->handle(a);
 	walker->handle(b);
-	walker->handle(counter);
+//	if (walker->is_seeder()) counter = 0;//not enough state bits to offer luxuries like this
 }
 Uint32 PractRand::RNGs::Raw::sfc32::raw32() {
 	Uint32 tmp = a + b + counter++;
@@ -62,13 +62,14 @@ Uint32 PractRand::RNGs::Raw::sfc32::raw32() {
 void PractRand::RNGs::Raw::sfc32::seed(Uint64 s) {
 	a = Uint32(s >> 0);
 	b = Uint32(s >> 32);
-	counter = a ^ b;
+	counter = 0;
 	for (int i = 0; i < 6; i++) raw32();
 }
 void PractRand::RNGs::Raw::sfc32::walk_state(StateWalkingObject *walker) {
 	walker->handle(a);
 	walker->handle(b);
 	walker->handle(counter);
+//	if (walker->is_seeder()) counter = 0;//not enough state bits to offer luxuries like this
 }
 Uint64 PractRand::RNGs::Raw::sfc64::raw64() {
 	Uint64 tmp = a + b + counter++;
@@ -78,14 +79,15 @@ Uint64 PractRand::RNGs::Raw::sfc64::raw64() {
 	return tmp;
 }
 void PractRand::RNGs::Raw::sfc64::seed(Uint64 s) {
-	counter = s;
-	a = b = 0;
+	counter = 0;
+	a = b = s;
 	for (int i = 0; i < 7; i++) raw64();
 }
 void PractRand::RNGs::Raw::sfc64::walk_state(StateWalkingObject *walker) {
 	walker->handle(a);
 	walker->handle(b);
 	walker->handle(counter);
+	if (walker->is_seeder()) counter = 0;
 }
 
 

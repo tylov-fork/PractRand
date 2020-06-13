@@ -114,17 +114,36 @@ void PractRand::RNGs::Raw::hc256::_do_batch() {//do not change
 	counter = (counter + OUTPUT_BUFFER_SIZE) & 0x7ff;
 	used = 0;
 }
-Uint32 PractRand::RNGs::Raw::hc256::raw32() {//LOCKED, do not change
-	if (used < OUTPUT_BUFFER_SIZE) return outbuf[used++];
-	_do_batch();
-	return outbuf[used++];
-}
+//Uint32 PractRand::RNGs::Raw::hc256::raw32() {//LOCKED, do not change
+//	if (used < OUTPUT_BUFFER_SIZE) return outbuf[used++];
+//	_do_batch();
+//	return outbuf[used++];
+//}
 void PractRand::RNGs::Raw::hc256::seed(Uint64 s) {//LOCKED, do not change
 	Uint32 seed_array[16];
 	seed_array[0] = Uint32(s);
 	seed_array[1] = Uint32(s >> 32);
 	for (int i = 2; i < 16; i++) seed_array[i] = 0;
 	seed(seed_array);
+}
+void PractRand::RNGs::Raw::hc256::self_test() {
+	Raw::hc256 rng;
+	Uint32 key_and_iv[16] = {0};
+	rng.seed(key_and_iv);
+	if (rng.raw32() != 0x8589075b) issue_error("hc256::self_test() failed");
+	key_and_iv[8] = 1; rng.seed(key_and_iv); key_and_iv[8] = 0;
+	if (rng.raw32() != 0xbfa2e2af) issue_error("hc256::self_test() failed");
+	key_and_iv[0] = 0x55; rng.seed(key_and_iv); key_and_iv[0] = 0;
+	if (rng.raw32() != 0xfe4a401c) issue_error("hc256::self_test() failed");
+	rng.seed(key_and_iv);
+	Uint32 checksums[16] = {0};
+	for (int x = 0; x < 1<<16; x++) {
+		for (int i = 0; i < 16; i++) checksums[i] ^= rng.raw32();
+	}
+	if (checksums[0] != 0xc6b6fb99) issue_error("hc256::self_test() failed");
+	if (checksums[1] != 0xf2ae1440) issue_error("hc256::self_test() failed");
+	if (checksums[2] != 0xa7d4ca34) issue_error("hc256::self_test() failed");
+	if (checksums[15] != 0xa9c08937) issue_error("hc256::self_test() failed");
 }
 
 #define f1(x) (rotr((x),7) ^ rotr((x),18) ^ ((x) >> 3))
@@ -189,7 +208,7 @@ void PractRand::RNGs::Raw::hc256::walk_state(StateWalkingObject *walker) {
 	walker->handle(used);
 	for (unsigned int i = 0; i < OUTPUT_BUFFER_SIZE; i++) walker->handle(outbuf[i]);
 
-	if (!(walker->get_properties() & StateWalkingObject::FLAG_READONLY)) {
+	if (!(walker->get_properties() & StateWalkingObject::FLAG_READ_ONLY)) {
 		if (used > OUTPUT_BUFFER_SIZE) used = OUTPUT_BUFFER_SIZE;
 		counter &= 2047 & ~(OUTPUT_BUFFER_SIZE-1);
 		//to do: verify that this is correct

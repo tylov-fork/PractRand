@@ -1,6 +1,7 @@
 #include <string>
-#include <stdlib.h>
-#include <time.h>
+#include <ctime>
+#include <cstdlib>
+#include <cstdio>
 
 #include "PractRand/config.h"
 #include "PractRand/rng_basics.h"
@@ -12,30 +13,17 @@
 #endif
 
 /*
-TO DO: improve entropy gathering code; it kinda sucks now
+TO DO: improve entropy gathering code
 ideas:
-	try using the intended platform method
-		RtlGenRandom on windows?
-		/dev/random and/or /dev/urandom on unix?
-	improve RDTSC
-		add implementations for gcc and/or intel-C
-		check x86 generation to prevent use or RDTSC on 386/486 targets?
+	platform methods for non-windows non-unix OSes?
+		???
+	improve/enable blocking /dev/random suppport
+	improve generic methods for unrecognized platforms
 */
 
 using namespace PractRand;
 
-void PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng, int milliseconds ) {
-#if 1
-	{//libc
-		//not much entropy, but we take what we can get
-		rng->add_entropy64((Uint64)::time(NULL));
-		rng->add_entropy64((Uint64)::clock());
-		rng->add_entropy64((Uint64)rng);
-		void *p = malloc(1);
-		rng->add_entropy64((Uint64)p);
-		free(p);
-	}
-#endif
+bool PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng, int milliseconds ) {
 #if (defined _WIN32) && 1
 	{//win32 crypto PRNG
 		HMODULE hLib=LoadLibraryA("ADVAPI32.DLL");
@@ -47,10 +35,50 @@ void PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 				Uint64 buf[NUM_RANDOM_U64s];
 				if(get_random_bytes(buf,NUM_RANDOM_U64s*sizeof(buf[0]))) {
 					for (int i = 0; i < NUM_RANDOM_U64s; i++) rng->add_entropy64(buf[i]);
+					return true;
 				}
 			}
 			FreeLibrary(hLib);
 		}
+	}
+#endif
+#if 1
+	{//unix (linux/bsd/osx/etc, all flavor supposedly)
+		std::FILE *f;
+		enum {NUM_RANDOM_U64s = 4};
+		Uint64 buf[NUM_RANDOM_U64s];
+		if (f = std::fopen("/dev/urandom", "rb")) {
+			if(std::fread(buf,NUM_RANDOM_U64s*sizeof(buf[0]),1,f)) {
+				for (int i = 0; i < NUM_RANDOM_U64s; i++) rng->add_entropy64(buf[i]);
+				return true;
+			}
+		}
+	}
+#endif
+#if 0 //DISABLED
+	{
+	//disabled to avoid the possibility of blocking
+		if (millseconds && f = std::fopen("/dev/random", "rb")) {
+			//skip this if a good source was already found, cause this can block
+			enum {NUM_RANDOM_U64s = 4};
+			Uint64 buf[NUM_RANDOM_U64s];
+			if(std::fread(buf,NUM_RANDOM_U64s*sizeof(buf[0]),1,f)) {
+				for (int i = 0; i < NUM_RANDOM_U64s; i++) rng->add_entropy64(buf[i]);
+				return true;
+			}
+		}
+	}
+#endif
+#if 1
+	{//libc
+		//not much entropy, but we take what we can get
+		rng->add_entropy64((Uint64)std::time(NULL));
+		rng->add_entropy64((Uint64)std::clock());
+		rng->add_entropy64((Uint64)rng);
+		Uint64 *p = (Uint64*)std::malloc(sizeof(Uint64));
+		rng->add_entropy64((Uint64)p);
+		//rng->add_entropy64(*p);//commented to avoid issues with memory debuggers
+		free(p);
 	}
 #endif
 #if (defined _WIN32) && 1
@@ -83,7 +111,6 @@ void PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 		rng->add_entropy32(t);
 	}
 #endif
-
 #if (defined _WIN32) && 0 //DISABLED
 	{//WINDOWS REGISTRY
 		//Not a true entropy source, but an accumulator across multiple runs, 
@@ -131,17 +158,17 @@ void PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 				r = RegSetValueExA(key, "seed", 0, REG_BINARY, buffer, TARGET_SIZE);
 			}
 			if (r != ERROR_SUCCESS) continue;
-			//printf("using seed (%02x%02x)\n", buffer[1], buffer[0]);
+			//std::printf("using seed (%02x%02x)\n", buffer[1], buffer[0]);
 			rng->add_entropy_N(buffer, size);
 			if (size > TARGET_SIZE) size = TARGET_SIZE;
 			rng->flush_buffers();
-			//printf("buffers flushed\n");
+			//std::printf("buffers flushed\n");
 			for (unsigned int i = 0; i < size; i++) buffer[i] ^= rng->raw8();
 			for (unsigned int i = size; i < TARGET_SIZE; i++) buffer[i] = rng->raw8();
-			//printf("attempting to set new seed (%02x%02x)\n", buffer[1], buffer[0]);
+			//std::printf("attempting to set new seed (%02x%02x)\n", buffer[1], buffer[0]);
 			r = RegSetValueExA(key, "seed", 0, REG_BINARY, buffer, TARGET_SIZE);
 			if (r != ERROR_SUCCESS) continue;
-			//printf("successfully set new seed\n");
+			//std::printf("successfully set new seed\n");
 			break;
 		}
 		if (key) {
@@ -152,7 +179,7 @@ void PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 #endif //_WIN32 (registry)
 
 #if (defined _WIN32) && 0
-	if (milliseconds) {//accumulate entropy over time (does a VERY bad job)
+	if (milliseconds && !good_entropy_source_found) {//accumulate entropy over time (does a VERY bad job)
 		LARGE_INTEGER qt, qt2;
 		QueryPerformanceCounter(&qt);
 		DWORD start_time = GetTickCount();

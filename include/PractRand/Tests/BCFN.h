@@ -7,10 +7,10 @@ namespace PractRand {
 			bool autofail;
 			long mask[LEVELS];
 			long cur[LEVELS];
-			bool even[LEVELS];//<4 is never used?
-			long leftovers[LEVELS];//<4 is never used? <10 not strictly needed?
-			long total[LEVELS];//<4 isn't updated
-			long warmup[LEVELS];//<4 is never used?
+			bool even[LEVELS];     // <4 is never used?
+			long leftovers[LEVELS];// <4 is never used? <10 not really needed?
+			long total[LEVELS];    // <4 isn't updated
+			long warmup[LEVELS];   // <4 is never used?
 			long tbits;
 			long unitsL2;
 			Uint64 blocks;

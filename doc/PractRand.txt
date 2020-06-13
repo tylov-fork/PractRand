@@ -1,7 +1,7 @@
 PractRand (Practically Random) is a C++ library of pseudo-random number 
 generators (PRNGs, or just RNGs) and statistical tests for RNGs.  
 
-version 0.84
+version 0.85
 
 1. Randon Number Generation with PractRand
 Most development platforms come with random number generators that have 
@@ -32,10 +32,9 @@ B3: RNG algorithms that are very fast.
 B4: RNG algorithms that are cryptographically secure.  
 B5: RNG algorithms that are easy to implement in hardware.  
 B6: RNG algorithms that allow seeking / random access.  
-B7: RNG algorithms appropriate for just about any type of CPU (except 
-floating point DSPs... will add some for those later).  
+B7: RNG algorithms appropriate for a wide variety of CPU types.  
 
-Other libraries including multiple RNG algorithms:
+Other libraries including multiple RNG algorithms with a common interface:
 Boost / C++0x TR1 - http://www.boost.org/
 TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
 hasard - http://bytebucket.org/haypo/hasard/wiki/Home
@@ -46,16 +45,19 @@ GSL - http://www.gnu.org/software/gsl/
 features:
 
 A. Includes a standard battery of tests, in the tradition of Diehard.  
+Many competitors include only raw tests with no obvious means for 
+someone unfamiliar with them to pick parameterizations, or a default 
+test set that is simply one parameterization of each test regardless 
+of the relative strengths and breadths of the tests involved.  
 
 B. Standard battery of tests can detect bias in a wide variety of RNGs 
 quickly.  See Tests_results.txt and/or Tests_engines.txt for more on 
 which biases it can detect how quickly relative to competing software 
 packages.  Basically, it can detect ~90% of biases that competing 
 software packages can detect, plus several categories of bias that 
-competitors cannot detect or have a very hard time detecting.  On 
-biases it can detect it is broadly comparable in speed (sometimes 
-slower, sometimes faster, but generally similar) to competitors, but 
-requires more bits.  
+competitors have a very hard time detecting.  On biases it can detect 
+it requires more random bits as input, but is often faster despite 
+that.  
 
 C. Tests are provided as legally unencumbered source code and static 
 libraries, so that data can be passed directly to them bypassing the 
@@ -66,9 +68,10 @@ restrictions on what they can be linked with and redistributed with).
 
 D. No realistic maximum sequence length for testing.  Competing 
 software packages generally either have an interface that makes long 
-sequences impossible or crash if given a very long sequence, but 
-PractRand has been tested on sequence lengths over 100 terabytes and 
-is expected to work on sequence lengths up to a few exabytes.  
+sequences impossible or crash or produce meaningless results if given 
+a very long sequence, but PractRand has been tested on sequence 
+lengths over 100 terabytes and is expected to work on sequence 
+lengths up to a few exabytes.  
 
 E. Mostly original tests.  Competing software packages tend to mainly 
 use duplicates of tests that appeared in the literature decades ago, 
@@ -86,11 +89,12 @@ is a very important feature.
 
 Other packages for testing PRNGs:
 TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
-NIST RNG tests - http://csrc.nist.gov/groups/ST/toolkit/rng/index.html
+NIST STS - http://csrc.nist.gov/groups/ST/toolkit/rng/index.html
 RaBiGeTe - http://www.webalice.it/cristiano.pi/rabigete/
 Dieharder - http://www.phy.duke.edu/~rgb/General/dieharder.php
 Diehard - http://www.stat.fsu.edu/pub/diehard/
 ENT - http://www.fourmilab.ch/random/
+gjrand - http://gjrand.sourceforge.net/
 
 Documentation:
 
@@ -104,10 +108,12 @@ RNG_multithreading.txt - brief overview of the intended methods
 RNG_interface_variations.txt - while PractRand offers a common interface 
 	to all RNGs in it, there are actually several minor variations on 
 	that common interface, ie polymorphic RNGs vs light-weight RNGs.  
-RNG_entropy_pools.txt - not yet written
+RNG_entropy_pools.txt - overview of the subset of RNGs in PractRand 
+	known as "entropy pools".  These RNGs are useful in exotic seeding 
+	scenarios.  
 Tests_usage.txt - brief discusion of how to use the statitical tests
 Tests_results.txt - tables showing the relative performance of 
-	PractRands standard tests vs TestU01 Rabbit and TestU01 Crush
+	PractRands standard tests vs TestU01 *Crush
 Tests_batteries.txt - a very brief look at the sets of tests that 
 	PractRand defines
 Tests_engines.txt - a list of the tests that PractRand defines, with 
