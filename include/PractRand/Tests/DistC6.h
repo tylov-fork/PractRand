@@ -8,8 +8,6 @@ namespace PractRand {
 				int bits_clipped_2_ = 0 ); 
 			virtual void init( PractRand::RNGs::vRNG *known_good );
 			virtual std::string get_name() const;
-			//virtual double get_result();
-			//virtual double result_to_pvalue ( Uint64 blocks, double r );
 			virtual void get_results ( std::vector<TestResult> &results );
 
 			virtual void test_blocks(TestBlock *data, int numblocks);
@@ -49,6 +47,26 @@ namespace PractRand {
 			}
 			void advance_index ( int bit_count ) {
 				last_index = _advance_index(last_index, lookup_table[bit_count]);}
+		};
+		class DistC7 : public DistC6 {
+		public:
+			DistC7(int length_ = 9, int unitsL_ = 0,
+				int bits_clipped_0_ = 1,
+				int bits_clipped_1_ = 0,
+				int bits_clipped_2_ = 0
+				);
+			virtual void init(PractRand::RNGs::vRNG *known_good);
+			virtual std::string get_name() const;
+			virtual void get_results(std::vector<TestResult> &results);
+
+			virtual void test_blocks(TestBlock *data, int numblocks);
+		protected:
+			//configuration:
+			//precalcs:
+			//state:
+			bool odd;
+			VariableSizeCount<Uint8> odd_counts;
+			//internal helpers:
 		};
 	}//Tests
 }//PractRand

@@ -74,13 +74,14 @@ namespace PractRand {
 				"arbee",
 				"xsm64", "xsm32",
 				"jsf64", "jsf32", "sfc64", "sfc32", "sfc16",
+				"rarns16", "rarns32", "rarns64",
 				"mt19937",
 				NULL
 			};
 			const int num_recommended_rngs = sizeof(recommended_rngs) / sizeof(recommended_rngs[0]) - 1;
 			const char *nonrecommended_simple[] = {
 				"xorshift32", "xorshift64", "xorshift32of128", "xoroshiro128plus",
-				"xorwow32of96", "xorwow32x6", "xsalta16", "xsaltb16", "xsaltc16",
+				"xorwow32of96", "xorwow32x6", "xsalta16x3", "xsaltb16x3", "xsaltc16x3",
 				"sapparot", "sap16of48", "sap32of96",
 				"flea32x1", "jsf16",
 				"sfc_v1_16", "sfc_v1_32", "sfc_v2_16", "sfc_v2_32", "sfc_v3_16", "sfc_v3_32",
@@ -90,12 +91,12 @@ namespace PractRand {
 				"murmlacish",
 				"gjishA", "gjishB", "gjishC", "gjishD",
 				"ara16", "ara32", "arx16", "arx32", "hara16", "harx16", "learx16", "hlearx16", "alearx16", "arac16", "arxc16",
-				"rarns16",
 				NULL
 			};
 			const int num_nonrecommended_simple = sizeof(nonrecommended_simple) / sizeof(nonrecommended_simple[0]) - 1;
 			const char *nonrecommended_nonlcg[] = {
 				"garthy16", "garthy32", "binarymult16", "binarymult32", "rxmult16", "multish3x32", "multish4x16",
+				"mwrca16", "mwrca32", "mwrcc16", "mwrcc32", "mwrcca16", "mwrcca32", 
 				"old_mwlac16", "mwlac_varA", "mwlac_varB", "mwlac_varC", "mwlac_varD", "mwlac_varE",
 				"mo_Cmfr", "mo_Cmr32of64", "mulcr16", "mulcr32", "mmr16", "mmr32",
 				NULL
@@ -114,7 +115,7 @@ namespace PractRand {
 			const char *nonrecommended_cbuf[] = {
 				"mm32", "mm32_awc", "mm16of32", "mm16of32_awc", "mm4691",
 				"cbuf_accum", "cbuf_accum_big", "cbuf_2accum_small", "cbuf_2accum", "dual_cbuf_small", "dual_cbuf", "dual_cbufa_small", "dual_cbuf_accum",
-				"fibmul16of32", "fibmul32of64", "ranrot32small", "ranrot32", "ranrot32big", "ranrot3tap32small", "ranrot3tap32", "ranrot3tap32big", "ranrot32hetsmall", "ranrot32het", "ranrot32hetbig",
+				"fibmul16of32", "fibmul32of64", "fibmulmix16", "ranrot32small", "ranrot32", "ranrot32big", "ranrot3tap32small", "ranrot3tap32", "ranrot3tap32big", "ranrot32hetsmall", "ranrot32het", "ranrot32hetbig",
 				"mt19937_unhashed", "salsa(3)", "chacha(3)", "salsa(4)", "chacha(4)",
 				NULL
 			};
@@ -151,7 +152,8 @@ namespace RNG_Factories {
 	};*/
 
 	bool parse_argument_list(const std::string &raw, std::string &name, std::vector<std::string> &parameters) {
-		// "BDS(BDS(chacha(8),4),8)" -> "SS", "BDS(chacha(8),4)", "8"
+		// "BDS(BDS(chacha(8),4),8)" -> "BDS", "BDS(chacha(8),4)", "8"
+		// that is, function name, parameter 1, parameter 2, ...
 		parameters.clear();
 		const char *base = raw.c_str();
 		const char *tmp = strpbrk(base, "(,)");
@@ -186,7 +188,7 @@ namespace RNG_Factories {
 		if (!parse_argument_list(raw, rng_name, parameters)) return NULL;
 		std::map<std::string, PractRand::RNGs::vRNG *(*)(std::vector<std::string> &params)>::iterator it = RNG_factory_index.find(rng_name);
 		if (it == RNG_factory_index.end()) return NULL;
-		int os = parameters.size();
+		unsigned long os = parameters.size();
 		PractRand::RNGs::vRNG *rng = it->second(parameters);
 		if (error_message && !rng && os < parameters.size()) *error_message = parameters[os];
 		return rng;
@@ -307,6 +309,7 @@ namespace RNG_Factories {
 				return new PractRand::RNGs::Polymorphic::NotRecommended::xlcg32of64_varqual(total_bits - out_bits);
 			else return new PractRand::RNGs::Polymorphic::NotRecommended::xlcg32of128_varqual(total_bits - out_bits);
 		}
+		else return NULL;
 	}
 	PractRand::RNGs::vRNG *clcg_factory(std::vector<std::string> &params) {
 		if (params.size() != 2) {params.push_back("wrong number of parameters to clcg - should be clcg(out_bits,total_bits)");return NULL;}
@@ -316,7 +319,8 @@ namespace RNG_Factories {
 		if (total_bits < out_bits || total_bits > 96) {params.push_back("clcg total_bits invalid: must be out_bits+32 <= total_bits <= 96");return NULL;}
 		if (out_bits == 8) return new PractRand::RNGs::Polymorphic::NotRecommended::clcg8of96_varqual(total_bits - out_bits - 32);
 		else if (out_bits == 16) return new PractRand::RNGs::Polymorphic::NotRecommended::clcg16of96_varqual(total_bits - out_bits - 32);
-		else /*if (out_bits == 32)*/ return new PractRand::RNGs::Polymorphic::NotRecommended::clcg32of96_varqual(total_bits - out_bits - 32);
+		else if (out_bits == 32) return new PractRand::RNGs::Polymorphic::NotRecommended::clcg32of96_varqual(total_bits - out_bits - 32);
+		else return NULL;
 	}
 	PractRand::RNGs::vRNG *cxlcg_factory(std::vector<std::string> &params) {
 		if (params.size() != 2) {params.push_back("wrong number of parameters to clcg - should be clcg(out_bits,total_bits)");return NULL;}
@@ -326,7 +330,8 @@ namespace RNG_Factories {
 		if (total_bits < out_bits || total_bits > 96) {params.push_back("cxlcg total_bits invalid: must be out_bits+32 <= total_bits <= 96");return NULL;}
 		if (out_bits == 8) return new PractRand::RNGs::Polymorphic::NotRecommended::cxlcg8of96_varqual(total_bits - out_bits - 32);
 		else if (out_bits == 16) return new PractRand::RNGs::Polymorphic::NotRecommended::cxlcg16of96_varqual(total_bits - out_bits - 32);
-		else /*if (out_bits == 32)*/ return new PractRand::RNGs::Polymorphic::NotRecommended::cxlcg32of96_varqual(total_bits - out_bits - 32);
+		else if (out_bits == 32) return new PractRand::RNGs::Polymorphic::NotRecommended::cxlcg32of96_varqual(total_bits - out_bits - 32);
+		else return NULL;
 	}
 	PractRand::RNGs::vRNG *bigbadlcg_factory(std::vector<std::string> &params) {
 		if (params.size() != 3) { params.push_back("wrong number of parameters to bigbadlcg - should be bigbadlcg(out_bits,total_bits,shift)"); return NULL; }
@@ -338,7 +343,8 @@ namespace RNG_Factories {
 		if (out_bits == 8) return new PractRand::RNGs::Polymorphic::NotRecommended::bigbadlcg8X(total_bits - out_bits, shift);
 		else if (out_bits == 16) return new PractRand::RNGs::Polymorphic::NotRecommended::bigbadlcg16X(total_bits - out_bits, shift);
 		else if (out_bits == 32) return new PractRand::RNGs::Polymorphic::NotRecommended::bigbadlcg32X(total_bits - out_bits, shift);
-		else /*if (out_bits == 64)*/ return new PractRand::RNGs::Polymorphic::NotRecommended::bigbadlcg64X(total_bits - out_bits, shift);
+		else if (out_bits == 64) return new PractRand::RNGs::Polymorphic::NotRecommended::bigbadlcg64X(total_bits - out_bits, shift);
+		else return NULL;
 	}
 	PractRand::RNGs::vRNG *chacha_factory(std::vector<std::string> &params) {
 		if (params.size() > 1) {params.push_back("too many parameters for chacha");return NULL;}
@@ -396,6 +402,21 @@ namespace RNG_Factories {
 		return new RNG(rng);
 	}
 	template<class RNG>
+	PractRand::RNGs::vRNG *_generic_variable_parameter_transform_RNG_factory(std::vector<std::string> &params) {
+		if (params.size() < 1) return NULL;
+		std::vector<PractRand::RNGs::vRNG *> source_rngs;
+		PractRand::RNGs::vRNG *rng;
+		for (unsigned int i = 0; i < params.size(); i++) {
+			rng = create_rng(params[i]);
+			if (!rng) return NULL;
+			source_rngs.push_back(rng);
+		}
+		rng = new RNG(source_rngs);
+		if (rng) return rng;
+		for (unsigned int i = 0; i < params.size(); i++) delete source_rngs[i];
+		return NULL;
+	}
+	template<class RNG>
 	PractRand::RNGs::vRNG *_generic_single_parameter_RNG_factory(std::vector<std::string> &params) {
 		if (params.size() != 1) return NULL;
 		return new RNG(atoi(params[0].c_str()));
@@ -428,6 +449,9 @@ namespace RNG_Factories {
 		REGISTER_RNG_0( sfc16 )
 		REGISTER_RNG_0( sfc32 )
 		REGISTER_RNG_0( sfc64 )
+		REGISTER_RNG_0( rarns16 )
+		REGISTER_RNG_0( rarns32 )
+		REGISTER_RNG_0( rarns64 )
 		REGISTER_RNG_0( arbee )
 		REGISTER_RNG_0( trivium )
 		REGISTER_RNG_0( sha2_based_pool )
@@ -465,15 +489,20 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(xorshift16of32)
 		REGISTER_RNG_0(xorshift32of64)
 		REGISTER_RNG_0(xorshift32x4)
+		REGISTER_RNG_0(xorwow32plus32)
 		REGISTER_RNG_0(xorwow32of96)
 		REGISTER_RNG_0(xorwow32x6)
+		REGISTER_RNG_0(xorshift128plus)
 		REGISTER_RNG_0(xoroshiro128plus)
 		REGISTER_RNG_0(xoroshiro128plus_2p64)
+		REGISTER_RNG_0(tinyMT)
 		REGISTER_RNG_0(sapparot)
 		REGISTER_RNG_0(sap16of48)
 		REGISTER_RNG_0(sap32of96)
 		REGISTER_RNG_0(flea32x1)
 		REGISTER_RNG_0(jsf16)
+		REGISTER_RNG_0(tyche)
+		REGISTER_RNG_0(tyche16)
 		REGISTER_RNG_0(sfc_v1_16)
 		REGISTER_RNG_0(sfc_v1_32)
 		REGISTER_RNG_0(sfc_v2_16)
@@ -510,7 +539,6 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(alearx16)
 		REGISTER_RNG_0(arac16)
 		REGISTER_RNG_0(arxc16)
-		REGISTER_RNG_0(rarns16)
 
 		// include/PractRand/RNGs/other/mult.h
 		RNG_Factories::RNG_factory_index["lcg"] = lcg_factory;
@@ -533,6 +561,12 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(multish2x64)
 		REGISTER_RNG_0(multish3x32)
 		REGISTER_RNG_0(multish4x16)
+		REGISTER_RNG_0(mwrca16)
+		REGISTER_RNG_0(mwrca32)
+		REGISTER_RNG_0(mwrcc16)
+		REGISTER_RNG_0(mwrcc32)
+		REGISTER_RNG_0(mwrcca16)
+		REGISTER_RNG_0(mwrcca32)
 		REGISTER_RNG_0(old_mwlac16)
 		REGISTER_RNG_0(mwlac_varA)
 		REGISTER_RNG_0(mwlac_varB)
@@ -567,6 +601,7 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(dual_cbuf_accum)
 		REGISTER_RNG_0(fibmul16of32)
 		REGISTER_RNG_0(fibmul32of64)
+		REGISTER_RNG_0(fibmulmix16)
 		REGISTER_RNG_0(ranrot32small)
 		REGISTER_RNG_0(ranrot32)
 		REGISTER_RNG_0(ranrot32big)
@@ -599,6 +634,7 @@ namespace RNG_Factories {
 		REGISTER_RNG_1(genindF)
 
 		// include/PractRand/RNGs/other/transform.h
+		RNG_Factories::RNG_factory_index["xor"] = _generic_variable_parameter_transform_RNG_factory<PractRand::RNGs::Polymorphic::NotRecommended::Xor>;
 		RNG_Factories::RNG_factory_index["BDS"] = BDS_factory;
 		RNG_Factories::RNG_factory_index["SShrink"] = SelfShrink_factory;
 		RNG_Factories::RNG_factory_index["AsUnknown"] = _generic_single_parameter_transform_RNG_factory<PractRand::RNGs::Polymorphic::NotRecommended::ReinterpretAsUnknown>;

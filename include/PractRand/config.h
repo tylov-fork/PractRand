@@ -42,9 +42,7 @@ programs, but it will still work.
 #elif __GNUC__
 #define PRACTRAND_THREAD_LOCAL_STORAGE __thread
 #else
-//either leave PRACTRAND_THREAD_LOCAL_STORAGE undefined, 
-//or define it to something that makes sense for your compiler
-//WARNING: PractRand autoseeding might not be thread-safe if it is undefined
+
 #endif
 
 

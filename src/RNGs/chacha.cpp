@@ -49,7 +49,7 @@ void PractRand::RNGs::Polymorphic::chacha::set_rounds(int rounds_) {implementati
 int PractRand::RNGs::Polymorphic::chacha::get_rounds() const {return implementation.get_rounds();}
 
 //raw:
-PractRand::RNGs::Raw::chacha::~chacha() {std::memset(this, 0, sizeof(this));}
+PractRand::RNGs::Raw::chacha::~chacha() {std::memset(this, 0, sizeof(*this));}
 #ifdef PRACTRAND_ALIGN_128
 static const Uint32 PRACTRAND_ALIGN_128 chacha_long_seed_constants[4] = {
 #else

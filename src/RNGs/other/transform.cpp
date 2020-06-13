@@ -29,6 +29,102 @@ namespace PractRand {
 				Uint64 Transform8::get_flags() const {return base_rng->get_flags() | FLAG::USES_INDIRECTION;}
 				void Transform8::walk_state(StateWalkingObject *walker) {base_rng->walk_state(walker);}
 				Transform8::~Transform8() {delete base_rng;}
+				void MultiplexTransformRNG::refill() { index = 0; }
+				Uint8 MultiplexTransformRNG::raw8() {
+					if (index >= Tests::TestBlock::SIZE) {
+						refill();
+						index = 1;
+						return buffer->as8[0];
+					}
+					return buffer->as8[index++];
+				}
+				Uint16 MultiplexTransformRNG::raw16() {
+					index += 3; index &= ~1;//round up to force alignment, and also increment position
+					if (index > Tests::TestBlock::SIZE) {
+						refill();
+						index = 2;
+						return buffer->as16[0];
+					}
+					Uint16 rv = *reinterpret_cast<Uint16*>(&buffer->as8[index - 2]);//read 16 aligned bits
+					return rv;
+				}
+				Uint32 MultiplexTransformRNG::raw32() {
+					index += 7; index &= ~3;
+					if (index > Tests::TestBlock::SIZE) {
+						refill();
+						index = 4;
+						return buffer->as32[0];
+					}
+					Uint32 rv = *reinterpret_cast<Uint32*>(&buffer->as8[index - 4]);
+					return rv;
+				}
+				Uint64 MultiplexTransformRNG::raw64() {
+					index += 15; index &= ~7;
+					if (index > Tests::TestBlock::SIZE) {
+						refill();
+						index = 8;
+						return buffer->as64[0];
+					}
+					Uint64 rv = *reinterpret_cast<Uint64*>(&buffer->as8[index - 8]);
+					return rv;
+				}
+				void MultiplexTransformRNG::seed(Uint64 seedval) {
+					index = 999999;
+					for (std::vector<vRNG*>::iterator it = source_rngs.begin(); it != source_rngs.end(); it++) {
+						vRNG *vrng = *it;
+						vrng->seed(seedval);
+					}
+				}
+				void MultiplexTransformRNG::seed(vRNG *seeder) {
+					index = 999999;
+					for (std::vector<vRNG*>::iterator it = source_rngs.begin(); it != source_rngs.end(); it++) {
+						vRNG *vrng = *it;
+						vrng->seed(seeder);
+					}
+					/*static bool first = true;
+					if (first) {
+						std::printf("\n{\n");
+						for (std::vector<vRNG*>::iterator it = source_rngs.begin(); it != source_rngs.end(); it++) std::printf("\t{%s:%s}\n", (*it)->get_name().c_str(), (*it)->print_state().c_str());
+						std::printf("}\n");
+						first = false;
+					}*/
+				}
+				int MultiplexTransformRNG::get_native_output_size() const {
+					int lowest = 9999, highest = -1;
+					for (std::vector<vRNG*>::const_iterator it = source_rngs.begin(); it != source_rngs.end(); it++) {
+						int ls = (*it)->get_native_output_size();
+						if (ls < lowest) lowest = ls;
+						if (ls > highest) highest = ls;
+					}
+					if (lowest == highest) return lowest;
+					return -1;
+				}
+				Uint64 MultiplexTransformRNG::get_flags() const {
+					Uint64 anded_bits = Uint64(-1);
+					Uint64 ored_bits = Uint64(0);
+					for (std::vector<vRNG*>::const_iterator it = source_rngs.begin(); it != source_rngs.end(); it++) {
+						Uint64 lf = (*it)->get_flags();
+						anded_bits &= lf;
+						ored_bits |= lf;
+					}
+					using namespace PractRand::RNGs::FLAG;
+					return (OUTPUT_IS_BUFFERED | STATE_UNAVAILABLE) |
+						(anded_bits & (SUPPORTS_FASTFORWARD | SUPPORTS_ENTROPY_ACCUMULATION | USES_SPECIFIED | ENDIAN_SAFE)) |
+						(ored_bits & (CRYPTOGRAPHIC_SECURITY | USES_MULTIPLICATION | USES_COMPLEX_INSTRUCTIONS | USES_VARIABLE_SHIFTS | USES_INDIRECTION | USES_CYCLIC_BUFFER | USES_FLOW_CONTROL | USES_BIT_SCANS | USES_OTHER_WORD_SIZES | OUTPUT_IS_HASHED));
+				}
+				void MultiplexTransformRNG::walk_state(StateWalkingObject *walker) {
+					for (std::vector<vRNG*>::const_iterator it = source_rngs.begin(); it != source_rngs.end(); it++) {
+						(*it)->walk_state(walker);
+					}
+					if (!walker->is_read_only()) index = 999999;
+				}
+				MultiplexTransformRNG::MultiplexTransformRNG(const std::vector<vRNG*> &sources) {
+					buffer = new Tests::TestBlock;
+					index = 999999;
+					source_rngs = sources;
+				}
+				MultiplexTransformRNG::~MultiplexTransformRNG() { delete buffer; buffer = nullptr; }
+
 
 				ReinterpretAsUnknown::ReinterpretAsUnknown( vRNG *rng ) : Transform8(rng) {
 					PractRand::Tests::TestBlock *block = new PractRand::Tests::TestBlock;
@@ -129,6 +225,25 @@ namespace PractRand {
 					return buffer[index++];
 				}
 				std::string ReinterpretAs64::get_name() const {return std::string("As64(") + base_rng->get_name() + ")";}
+
+				void Xor::refill() {
+					MultiplexTransformRNG::refill();
+					PractRand::Tests::TestBlock tmp;
+					buffer->fill(source_rngs[0]);
+					for (int sri = 1; sri < source_rngs.size(); sri++) {
+						tmp.fill(source_rngs[sri]);
+						for (int i = 0; i < PractRand::Tests::TestBlock::SIZE / 8; i++) buffer->as64[i] ^= tmp.as64[i];
+					}
+				}
+				std::string Xor::get_name() const {
+					std::string rv = "xor(";
+					for (int sri = 0; sri < source_rngs.size(); sri++) {
+						if (sri) rv += ",";
+						rv += source_rngs[sri]->get_name();
+					}
+					rv += ")";
+					return rv;
+				}
 
 				Discard16to8::Discard16to8(vRNG *base_rng_) : Transform8(base_rng_) {
 					//if (base_rng_->get_native_output_size() != INPUT_BITS) std::cerr << "* warning: Discard16to8 using incorrect input size?\n";
@@ -296,7 +411,7 @@ namespace PractRand {
 				}
 				void BaysDurhamShuffle64::walk_state(StateWalkingObject *walker) {
 					base_rng->walk_state(walker);
-					if (!(walker->get_properties() && walker->FLAG_CLUMSY)) {
+					if (!(walker->get_properties() & walker->FLAG_CLUMSY)) {
 						walker->handle(index_mask);
 						walker->handle(index_shift);
 					}
@@ -325,7 +440,7 @@ namespace PractRand {
 				}
 				void BaysDurhamShuffle32::walk_state(StateWalkingObject *walker) {
 					base_rng->walk_state(walker);
-					if (!(walker->get_properties() && walker->FLAG_CLUMSY)) {
+					if (!(walker->get_properties() & walker->FLAG_CLUMSY)) {
 						walker->handle(index_mask);
 						walker->handle(index_shift);
 					}
@@ -354,7 +469,7 @@ namespace PractRand {
 				}
 				void BaysDurhamShuffle16::walk_state(StateWalkingObject *walker) {
 					base_rng->walk_state(walker);
-					if (!(walker->get_properties() && walker->FLAG_CLUMSY)) {
+					if (!(walker->get_properties() & walker->FLAG_CLUMSY)) {
 						walker->handle(index_mask);
 						walker->handle(index_shift);
 					}
@@ -383,7 +498,7 @@ namespace PractRand {
 				}
 				void BaysDurhamShuffle8::walk_state(StateWalkingObject *walker) {
 					base_rng->walk_state(walker);
-					if (!(walker->get_properties() && walker->FLAG_CLUMSY)) {
+					if (!(walker->get_properties() & walker->FLAG_CLUMSY)) {
 						walker->handle(index_mask);
 						walker->handle(index_shift);
 					}

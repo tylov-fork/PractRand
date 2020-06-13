@@ -12,6 +12,19 @@ namespace PractRand {
 		int simplify_prob_table ( unsigned long categories, double N, double *prob_table, Uint64 *counts, bool linear, bool aggressive );
 		double chi_squared_test ( unsigned long categories, const double *prob_table, const Uint64 *counts );
 		double rarity_test(unsigned long categories, const double *prob_table, const Uint64 *counts);
+		class G_TEST {
+			long double total, sum, prob_sum, minimum_prob, partial_count, partial_prob;
+			long categories;
+		public:
+			G_TEST() { reset(); }
+			void reset();
+			void set_minimum_prob(double min) { minimum_prob = min; }
+			void add_category(Uint64 count, long double probability);
+			void finalize();
+			double get_result() const;
+			long get_DoF() const;
+			long get_categories() const { return categories; }
+		};
 		double g_test(unsigned long categories, const double *prob_table, const Uint64 *counts);
 		double g_test_flat(unsigned long categories, const Uint64 *counts);
 		double g_test_flat_merge_normal(unsigned long categories, const Uint64 *counts, Uint64 total = Uint64(-1), double target_ratio = 32.0);//already converted to approximately normal distribution (mandatory since DoF is not returned)
@@ -23,6 +36,7 @@ namespace PractRand {
 		double math_normaldist_to_suspicion(double normal);
 		double math_pvalue_to_normaldist(double pvalue);
 		double math_normaldist_pdf ( double normal );
+		Uint64 math_nChooseR(int set_size, int num_choices);
 		double math_factorial(double a);
 		double math_factorial_log(Uint64 a);//log of a!
 		class SampleSet;
@@ -50,7 +64,7 @@ namespace PractRand {
 		class SampleSet {
 		public:
 			std::vector<double> rs;
-			Uint64 duplicates;
+			Uint32 duplicates;
 			double sum;
 			double sum_sqr;
 			void _count_duplicates();
@@ -64,7 +78,7 @@ namespace PractRand {
 				_normalize();
 			}
 			void add(const double *new_results, int n) {
-				int s = rs.size();
+				long s = rs.size();
 				rs.resize(s + n);
 				for (int i = 0; i < n; i++) {
 					rs[s+i] = new_results[i];
@@ -78,16 +92,16 @@ namespace PractRand {
 				_normalize();
 			}
 			void reset() {duplicates = 0; sum = 0; sum_sqr = 0; rs.resize(0);}
-			int size() const {return rs.size();}
-			int num_duplicates() const {return duplicates;}
-			int get_index ( double other_result ) const {return int(0.5+_get_index(other_result));}
+			long size() const {return rs.size();}
+			long num_duplicates() const {return duplicates;}
+			long get_index ( double other_result ) const {return int(0.5+_get_index(other_result));}
 			double get_mean() const {if (rs.empty()) return 0; else return sum / rs.size();}
 			double get_stddev() const {if (rs.empty()) return 0; double avg = get_mean(), avg_sqr = sum_sqr / rs.size(); return std::sqrt(avg_sqr - avg * avg);}
 			double get_percentile ( double other_result ) const;//0 to 1
 			double get_result_by_index(int i) const {return rs[i];}
 			double get_result_by_percentile(double d) const;
-			int get_num_elements_less_than ( double other_result ) const;
-			int get_num_elements_greater_than ( double other_result ) const;
+			long get_num_elements_less_than ( double other_result ) const;
+			long get_num_elements_greater_than ( double other_result ) const;
 			void get_num_elements_less_and_greater ( double other_result, int &num_lower, int &num_higher ) const;
 		};
 
@@ -121,6 +135,8 @@ namespace PractRand {
 			LowIntType *low;
 			Uint64 *high;
 			int size;
+		private:
+			VariableSizeCount(const VariableSizeCount &other);//copy constructor disallowed
 		public:
 			int get_size() {return size;}
 			void reset_counts() {
@@ -148,6 +164,16 @@ namespace PractRand {
 				}
 			}
 			const Uint64 *get_array() {flush(); return &high[0];}
+			void swap_array(VariableSizeCount<LowIntType> &other) {
+				if (other.size != size) issue_error("VariableSizeCount::swap_array");
+				LowIntType *tmp_low = low;
+				Uint64 *tmp_high = high;
+				low = other.low;
+				high = other.high;
+				other.low = tmp_low;
+				other.high = tmp_high;
+			}
+			void force_count(int index, Uint64 value) { low[index] = 0; high[index] = value; }
 		};
 
 		class BitMatrix {

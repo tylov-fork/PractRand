@@ -131,6 +131,19 @@ namespace PractRand {
 					if (!(x || y || z || w)) x = 1;
 				}
 
+				Uint32 xorwow32plus32::raw32() {
+					i += 362437;
+					x ^= x << 13;
+					x ^= x >> 17;
+					x ^= x << 5;
+					return x + i;
+				}
+				std::string xorwow32plus32::get_name() const { return "xorwow32plus32"; }
+				void xorwow32plus32::walk_state(StateWalkingObject *walker) {
+					walker->handle(x);
+					if (!x) x = 1;
+					walker->handle(i);
+				}
 				Uint32 xorwow32of96::raw32() {
 					a += 362437;
 					return a + impl.raw32();
@@ -159,6 +172,24 @@ namespace PractRand {
 					walker->handle(v);
 					walker->handle(d);
 					if (!(x || y || z || w || v)) x = 1;
+				}
+				Uint64 xorshift128plus::raw64() {
+					Uint64 a = state0;
+					Uint64 b = state1;
+
+					state0 = b;
+					a ^= a << 23;
+					a ^= a >> 18;
+					a ^= b;
+					a ^= b >> 5;
+					state1 = a;
+
+					return a + b;
+				}
+				std::string xorshift128plus::get_name() const { return "xorshift128plus"; }
+				void xorshift128plus::walk_state(StateWalkingObject *walker) {
+					walker->handle(state0);
+					walker->handle(state1);
 				}
 				Uint64 xoroshiro128plus::raw64() {
 					Uint64 result = state0 + state1;
@@ -197,6 +228,38 @@ namespace PractRand {
 				void xoroshiro128plus_2p64::walk_state(StateWalkingObject *walker) {
 					walker->handle(state0);
 					walker->handle(state1);
+				}
+				void tinyMT::next_state() {
+					Uint32 x, y;
+					y = state[3];
+					x = (state[0] & 0x7fFFffFF) ^ state[1] ^ state[2];
+					x ^= x << 1;
+					y ^= (y >> 1) ^ x;
+					state[0] = state[1];
+					state[1] = state[2];
+					state[2] = x ^ (y << 10);
+					state[3] = y;
+					state[1] ^= -Sint32(y & 1) & state_param1;
+					state[2] ^= -Sint32(y & 1) & state_param2;
+				}
+				Uint32 tinyMT::raw32() {
+					next_state();
+					Uint32 a, b;
+					a = state[3];
+					b = state[0] + (state[2] >> 8);
+					a ^= b;
+					a ^= -Sint32(b & 1) & out_param;
+					return a;
+				}
+				std::string tinyMT::get_name() const { return "tinyMT"; }
+				void tinyMT::walk_state(StateWalkingObject *walker) {
+					walker->handle(state[0]);
+					walker->handle(state[1]);
+					walker->handle(state[2]);
+					walker->handle(state[3]);
+					state_param1 = 0x8f7011ee; // 0x8f7011ee, 0xfc78ff1f, 0x3793fdff is one of many good triples
+					state_param2 = 0xfc78ff1f;
+					out_param = 0x3793fdff;
 				}
 
 
@@ -435,6 +498,61 @@ namespace PractRand {
 					for (int i = 0; i < 20; i++) raw16();
 					*/
 				void jsf16::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(c);
+					walker->handle(d);
+					if (!(a | b) && !(c | d)) d++;
+				}
+
+				Uint32 tyche::raw32() {
+					a += b;
+					d ^= a;
+					d = rotate32(d, 16);
+					c += d;
+					b ^= c;
+					b = rotate32(b, 12);
+					a += b;
+					d ^= a;
+					d = rotate32(d, 8);
+					c += d;
+					b ^= c;
+					b = rotate32(b, 7);
+					return b;
+				}
+				void tyche::seed(Uint64 s) { seed(s, 0); }
+				void tyche::seed(Uint64 s, Uint32 idx) {
+					a = Uint32(s >> 32);
+					b = Uint32(s);
+					c = 2654435769;
+					d = 1367130551 ^ idx;
+					for (int i = 0; i < 20; i++) raw32();
+				}
+				std::string tyche::get_name() const { return "tyche"; }
+				void tyche::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(c);
+					walker->handle(d);
+					if (!(a | b) && !(c | d)) d++;
+				}
+				Uint16 tyche16::raw16() {
+					a += b;
+					d ^= a;
+					d = rotate16(d, 8);
+					c += d;
+					b ^= c;
+					b = rotate16(b, 6);
+					a += b;
+					d ^= a;
+					d = rotate16(d, 5);
+					c += d;
+					b ^= c;
+					b = rotate16(b, 3);
+					return b;
+				}
+				std::string tyche16::get_name() const { return "tyche16"; }
+				void tyche16::walk_state(StateWalkingObject *walker) {
 					walker->handle(a);
 					walker->handle(b);
 					walker->handle(c);
@@ -852,42 +970,6 @@ namespace PractRand {
 					walker->handle(counter);
 				}
 
-				Uint16 rarns16::raw16() {					//		378		131		124		111		F31		F11		F12		F21		FF1		FE1		FD1		F1A
-					Uint16 old1 = xs1, old2 = xs2, old3 = xs3;//							*				*						*		*				
-					Uint16 old = xs1;
-					xs1 = xs2 ^ (xs2 >> S1);
-					xs2 = xs3 ^ (xs3 << S2);
-					xs3 = xs3 ^ (xs3 >> S3) ^ old;
-					Uint16 rv = old1 + rotate16(old1, 5);
-					return (rv) ^ rotate16(xs1 + rv, 7);  //		16 TB?	512 GB	1+ TB	1 GB	128 GB	256 MB	4 GB	16 GB	64 MB	128 MB	2 GB	2 GB	27
-					//return rv^rotate16(rv+xs1,9)^rotate16(rv+xs2,3);  //					64 GB			256 GB					1 TB	128 GB					27
-					//return (rv ^ xs2) + rotate16(rv + xs1, 3);//			1+ TB			8 GB			16 GB					2 GB	16 GB					31
-					//Uint16 rv = old1 + rotate16(old1, 3);
-					//return (rv ^ xs2) + rotate16(xs1 + rv, 7);//							16 GB			16 GB					8 GB	1 GB					30
-					//Uint16 rv = old2+old1 + rotate16(old1, 3);
-					//return (rv ^ xs2) + rotate16(xs1 + rv, 7);//			4+ TB			64 GB	4+ TB	2+ TB					32 GB	16 GB					34
-					//Uint16 rv = old1 + rotate16(old1+old2, 3);
-					//return (rv ^ xs2) + rotate16(xs1 + rv, 7);//							32 GB			~1+ TB					~1+ TB	512 GB					35
-				}
-				std::string rarns16::get_name() const { return "rarns16"; }
-				void rarns16::walk_state(StateWalkingObject *walker) {
-					walker->handle(xs1);
-					walker->handle(xs2);
-					walker->handle(xs3);
-					walker->handle(history);
-					if (!(xs1 | xs2 | xs3)) xs1 = 1;
-				}
-				void rarns16::seed(Uint64 s) {
-					xs1 = Uint16(s >> 0);
-					xs2 = Uint16(s >> 16);
-					xs3 = Uint16(s >> 32);
-					if (!(xs1 | xs2 | xs3)) {
-						xs1 = Uint16(s >> 48);
-						xs2 = 1;
-					}
-					raw16();
-					return;
-				}
 			}
 		}
 	}

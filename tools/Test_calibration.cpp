@@ -359,6 +359,64 @@ void blah_fpf() {
 	}
 }
 
+void _set_shift_values(int shift1, int shift2, int shift3);
+struct CharPoly {
+	enum { WORDS = 3 };
+	typedef Uint16 Word;
+	enum { BITS = sizeof(Word) * 8 };
+	Word data[WORDS];
+
+	void zero() { std::memset(data, 0, WORDS * sizeof(Word)); }
+};
+CharPoly operator+(const CharPoly &a, const CharPoly &b) {
+	CharPoly rv;
+	for (int i = 0; i < CharPoly::WORDS; i++) rv.data[i] = a.data[i] + b.data[i];
+	return rv;
+}
+CharPoly mulx(const CharPoly &mod, const CharPoly &a) {
+	CharPoly rv = a;
+	int j;
+	if (rv.data[CharPoly::WORDS - 1] >> (CharPoly::BITS - 1)) {
+		for (j = CharPoly::WORDS - 1; j; j--)
+			rv.data[j] = ((rv.data[j - 1] >> (CharPoly::BITS - 1)) | (rv.data[j] << 1)) ^ mod.data[j];
+		rv.data[0] = (rv.data[0] << 1) ^ mod.data[j];
+	}
+	else {
+		for (j = CharPoly::WORDS - 1; j; j--)
+			rv.data[j] = (rv.data[j - 1] >> (CharPoly::BITS - 1)) | (rv.data[j] << 1);
+		rv.data[0] <<= 1;
+	}
+	return rv;
+}
+void blah_rarns_search_shifts() {
+	enum {
+		BITS = 16,
+		MIN_SHIFT1 = 0, MAX_SHIFT1 = BITS-1,
+		MIN_SHIFT2 = 0, MAX_SHIFT2 = BITS-1,
+		MIN_SHIFT3 = 0, MAX_SHIFT3 = BITS-1,
+	};
+	int shift1 = MIN_SHIFT1, shift2 = MIN_SHIFT2, shift3 = MIN_SHIFT3;
+	while (true) {
+		PractRand::RNGs::Raw::rarns16 rarns;
+		_set_shift_values(shift1, shift2, shift3);
+		rarns.seed(0);
+
+		if (++shift1 > MAX_SHIFT1) {
+			shift1 = MIN_SHIFT1;
+			if (++shift2 > MAX_SHIFT2) {
+				shift2 = MIN_SHIFT2;
+				if (++shift3 > MAX_SHIFT3) {
+					shift3 = MIN_SHIFT3;
+					break;
+				}
+			}
+		}
+	}
+}
+void blah_avalanche_grid() {
+	;
+}
+
 
 void find_test_distributions() {
 	std::time_t start_time = std::time(NULL);
@@ -372,7 +430,8 @@ void find_test_distributions() {
 	//Tests::ListOfTests tests(new Tests::Gap16());
 	//Tests::ListOfTests tests(new Tests::BRank(40));
 	//Tests::ListOfTests tests(new Tests::BCFN_FF(2, 13));
-	Tests::ListOfTests tests(new Tests::mod3_simple());
+	//Tests::ListOfTests tests(new Tests::mod3_simple());
+	Tests::ListOfTests tests(new Tests::mod3n(1));
 	//Tests::ListOfTests tests = Tests::Batteries::get_core_tests();
 	//Tests::ListOfTests tests = Tests::Batteries::get_expanded_core_tests();
 	//Tests::ListOfTests tests(new Tests::DistC6(9,0, 1,0,0));
@@ -455,7 +514,7 @@ void find_test_distributions() {
 			}
 		}
 		Uint64 blocks_so_far = 0;
-		for (int length_L2 = 25; length_L2 <= 32; length_L2 += 1) {
+		for (int length_L2 = 10; length_L2 <= 25; length_L2 += 1) {
 			if (length_L2 >= 10+3 && length_L2 < 99) {
 				Uint64 new_blocks = (5ull << (length_L2-3)) / Tests::TestBlock::SIZE;
 				tman.test(new_blocks - blocks_so_far);

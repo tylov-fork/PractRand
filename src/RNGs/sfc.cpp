@@ -9,6 +9,7 @@
 #include "PractRand/RNGs/sfc64.h"
 
 using namespace PractRand;
+using namespace PractRand::Internals;
 
 //polymorphic:
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C64(sfc64)
@@ -32,10 +33,10 @@ std::string PractRand::RNGs::Polymorphic::sfc16::get_name() const {return "sfc16
 //raw:
 Uint16 PractRand::RNGs::Raw::sfc16::raw16() {
 	enum {BARREL_SHIFT = 6, RSHIFT = 5, LSHIFT = 3};//good sets include {4,3,2},{6,5,2},{4,5,3},{6,5,3},{7,5,3}; older versions used {7,3,2}
-	Uint16 tmp = a + b + counter++;
+	Uint16 tmp = a + b + counter++;//49 / 8:30+ / 7:35 / 6:27 / 5:17
 	a = b ^ (b >> RSHIFT);
 	b = c + (c << LSHIFT);
-	c = ((c << BARREL_SHIFT) | (c >> (16-BARREL_SHIFT))) + tmp;
+	c = ((c << BARREL_SHIFT) | (c >> (16 - BARREL_SHIFT))) + tmp;
 	return tmp;
 }
 void PractRand::RNGs::Raw::sfc16::seed(Uint64 s) {
@@ -89,34 +90,6 @@ void PractRand::RNGs::Raw::sfc32::seed(Uint64 s) {
 	c = Uint32(s >> 32);
 	counter = 1;
 	for (int i = 0; i < 12; i++) raw32();//12
-/*
-_				e0f0	e0f1	e0f2		e1f0	e1f1	e1f2
-sfc 16	5											14
-sfc 16	6											25
-sfc 16	7											33
-sfc 16	8											37+
-		8/10/10
-
-sfc	32	4											12
-sfc	32	5											12
-sfc	32	6											21
-sfc	32	7											32
-sfc	32	8											36?
-		8/12/15
-
-sfc 64  5											13
-sfc 64  6											16
-sfc 64  7											29
-sfc 64  8											39+
-		8/12/18
-
-jsf	32	2											?		10
-jsf	32	3											14		12
-jsf	32	4											19		18
-jsf	32	5									24		24		23
-jsf	32	6													35
-jsf	32	7													42+
-	*/
 }
 void PractRand::RNGs::Raw::sfc32::seed_fast(Uint64 s) {
 	a = 0;

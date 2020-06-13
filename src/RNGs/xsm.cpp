@@ -42,14 +42,13 @@ Uint32 PractRand::RNGs::Raw::xsm32::raw32() {
 	//const Uint32 K = 0xD250CE2D;  //	11010010010100001100111000101101 456  194
 	//const Uint32 K =	0x21042185;	//	00100001000001000010000110000101 421  188 - now the middle quality version
 	//const Uint32 K = 0x21052045;  //	00100001000001010010000001000101 373  161 - original reduced quality version
-	//const Uint32 K =	0x01002045;  //	00000001000000000010000001000101 363  157 - lowest qualify version tested
+	//const Uint32 K =	0x01002045;  //	00000001000000000010000001000101 363  157 - lowest quality version tested
 
 	Uint32 tmp = lcg_high ^ rotate(lcg_high + lcg_low, 9); tmp ^= rotate(tmp + lcg_adder_high, 19);
 	tmp *= Uint32(0xD251CF2D);
 	step_forwards();
 	tmp = tmp ^ rotate(tmp + lcg_high, 16);
 	tmp *= Uint32(0x299529B5);
-	//tmp ^= tmp >> 8;
 	tmp ^= tmp >> 16;
 	return tmp;
 }
@@ -117,7 +116,6 @@ Uint64 PractRand::RNGs::Raw::xsm64::raw64() {
 	step_forwards();
 	tmp = tmp ^ rotate(tmp + lcg_high, 32);
 	tmp *= K;
-	//tmp ^= tmp >> 16;
 	tmp ^= tmp >> 32;
 	return tmp;
 }

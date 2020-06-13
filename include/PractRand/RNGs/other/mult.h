@@ -305,6 +305,42 @@ namespace PractRand {
 					void walk_state(StateWalkingObject *);
 				};
 
+				class mwrca16 : public vRNG16 {
+					Uint16 a, b;
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mwrca32 : public vRNG32 {
+					Uint32 a, b;
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mwrcc16 : public vRNG16 {
+					Uint16 a, b, counter;
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mwrcc32 : public vRNG32 {
+					Uint32 a, b, counter;
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mwrcca16 : public vRNG16 {
+					Uint16 a, b, counter;
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mwrcca32 : public vRNG32 {
+					Uint32 a, b, counter;
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 				//the 16 bit variant of the old version of my mwlac algorithm
 				class old_mwlac16 : public vRNG16 {
 					Uint16 a, b, c, d;

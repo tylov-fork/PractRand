@@ -16,14 +16,15 @@ namespace PractRand {
 	//NOTE: initialize_PractRand() is NOT threadsafe, it should be called before threads get spun off
 	
 	void self_test_PractRand();
-	void hook_error_handler(void (*callback)(const char *));
+	void issue_error(const char *msg = 0);//PractRand calls this any time there is an internal error
+	void hook_error_handler(void(*callback)(const char *));//this can be used to replace the default behavior of issue_error
 
 	class StateWalkingObject;
 
 	class SEED_AUTO_TYPE {};
 	class SEED_NONE_TYPE {};
-	static SEED_AUTO_TYPE SEED_AUTO;
-	static SEED_NONE_TYPE SEED_NONE;
+	extern SEED_AUTO_TYPE SEED_AUTO;
+	extern SEED_NONE_TYPE SEED_NONE;
 
 	namespace RNGs {
 		class vRNG {
@@ -41,10 +42,11 @@ namespace PractRand {
 			long serialize( char *buffer, long buffer_size );//returns serialized size, or zero on failure
 			char *serialize( size_t *size );//returns malloced block, or NULL on error, sets *size to size of block
 			bool deserialize( const char *buffer, long size );//returns true on success, false on failure
+			std::string print_state();//returns RNG state as a comma-delimited sequence of numbers
 			virtual void walk_state(StateWalkingObject *) = 0;
 
 
-			//raw random bits
+		//raw random bits
 			virtual Uint8  raw8 () = 0;
 			virtual Uint16 raw16() = 0;
 			virtual Uint32 raw32() = 0;
@@ -65,14 +67,16 @@ namespace PractRand {
 			double randlf(double max) {return randlf() * max;}
 			double randlf(double min, double max) {return randlf() * (max-min) + min;}
 
+		//non-uniform distributions
+			double gaussian();//mean 0.0, stddev 1.0
+			double gaussian(double mean, double stddev) { return gaussian() * stddev + mean; }
+
 		//metadata functions
 			virtual Uint64 get_flags() const;
 			virtual std::string get_name() const = 0;
-			virtual int get_native_output_size() const = 0;
-			//virtual Uint32 get_property(int index) const;
-			//virtual bool set_parameter(const char *) const;
+			virtual int get_native_output_size() const = 0;//generally 8, 16, 32, 64, or -1 (unknown)
 
-		//exotic methods (not supported by many implementations):
+		//exotic methods (not supported by many implementations - check flags to see if they support it):
 		//exotic methods 1: random access
 			virtual void seek_forward128 (Uint64 how_far_low64, Uint64 how_far_high64);
 			virtual void seek_backward128(Uint64 how_far_low64, Uint64 how_far_high64);
@@ -93,10 +97,9 @@ namespace PractRand {
 			//the milliseconds parameter is the maximum amount of time it is allowed to block while waiting for entropy
 			virtual bool add_entropy_automatically(int milliseconds = 0);
 
-		//exotic methods 3: misc.
-			virtual void flush_buffers();
+			virtual void flush_buffers();// some entropy pooling PRNGs have internal buffers that need to be flushed before inputs can effect outputs - this flushes both input and output buffers
 
-		//Boost / C++0x TR1 compatibility:
+		// C++2011 compatibility:
 #if defined PRACTRAND_BOOST_COMPATIBILITY
 			typedef Uint64 result_type;
 			result_type operator()() {return raw64();}
@@ -204,5 +207,6 @@ namespace PractRand {
 			typedef vRNG64 PolymorphicRNG64;
 		}
 	}//namespace RNGs
+	namespace Tests { union TestBlock; }
 }//namespace PractRand
 #endif//_practrand_rng_basics_h

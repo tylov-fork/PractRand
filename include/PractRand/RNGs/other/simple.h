@@ -103,6 +103,13 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
+				class xorwow32plus32 : public vRNG32 {
+					Uint32 x, i;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 				class xorwow32of96 : public vRNG32 {
 					xorshift64 impl;
 					Uint32 a;
@@ -119,6 +126,13 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
+				class xorshift128plus : public vRNG64 {
+					Uint64 state0, state1;
+				public:
+					Uint64 raw64();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 				class xoroshiro128plus : public vRNG64 {
 					// from David Blackman and Sebastiano Vigna (vigna@acm.org), see http://vigna.di.unimi.it/xorshift/
 					Uint64 state0, state1;
@@ -132,6 +146,15 @@ namespace PractRand {
 					Uint64 state0, state1;
 				public:
 					Uint64 raw64();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class tinyMT : public vRNG32 {
+					Uint32 state[4];
+					Uint32 state_param1, state_param2, out_param;
+				public:
+					void next_state();
+					Uint32 raw32();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
@@ -217,6 +240,23 @@ namespace PractRand {
 					void walk_state(StateWalkingObject *);
 				};
 				class jsf16 : public vRNG16 {
+					Uint16 a, b, c, d;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+
+				class tyche : public vRNG32 {
+					Uint32 a, b, c, d;
+				public:
+					Uint32 raw32();
+					void seed(Uint64 s);
+					void seed(Uint64 s, Uint32 idx);
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class tyche16 : public vRNG16 {
 					Uint16 a, b, c, d;
 				public:
 					Uint16 raw16();
@@ -439,15 +479,6 @@ namespace PractRand {
 					Uint16 raw16();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
-				};
-				class rarns16 : public vRNG16 {
-					Uint16 xs1, xs2, xs3, history;
-					enum { S1 = 3, S2 = 7, S3 = 8 };//3,7,8
-				public:
-					Uint16 raw16();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *walker);
-					void seed(Uint64 s);
 				};
 			}
 		}

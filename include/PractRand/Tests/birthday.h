@@ -82,7 +82,7 @@ namespace PractRand {
 		class BirthdayLamda1 : public TestBaseclass {
 		protected:
 			//optimized for lambda=1, few runs, as described in "On the performance of birthday spacings tests with certain families of random number generators" (L'ecuyer & Simard, 2001)
-			//using namespace BirthdayHelpers;// this is illegal in C++, I guess instead I'll try:
+			//using namespace BirthdayHelpers; using BirthdayHelpers::i128// these are illegal in C++, I guess instead I'll try:
 			typedef BirthdayHelpers::i128 i128;
 			enum {
 				SORT_HELPER_BITS = BirthdayHelpers::SORT_HELPER_BITS,
@@ -110,7 +110,27 @@ namespace PractRand {
 
 			virtual void test_blocks(TestBlock *data, int numblocks);
 		};
-		class BirthdaySystematic : public BirthdayLamda1 {
+		/*
+		class BirthdaySystematic64 {
+			// does Birthday Spacings test on 64 bit integers
+			// if a result is requested mid-buffer, the buffer will be sorted and processed but the contents left reusable and the results treated as ephemeral
+			// generally, the buffer size is aimed to have a lambda value of about 1 when using all 64 bits
+			// multiple tests are combined by simply adding their observed duplicated and expected duplicates
+			// currently undecided on whether or not early use of the buffer will suppress some bits or not
+			enum {
+				BUFSIZE_L2 = 22, 
+				BUFSIZE = 1 << BUFSIZE_L2
+			};
+			Uint64 buffer[BUFSIZE];
+			Uint64 elements_buffered;
+			Uint64 num_sorted; // this many elements in the buffer are already sorted, starting at the beginning, potentially allowing optimization to the final sorting of its contents
+			Uint64 observed_duplicates;
+			double expected_duplicates;
+			Uint64 evaluate_buffer();
+		public:
+			;
+		};*/
+		class BirthdaySystematic128 : public BirthdayLamda1 {
 			// similar to BirthdayLambda1 above
 			// but if a result is requested before the first sample is ready, it will return a result for a partial buffer
 			// and attempts to have everything optimized for the possibility of that partial-buffer case
@@ -125,7 +145,7 @@ namespace PractRand {
 			double incomplete_duplicates;
 			double incomplete_expected_duplicates;
 		public:
-			BirthdaySystematic(int max_bufsize_L2_ = 28);
+			BirthdaySystematic128(int max_bufsize_L2_ = 28);
 			virtual void init(PractRand::RNGs::vRNG *known_good);
 			virtual std::string get_name() const;
 			virtual void get_results(std::vector<TestResult> &results);

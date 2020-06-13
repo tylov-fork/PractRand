@@ -630,6 +630,35 @@ namespace PractRand {
 					if (position >= LAG1) position %= LAG1;
 					for (int i = 0; i < LAG1; i++) buffer[i] |= 1;
 				}
+				Uint16 fibmulmix16::raw16() {
+					if (position) return buffer[--position];
+					Uint16 prev = buffer[LAG1 - 1];
+					enum {
+						SH1  = 0
+						,SH2 = 0
+						,SH3 = 5
+					};
+					for (unsigned long i = 0; i < LAG2; i++) {
+						Uint16 a = buffer[i + LAG1 - LAG1];
+						Uint16 b = buffer[i + LAG1 - LAG2];
+						a = rotate16(a, SH1); b = rotate16(b, SH2); prev += rotate16(prev, SH3);
+						prev = buffer[i] = (a * (b | 1)) ^ prev;
+					}
+					for (unsigned long i = LAG2; i < LAG1; i++) {
+						Uint16 a = buffer[i];
+						Uint16 b = buffer[i - LAG2];
+						a = rotate16(a, SH1); b = rotate16(b, SH2); prev += rotate16(prev, SH3);
+						prev = buffer[i] = (a * (b | 1)) ^ prev;
+					}
+					position = LAG1;
+					return buffer[--position];
+				}
+				std::string fibmulmix16::get_name() const { return "fibmulmix16"; }
+				void fibmulmix16::walk_state(StateWalkingObject *walker) {
+					walker->handle(position);
+					for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
+					if (position >= LAG1) position %= LAG1;
+				}
 
 
 				Uint32 mt19937_unhashed::raw32() {

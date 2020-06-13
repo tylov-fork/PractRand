@@ -98,6 +98,7 @@ namespace Threading {
 #else //unix????
 #include <unistd.h>
 #include <pthread.h>
+#include <time.h>
 namespace Threading {
 	//compile time assert that Lock is big enough:
 	typedef char compile_time_assertion[(sizeof(Lock) >= sizeof(pthread_mutex_t)) ? 1 : -1];
@@ -106,11 +107,14 @@ namespace Threading {
 		issue_error(msg);
 	}
 	void sleep(int milliseconds) {
+		struct timespec ts;
+		ts.tv_sec = 0;
 		if (milliseconds > 1000) {
-			::sleep(milliseconds / 1000);
-			milliseconds %= 1000;
+			ts.tv_sec = milliseconds / 1000;
+			milliseconds -= ts.tv_sec * 1000;
 		}
-		usleep(1000 * milliseconds + 1);
+		ts.tv_nsec = milliseconds * 1000 + 1;
+		nanosleep(&ts, NULL);
 	}
 	void create_thread( THREADFUNC_RETURN_TYPE (THREADFUNC_CALLING_CONVENTION *func)(void*), void *param ) {
 		pthread_t thread;

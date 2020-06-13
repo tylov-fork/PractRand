@@ -4,6 +4,8 @@
 #include <vector>
 #include <cmath>
 #include <cstring>
+#include <iostream>
+#include <sstream>
 #include <cstdlib>
 
 #include "PractRand/config.h"
@@ -15,7 +17,9 @@
 #include "PractRand/RNGs/all.h"
 
 namespace PractRand {
-	const char *version_str = "0.94";
+	const char *version_str = "0.95";
+	SEED_AUTO_TYPE SEED_AUTO;
+	SEED_NONE_TYPE SEED_NONE;
 	void (*error_callback)(const char *) = NULL;
 	void issue_error ( const char *msg) {
 		if (error_callback) error_callback(msg);
@@ -107,6 +111,27 @@ namespace PractRand {
 		}
 		virtual Uint32 get_properties() const {return 0;}
 	};
+	class PrintingStateWalker : public StateWalkingObject {
+		std::ostringstream outbuf;
+		bool first;
+		void pre() {
+			if (first) first = false;
+			else outbuf << ",";
+		}
+	public:
+		PrintingStateWalker() : first(true) {}
+		virtual void handle(bool   &v) { pre(); outbuf << v; }
+		virtual void handle(Uint8  &v) { pre(); outbuf << v; }
+		virtual void handle(Uint16 &v) { pre(); outbuf << v; }
+		virtual void handle(Uint32 &v) { pre(); outbuf << v; }
+		virtual void handle(Uint64 &v) { pre(); outbuf << v; }
+		virtual void handle(float  &v) { pre(); outbuf << v; }
+		virtual void handle(double &v) { pre(); outbuf << v; }
+
+		virtual Uint32 get_properties() const { return FLAG_CLUMSY; }
+		std::string get_string() const { return outbuf.str(); }
+		void reset() { first = true; outbuf.str(""); }
+	};
 	class GenericIntegerSeedingStateWalker : public StateWalkingObject {
 	public:
 		PractRand::RNGs::Raw::arbee seeder;
@@ -118,13 +143,13 @@ namespace PractRand {
 		virtual void handle(Uint64 &v) {v = seeder.raw64();}
 		virtual void handle(float  &) {issue_error("RNGs with default integer seeding should not contain floating point values");}
 		virtual void handle(double &) {issue_error("RNGs with default integer seeding should not contain floating point values");}
-		virtual Uint32 get_properties() const {return FLAG_CLUMSY | FLAG_SEEDER;}
+		virtual Uint32 get_properties() const { return FLAG_CLUMSY | FLAG_SEEDER; }
 	};
 	class GenericSeedingStateWalker : public StateWalkingObject {
 	public:
 		PractRand::RNGs::vRNG *seeder;
 		GenericSeedingStateWalker(RNGs::vRNG *seeder_) : seeder(seeder_) {}
-		virtual void handle(bool   &v) {v = (seeder->raw8() & 1) ? true : false;}
+		virtual void handle(bool   &v) { v = (seeder->raw8() & 1) ? true : false; }
 		virtual void handle(Uint8  &v) {v = seeder->raw8 ();}
 		virtual void handle(Uint16 &v) {v = seeder->raw16();}
 		virtual void handle(Uint32 &v) {v = seeder->raw32();}
@@ -339,6 +364,11 @@ namespace PractRand {
 			}
 			return buffer;
 		}
+		std::string vRNG::print_state() {
+			PrintingStateWalker printer;
+			walk_state(&printer);
+			return printer.get_string();
+		}
 		bool vRNG::deserialize( const char *buffer, long size ) {//returns number of bytes used, or zero on error
 			DeserializingStateWalker deserializer(buffer, size);
 			walk_state(&deserializer);
@@ -375,6 +405,7 @@ namespace PractRand {
 		}
 		float vRNG::randf() {PRACTRAND__RANDF_IMPLEMENTATION(*this)}
 		double vRNG::randlf() {PRACTRAND__RANDLF_IMPLEMENTATION(*this)}
+		double vRNG::gaussian() { return Internals::generate_gaussian_fast(raw64()); }
 		Uint64 vRNG::get_flags() const {return 0;}
 		void vRNG::seek_forward128 (Uint64, Uint64) {}
 		void vRNG::seek_backward128(Uint64, Uint64) {}

@@ -22,7 +22,6 @@ namespace PractRand {
 
 		virtual void handle(float &) = 0;
 		virtual void handle(double &) = 0;
-		//virtual void handle(void *&) = 0;
 
 		//purposes: 
 		// 1. seeding
@@ -30,13 +29,15 @@ namespace PractRand {
 		// 3. avalanche style testing (measure state size / props, tweak bits in state, etc)
 		// 4. ???
 		enum {
-			FLAG_READ_ONLY = 1, //does not make changes
-			FLAG_CLUMSY = 2,    //may violate invariants (if also FLAG_READ_ONLY then only wants to see state visible to clumsy writers)
-			FLAG_SEEDER = 4,    //some RNGs may have extra invariants enforced only on seeded states (minimum distance away from other seeded states on cycle)
+			FLAG_READ_ONLY = 1, // does not make changes
+			FLAG_WRITE_ONLY = 2,// result does not depend upon prior state
+			FLAG_CLUMSY = 4,    // may violate invariants (if also FLAG_READ_ONLY then only wants to see state visible to clumsy writers)
+			FLAG_SEEDER = 8,    // some RNGs may have extra invariants enforced only on seeded states (minimum distance away from other seeded states on cycle)
 		};
 		virtual Uint32 get_properties() const = 0;
-		bool is_read_only() const {return (get_properties() & FLAG_READ_ONLY) ? true : false;}
-		bool is_clumsy() const {return (get_properties() & FLAG_CLUMSY) ? true : false;}
+		bool is_read_only() const { return (get_properties() & FLAG_READ_ONLY) ? true : false; }
+		bool is_write_only() const { return (get_properties() & FLAG_WRITE_ONLY) ? true : false; }
+		bool is_clumsy() const { return (get_properties() & FLAG_CLUMSY) ? true : false; }
 		bool is_seeder() const {return (get_properties() & FLAG_SEEDER) ? true : false;}
 
 		/*void handle(signed char      &v) {handle((unsigned char)v);}

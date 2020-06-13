@@ -254,11 +254,11 @@ namespace PractRand {
 					Uint64 n2 = (Uint64(n2m0) * 527612 - Uint64(n2m2) * 1370589) % ((1ull << 32) - 22853);
 					n1m2 = n1m1;
 					n1m1 = n1m0;
-					n1m0 = n1;
+					n1m0 = Uint32(n1);
 					n2m2 = n2m1;
 					n2m1 = n2m0;
-					n2m0 = n2;
-					return n1 + n2;
+					n2m0 = Uint32(n2);
+					return Uint32(n1 + n2);
 				}
 				std::string cmrg32of192::get_name() const {return "cmrg32of192";}
 				void cmrg32of192::walk_state(StateWalkingObject *walker) {
@@ -277,7 +277,7 @@ namespace PractRand {
 					x3 = x0;
 					x0 = (x0 >> 19) ^ tmp ^ (tmp >> 8);
 					lcg = (lcg * 279470273) % 4294967291;
-					return x0 ^ lcg;
+					return Uint32(x0 ^ lcg);
 				}
 				std::string xsh_lcg_bad::get_name() const { return "xsh_lcg_bad"; }
 				void xsh_lcg_bad::seed(Uint64 s) {
@@ -415,6 +415,83 @@ namespace PractRand {
 				std::string multish4x16::get_name() const {return "multish4x16";}
 				void multish4x16::walk_state(StateWalkingObject *walker ) {
 					walker->handle(a); walker->handle(b); walker->handle(c); walker->handle(d);
+				}
+
+				Uint16 mwrca16::raw16() {
+					Uint16 old = a * 0xa395;
+					a ^= rotate16(b, 8);
+					b = old;
+					return a+b;
+				}
+				std::string mwrca16::get_name() const { return "mwrca16"; }
+				void mwrca16::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+				}
+				Uint32 mwrca32::raw32() {
+					Uint32 old = a * 0x5925a395;
+					a ^= rotate32(b, 16);
+					b = old;
+					return a+b;
+				}
+				std::string mwrca32::get_name() const { return "mwrca32"; }
+				void mwrca32::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+				}
+
+				Uint16 mwrcc16::raw16() {
+					Uint16 old = a * 0xa395;
+					a += counter++;
+					a ^= rotate16(b, 8);
+					b = old;
+					return a;
+				}
+				std::string mwrcc16::get_name() const { return "mwrcc16"; }
+				void mwrcc16::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(counter);
+				}
+				Uint32 mwrcc32::raw32() {
+					Uint32 old = a * 0x5925a395;
+					a += counter++;
+					a ^= rotate32(b, 16);
+					b = old;
+					return a;
+				}
+				std::string mwrcc32::get_name() const { return "mwrcc32"; }
+				void mwrcc32::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(counter);
+				}
+
+				Uint16 mwrcca16::raw16() {
+					Uint16 old = a * 0xa395;
+					a += counter++;
+					a ^= rotate16(b, 8);
+					b = old;
+					return a+b;
+				}
+				std::string mwrcca16::get_name() const { return "mwrcca16"; }
+				void mwrcca16::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(counter);
+				}
+				Uint32 mwrcca32::raw32() {
+					Uint32 old = a * 0x5925a395;
+					a += counter++;
+					a ^= rotate32(b, 16);
+					b = old;
+					return a+b;
+				}
+				std::string mwrcca32::get_name() const { return "mwrcca32"; }
+				void mwrcca32::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(counter);
 				}
 
 				Uint16 old_mwlac16::raw16() {
@@ -613,9 +690,9 @@ namespace PractRand {
 					b += a >> 32;
 					high = high * M + (b >> 32);
 					low ^= X;
-					if (outshift >= 64) return Uint16(high >> (outshift - 64));
-					if (outshift > 48) return Uint16((low >> outshift) | (high << (64 - outshift)));
-					return Uint16(low >> outshift);
+					if (outshift >= 64) return Uint8(high >> (outshift - 64));
+					if (outshift > 56) return Uint8((low >> outshift) | (high << (64 - outshift)));
+					return Uint8(low >> outshift);
 				}
 				std::string xlcg8of128_varqual::get_name() const {
 					std::ostringstream str;

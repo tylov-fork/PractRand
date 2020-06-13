@@ -183,49 +183,74 @@ public:
 	Word _raw_native() {
 		Word old;
 		const Word K = Word(0x92ec64765925a395ull);
+		/*
+		old = a + b;// irreversible, but fast and seems decent enough once the cycle length is long enough
+		a = rotate(a, RSHIFT) ^ old;
+		b = rotate(b, ROTATE) + old;
+		return old;//*/
 		//now based upon alearx:
-		a ^= rotate(b + c, LSHIFT);
-		b ^= rotate(c + (c << 3), RSHIFT);
-		c ^= a + (a << 3); c = rotate(c, ROTATE);
-		return a;//*/
+		//a ^= rotate(b + c, LSHIFT);
+		//b ^= rotate(c + (c << 3), RSHIFT);
+		//c ^= a + (a << 3); c = rotate(c, ROTATE);
+		//return a;//*/
 		//good speed, 16 bit version fails @ 32 GB, 32 bit version passed 8 TB
-		/*old = a + b;
+		/*
+		old = a + b;
 		a = b ^ (b >> RSHIFT);
 		b = c + (c << LSHIFT);
 		c = old + rotate(c,ROTATE);// RSHIFT,LSHIFT,ROTATE : 7,3,9 @ 32 bit
 		return old;//*/
 		//best quality: 16 bit fails @ 1 TB, but not as fast ;; switching "a += b ^ c;" for "a ^= b + c;" increases that to 2 TB
-		/*old = a + (a << LSHIFT);
+		/*
+		old = a + (a << LSHIFT);
 		a += b ^ c;
 		b = c ^ (c >> RSHIFT);
 		c = old + rotate(c,ROTATE);
 		return old;//*/
-		//faster, simpler, lower quality - just 4-6 ops, very few dependent
-		//16 bit: 128 MB, 32 bit: 32 GB
-		/*old = a + b;
-		a = b + rotate(c,ROTATE);
+		//faster, simpler, lower quality - just 5-6 ops, very few dependent
+		//16 bit: 64 MB, 32 bit: 32 GB
+		/*
+		old = a + b;
+		a = c + rotate(b,ROTATE);
 		b = c + (c << LSHIFT);
-		c = old;
+		c ^= old;
 		return c;//*/
-		//another alternative
-		//16 bit: 1 GB, 32 bit: 2 TB
-		/*old = a + b;
+		/*
+		old = a + b;// 6 ops with LEA, 7 with RISC, unfortunately more dependencies thtn desirable, test result:  16 bit: 256 GB
+		a = b + (b << RSHIFT);
+		b = rotate(b, LSHIFT) + c;
+		c = rotate(c, ROTATE) ^ old;
+		return old;//*/
+		//*
+		a += b;// 5 ops on all relevant archs, dependencies aren't too bad; test results:  16 bit: 16 GB, 32 bit: > 4 TB
+		b ^= c;//test results at 16 bit: PractRand std: 16 GB ; gjrand: ----1
+		c += a;//test results at 32 bit: PractRand std: >4 TB ; gjrand: ------
+		b = rotate(b, RSHIFT);
+		c = rotate(c, ROTATE);
+		return a;//*/
+		//another alternative, 5-7 ops
+		//16 bit: 256 MB, 32 bit: 2 TB
+		/*
+		old = a + b;
 		a = b;
 		b = c + (c << LSHIFT);
 		c = rotate(c, ROTATE);
-		a += c;
 		c += old;
 		return a;//*/
 		//uses multiplication, only 2 words, but pretty good asside from that:
-		//16: 1 GB, 32 bit: > 32 TB
-		/*old = a * Word(0x92ec64765925a395ull);
-		a = b ^ rotate(a, OUTPUT_BITS/2);
+		//16: 16 MB, 32 bit: 8 TB
+		/*
+		old = a * Word(0x92ec64765925a395ull);
+		a = b ^ rotate(a, OUTPUT_BITS / 2);
 		b = old;
 		return a+b;//*/
-		/*old = a * Word(0x92ec64765925a395ull);
-		a = rotate(a, OUTPUT_BITS/2) ^ b ^ c++;
+		//16: 128 MB, 32 bit: ??
+		/*
+		old = a * Word(0x92ec64765925a395ull);
+		a += c++;
+		a ^= rotate(b, OUTPUT_BITS / 2);
 		b = old;
-		return a;*/
+		return a;//*/
 		/*old = (a ^ (a >> (OUTPUT_BITS/2)));
 		//c += (c << 3) + 1;
 		a += b + (b << 3);
@@ -324,6 +349,26 @@ public:
 		b = rotate(b,13) + b + (b<<3);
 		c = (c + (c << 7)) ^ rotate(c,11);
 		return a^b^c;*/
+
+		//a three-word version, adequate quality, but probably doesn't do to well with superscalarism
+		//*
+		a += b + c;
+		c += 1;
+		b ^= a;
+		a = rotate(a, 3);
+		b = rotate(b, 11);
+		a += b;
+		b ^= a;//*/
+
+		/*
+		c = rotate(c, 7);//best shift pairs at 16 bits are (10,3), (7,5), (11,9) ; other possibles are (4,9), (5,13), (6,11), (6,13), (7,4), (9,3), (9,4), (9,5), (11,7), (12,6), (12,9), and (12,10)
+		a += b + counter++;//but even with those shifts, quality is marginal
+		b ^= c;
+		c += a;
+		a = rotate(a, 12);*/
+
+
+
 
 		//VERY good speed, 16 bit version failed @ 256 GB (2 GB w/o counter), 32 bit @ ?
 		/*enum { SHIFT = (OUTPUT_BITS == 64) ? 43 : ((OUTPUT_BITS == 32) ? 23 : ((OUTPUT_BITS == 16) ? 11 : -1)) };//43, 11, 9

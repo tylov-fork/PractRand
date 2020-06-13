@@ -7,11 +7,11 @@ namespace PractRand {
 	class TestResult {
 	public:
 		std::string name;
-		double weight;
 		double raw;//-inf to +inf but concentrated around -10 to +10
 		double processed;//varies depending upon type:
-		int type;
-		enum {TYPE_RAW, TYPE_RAW_NORMAL, TYPE_BAD_P, TYPE_BAD_S, TYPE_GOOD_P, TYPE_GOOD_S, TYPE_PASSFAIL};
+		long type;
+		double weight;
+		enum { TYPE_RAW, TYPE_RAW_NORMAL, TYPE_BAD_P, TYPE_BAD_S, TYPE_GOOD_P, TYPE_GOOD_S, TYPE_PASSFAIL, TYPE_UNKNOWN };
 		//  TYPE_RAW           there is no processed value
 		//  TYPE_RAW_NORMAL    there is no processed value, but treat the raw value as roughly a badly distorted normal distribution
 		//  TYPE_BAD_P         a p-value, but probably a VERY low quality p-value
@@ -19,6 +19,7 @@ namespace PractRand {
 		//  TYPE_GOOD_P        a relatively trustworthy p-value
 		//  TYPE_GOOD_S        a transformed p-value that has better dynamic range... 1 : 0.75, 0 : 0.5, -1 = 0.25, -2 = 0.125, -3 = 0.0625, -0.3 = 0.406126..., etc
 		//  TYPE_PASSFAIL      0 means pass, 1 means fail
+		//  TYPE_UNKNOWN       unusuable result, visible but no clear meaning
 
 		TestResult(const std::string &name_, double raw_, double processed_, int type_, double weight_) : name(name_), raw(raw_), processed(processed_), type(type_), weight(weight_) {}
 		double get_raw() const {return raw;}

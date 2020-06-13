@@ -1,6 +1,9 @@
 namespace PractRand {
 	namespace Tests {
-		class BCFTFN : public TestBaseclass {
+
+		//these are disabled for the moment
+
+		/*class BCFTFN : public TestBaseclass {
 		protected:
 			enum {LEVELS = 8};
 			long overlap, tbits, mask;
@@ -65,6 +68,6 @@ namespace PractRand {
 					odd[level] = true;
 				}
 			}
-		};
+		};*/
 	}//Tests
 }//PractRand

@@ -43,6 +43,25 @@ namespace PractRand {
 					Transform8(vRNG *rng) : base_rng(rng) {}
 					~Transform8();
 				};
+				class MultiplexTransformRNG : public vRNG {
+				public:
+					PractRand::Tests::TestBlock *buffer;
+					int index;
+					virtual void refill();
+					std::vector<vRNG *> source_rngs;
+				public:
+					Uint8 raw8();
+					Uint16 raw16();
+					Uint32 raw32();
+					Uint64 raw64();
+					void seed(Uint64 seedval);
+					void seed(vRNG *seeder);
+					Uint64 get_flags() const;
+					void walk_state(StateWalkingObject *walker);
+					MultiplexTransformRNG(const std::vector<vRNG*> &sources);
+					~MultiplexTransformRNG();
+					virtual int get_native_output_size() const;
+				};
 
 				class GeneralizedTableTransform : public vRNG8 {//written for self-shrinking-generators, but also useful for other transforms
 				public:
@@ -65,7 +84,7 @@ namespace PractRand {
 					void seed(Uint64 seed);
 					Uint64 get_flags() const;
 					std::string get_name() const ;
-					GeneralizedTableTransform(vRNG *rng, const Entry *table_, std::string name_) : base_rng(rng), table(table_), buf_count(0), buf_data(0), name(name_) {}
+					GeneralizedTableTransform(vRNG *rng, const Entry *table_, std::string name_) : table(table_), base_rng(rng), buf_count(0), buf_data(0), name(name_) {}
 					~GeneralizedTableTransform();
 					void walk_state(StateWalkingObject *);
 					Uint8 raw8();
@@ -125,6 +144,37 @@ namespace PractRand {
 					Uint64 raw64();
 					std::string get_name() const;
 				};
+
+				class Xor : public MultiplexTransformRNG {
+					virtual void refill();
+				public:
+					Xor(const std::vector<vRNG*> &sources) : MultiplexTransformRNG(sources) {}
+					std::string get_name() const;
+				};
+				/*class Interleave8 : public MultiplexTransformRNG {
+					virtual void refill();
+				public:
+					Interleave8(const std::vector<vRNG*> &sources) : MultiplexTransformRNG(sources) {}
+					std::string get_name() const;
+				};
+				class Interleave16 : public MultiplexTransformRNG {
+					virtual void refill();
+				public:
+					Interleave16(const std::vector<vRNG*> &sources) : MultiplexTransformRNG(sources) {}
+					std::string get_name() const;
+				};
+				class Interleave32 : public MultiplexTransformRNG {
+					virtual void refill();
+				public:
+					Interleave32(const std::vector<vRNG*> &sources) : MultiplexTransformRNG(sources) {}
+					std::string get_name() const;
+				};
+				class Interleave64 : public MultiplexTransformRNG {
+					virtual void refill();
+				public:
+					Interleave64(const std::vector<vRNG*> &sources) : MultiplexTransformRNG(sources) {}
+					std::string get_name() const;
+				};*/
 
 				class Discard16to8 : public Transform8 {
 					typedef Uint16 InWord;

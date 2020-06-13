@@ -225,6 +225,7 @@ namespace PractRand {
 				return reduced_size;
 			}
 			else {//linear
+				// I forget, why I am not doing a single pass?
 				double E2 = aggressive ? 0.5 : E;
 				for (int i = 0; i < 100; i++) {
 					int combined = 0;
@@ -348,6 +349,53 @@ namespace PractRand {
 			score_normalized /= score_deviation;
 			return score_normalized;
 		}
+		void G_TEST::reset() {
+			total = 0;
+			sum = 0;
+			prob_sum = 0;
+			minimum_prob = 0;
+			partial_count = 0;
+			partial_prob = 0;
+			categories = 0;
+		}
+		double G_TEST::get_result() const {
+			//if (categories < 2) return 0;
+			return 2.0 * (sum - total * std::log(total));
+		}
+		long G_TEST::get_DoF() const {
+			return categories - 1;
+		}
+		void G_TEST::finalize() {
+			if (partial_prob || partial_count) {
+				total += partial_count;
+				if (partial_count) sum += partial_count * std::log(partial_count / partial_prob);
+				prob_sum += partial_prob;
+				categories += 1;
+			}
+
+			if (prob_sum < 0.999 || prob_sum > 1.001) issue_error("G_TEST::get_result - probability total is badly off");
+			if (categories < 2) issue_error("G_TEST::get_result - ...how many categories?");
+		}
+		void G_TEST::add_category(Uint64 count, long double prob) {
+			if (minimum_prob && prob < minimum_prob) {//currently allows combining of non-adjent categories
+				partial_count += count;
+				partial_prob += prob;
+				if (partial_prob >= minimum_prob) {
+					total += partial_count;
+					if (partial_count) sum += partial_count * std::log(partial_count / partial_prob);
+					categories += 1;
+					prob_sum += partial_prob;
+					partial_count = 0;
+					partial_prob = 0;
+				}
+			}
+			else {
+				total += count;
+				if (count) sum += count * std::log(count / prob);
+				prob_sum += prob;
+				categories += 1;
+			}
+		}
 		double g_test(unsigned long categories, const double *prob_table, const Uint64 *counts) {
 			long double total = 0;
 			long double sum = 0;
@@ -404,10 +452,25 @@ namespace PractRand {
 			return math_chisquared_to_normal(sum, ((categories+merge-1) / merge)-1);
 		}
 
+		Uint64 math_nChooseR(int set_size, int num_choices) {
+			//remember, larger values will quickly overflow
+			if (set_size < 1) issue_error("math_nChooseR - set_size out of range");
+			if (!num_choices) return 1;
+			if (num_choices < 1 || num_choices > set_size) issue_error("math_nChooseR - num_choices out of range");
+			if (num_choices > set_size - num_choices) {
+				num_choices = set_size - num_choices;
+			}
+			Uint64 rv = set_size;
+			for (int i = 2; i <= num_choices; i++) {
+				rv *= set_size + 1 - i;
+				rv /= i;//guaranteed to divide evenly, if we haven't overflowed yet
+			}
+			return rv;
+		}
 		double math_factorial(double a) {
 			//only an aproximation, but a decent one
 			if (!a) return 1;
-			static double halfL2Pi = std::log(3.14159265358979 * 2) / 2;
+			//static double halfL2Pi = std::log(3.14159265358979 * 2) / 2;
 			static double halfLPi = std::log(3.14159265358979) / 2;
 			double L = std::log(a);
 			double r = a * (L - 1) + std::log(a * (1 + 4 * a * (1 + 2 * a))) / 6 + halfLPi;
@@ -568,31 +631,69 @@ namespace PractRand {
 				}
 			}
 		}
-		static double _math_lower_incomplete_gamma ( double a, double x, double scale = 1.0, double offset = 0.0) {
+		double math_lower_incomplete_gamma(double a, double x) {
+			double scale = 1.0;
+			double offset = 0.0;
 		recurse:
+			if (a == 0.5) return (std::sqrt(3.141592653589793238) * math_erf(std::sqrt(x))) * scale + offset;
 			if (a == 1) return (1 - std::exp(-x)) * scale + offset;
-			if (a == 0.5) return (std::sqrt(3.14159265358979) * math_erf(std::sqrt(x))) * scale + offset;
+			//if (a > 1) return (a - 1) * math_lower_incomplete_gamma(a - 1, x) - std::pow(x, a - 1) * std::exp(-x);
 			if (a > 1) {
 				a -= 1;
-				offset -= std::pow(x, a) * std::exp(-x) * scale;
+				//offset -= std::pow(x, a) * std::exp(-x) * scale;
+				offset -= std::exp(std::log(x) * a - x) * scale;
 				scale *= a;
 				goto recurse;
-				//return _math_lower_incomplete_gamma( a-1, x, scale, offset );
-				//if (a > 1) return (a-1) * math_lower_incomplete_gamma( a-1, x ) - std::pow(x, a-1) * std::exp(-x);
 			}
-			issue_error();return -1;
+			issue_error(); return -1;
 		}
-		static double math_lower_incomplete_gamma ( double a, double x) {
-			return _math_lower_incomplete_gamma(a, x, 1.0, 0.0);
-		}
-		static double math_gamma_function ( double a ) {
-			if (a == 0.5) return std::sqrt(3.14159265358979);
+		double math_gamma_function ( double a ) {
+			if (a == 0.5) return std::sqrt(3.141592653589793238);
 			if (a == 1) return 1;
 			if (a == 2) return 1;
 			if (a > 1) return math_gamma_function(a-1) * (a-1);
 			issue_error();return -1;
 		}
-		double math_upper_incomplete_gamma ( double a, double x ) {
+		static double math_regularized_gamma_function(double a, double x) {
+			if (a < 0.5 || a > 9999 || a*2!=std::floor(a*2) || x < 0) issue_error("math_regularized_gamma_function - parameters out of range");
+			std::vector<double> ln_offsets;
+			if (a > 1) ln_offsets.reserve(int(a) + 1);
+			double ln_scale = 0;
+			//double scale = 1.0;
+			//double offset = 0.0;
+		recurse:
+			if (a == 0.5) {
+				//double gamma = std::sqrt(3.141592653589793238) * scale;
+				//return (std::sqrt(3.141592653589793238) * math_erf(std::sqrt(x)) * scale + offset) / gamma;
+				double sum_offsets = 0;
+				for (std::vector<double>::iterator it = ln_offsets.begin(); it != ln_offsets.end(); it++)
+					sum_offsets += std::exp(*it - ln_scale);
+				//return math_erf(std::sqrt(x)) + offset / (std::sqrt(3.141592653589793238) * scale);
+				return math_erf(std::sqrt(x)) - sum_offsets / std::sqrt(3.141592653589793238);
+			}
+			if (a == 1) {
+				//double gamma = scale;
+				//return ((1 - std::exp(-x)) * scale + offset) / gamma;
+				double sum_offsets = 0;
+				for (std::vector<double>::iterator it = ln_offsets.begin(); it != ln_offsets.end(); it++)
+					sum_offsets += std::exp(*it - ln_scale);
+				//return (1 - std::exp(-x)) + offset / scale;
+				return (1 - std::exp(-x)) - sum_offsets;
+			}
+			//if (a > 1) return (a - 1) * math_lower_incomplete_gamma(a - 1, x) - std::pow(x, a - 1) * std::exp(-x);
+			if (a > 1) {
+				a -= 1;
+				//offset -= std::pow(x, a) * std::exp(-x) * scale;
+				//offset -= std::exp(std::log(x) * a - x) * scale;
+				//offset -= std::exp(std::log(x) * a - x) * scale;
+				ln_offsets.push_back(std::log(x) * a - x + ln_scale);
+				//scale *= a;
+				ln_scale += std::log(a);
+				goto recurse;
+			}
+			issue_error(); return -1;
+		}
+		static double math_upper_incomplete_gamma(double a, double x) {
 			if (a == 1) return std::exp(-x);
 			if (fabs(floor(a+.5)-a) <= 0.00000000001) {
 				if (!x) return math_factorial(a-1);
@@ -615,10 +716,11 @@ namespace PractRand {
 		}
 		double math_chisquared_to_pvalue ( double chisquared, double DoF ) {
 			if (DoF == 2) return 1 - std::exp(chisquared*-.5);
-			long double n = math_chisquared_to_normal(chisquared, DoF);
+			//long double n = math_chisquared_to_normal(chisquared, DoF);
 			//if (fabs(n) > 100) return (n > 0) ? 1 : 0;
 			//if (fabs(chisquared) > 100) return math_normaldist_to_pvalue(n);
-			long double p = math_lower_incomplete_gamma(DoF/2,chisquared/2) / math_gamma_function(DoF/2);
+			//long double p = math_lower_incomplete_gamma(DoF/2,chisquared/2) / math_gamma_function(DoF/2);
+			long double p = math_regularized_gamma_function(DoF / 2, chisquared / 2);
 			if (p < 0) p = 0;
 			if (p > 1) p = 1;
 			return (double)p;
@@ -967,8 +1069,8 @@ namespace PractRand {
 		//	std::sort<double*>(&rs[0], &rs[rs.size()]);
 			_count_duplicates();
 		}
-		int SampleSet::get_num_elements_less_than ( double other_result ) const {
-			int s = rs.size();
+		long SampleSet::get_num_elements_less_than ( double other_result ) const {
+			long s = rs.size();
 			if (!s) return 0;
 			if (rs[s-1] < other_result) return s;
 			if (rs[0] >= other_result) return 0;
@@ -984,9 +1086,9 @@ namespace PractRand {
 		//	for (i = 0; i < s && rs[i] < other_result; i++) ;
 		//	return i;
 		}
-		int SampleSet::get_num_elements_greater_than ( double other_result ) const {
+		long SampleSet::get_num_elements_greater_than ( double other_result ) const {
 			//could use more optimization, but who cares?
-			int s = rs.size();
+			long s = rs.size();
 			if (!s) return 0;
 			int i;
 			if (rs[0] > other_result) return s;
@@ -1010,7 +1112,7 @@ namespace PractRand {
 		}
 		double SampleSet::_get_index ( double other_result ) const {
 			double &r = other_result;
-			int s = rs.size();
+			long s = rs.size();
 			if (!s) return 0;
 			int lower, higher;
 			get_num_elements_less_and_greater(r, lower, higher);
@@ -1026,7 +1128,7 @@ namespace PractRand {
 		}
 		double SampleSet::get_percentile ( double other_result ) const {
 			double &r = other_result;
-			int s = rs.size();
+			long s = rs.size();
 			if (!s) return 0;
 			int lower, higher;
 			get_num_elements_less_and_greater(r, lower, higher);

@@ -86,7 +86,6 @@ namespace PractRand {
 	namespace RNGs {
 		class vRNG;
 	}
-	void issue_error(const char *msg = 0);
 	namespace Internals {
 		//inline
 		static inline Uint8  rotate8 (Uint8  value, int bits) {return (value << bits) | (value >> (8 -bits));}

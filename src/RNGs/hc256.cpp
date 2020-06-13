@@ -18,7 +18,7 @@ void PractRand::RNGs::Polymorphic::hc256::seed(Uint32 key_and_iv[16]) { implemen
 void PractRand::RNGs::Polymorphic::hc256::seed(vRNG *seeder_rng) { implementation.seed(seeder_rng); }
 
 //raw:
-PractRand::RNGs::Raw::hc256::~hc256() {std::memset(this, 0, sizeof(this));}
+PractRand::RNGs::Raw::hc256::~hc256() {std::memset(this, 0, sizeof(*this));}
 #ifndef _MSC_VER
 #define rotr(x,n) (((x)>>(n))|((x)<<(32-(n))))
 #else

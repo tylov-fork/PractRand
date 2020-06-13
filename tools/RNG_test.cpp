@@ -69,72 +69,61 @@ A minimal RNG implementation, just enough to make it usable.
 Deliberately flawed, though still better than many platforms default RNGs
 */
 
-//#include "PractRand/endian.h"
-
-struct BitPermutator {
-	//Uint32 lookup32_0[256], lookup32_1[256], lookup32_2[256], lookup32_3[256];
-	//Uint32 permutate_value32(Uint32 value)
-	Uint16 lookup16[2][256];
-	Uint16 permutate_value16(Uint16 value) { return lookup16[0][value & 255] | lookup16[1][value >> 8]; }
-	void init(PractRand::RNGs::vRNG *seeder_rng) {
-		int bits[16];
-		for (int i = 0; i < 16; i++) bits[i] = i;
-		for (int i = seeder_rng->raw8() + 256; i > 0; i--) {
-			int a, b; a = seeder_rng->raw8() & 15; b = seeder_rng->raw8() & 15;
-			int tmp = bits[a]; bits[a] = bits[b]; bits[b] = tmp;
-		}
-		for (int t = 0; t < 2; t++) for (int i = 0; i < 256; i++) { lookup16[t][i] = 0; }
-		for (int old_bp = 0; old_bp < 16; old_bp++) {
-			int new_bp_value = 1 << bits[old_bp];
-			for (int i = 0; i < 256; i++) if ((i >> (old_bp & 7)) & 1) lookup16[old_bp >> 3][i] |= new_bp_value;
-		}
-	}
-};
-BitPermutator permutator;
-
 class DummyRNG : public PractRand::RNGs::vRNG16 {
 public:
 	//declare state
-	Uint32 x, y, z, index;
+	//Uint16 s1, s2, s3, s4;
+	PractRand::RNGs::Polymorphic::NotRecommended::lcg16of64_varqual rng1;
+	PractRand::RNGs::Polymorphic::NotRecommended::simpleB rng2;
 	//and any helper methods you want:
 	static Uint16 rotate16(Uint16 v, int bits) { return (v << bits) | (v >> (16 - bits)); }
 	static Uint32 rotate32(Uint32 v, int bits) { return (v << bits) | (v >> (32 - bits)); }
+	static Uint64 rotate64(Uint64 v, int bits) { return (v << bits) | (v >> (64 - bits)); }
+	static Uint32 rotate_right16(Uint32 v, int bits) { return (v >> bits) | (v << (16 - bits)); }
+	static Uint32 rotate_right32(Uint32 v, int bits) { return (v >> bits) | (v << (32 - bits)); }
+	static Uint64 rotate_right64(Uint64 v, int bits) { return (v >> bits) | (v << (64 - bits)); }
+	//static Uint64 byteswap64(Uint64 v) { return (Uint64(Uint8(v >> 0)) << 56) | (Uint64(Uint8(v >> 8)) << 48) | (Uint64(Uint8(v >> 16)) << 40) | (Uint64(Uint8(v >> 24)) << 32) | (Uint64(Uint8(v >> 32)) << 24) | (Uint64(Uint8(v >> 40)) << 16) | (Uint64(Uint8(v >> 48)) << 8) | (Uint64(Uint8(v >> 56)) << 0); }
+	static Uint16 ddRot16(Uint16 value) { return rotate_right16(value, (value >> (16 - 3)) << 1); }
+	static Uint32 ddRot32(Uint32 value) { return rotate_right32(value, (value >> (32 - 3)) << 2); }
+	static Uint64 ddRot64(Uint64 value) { return rotate_right64(value, (value >> (64 - 4)) << 2); }
+	//constructor, if necessary
+	DummyRNG() : rng1(8) {}
 	//implement algorithm
 	Uint16 raw16() {
-		//x += z ^ index++;
-		//y += x ^ z;
-		//z += y ^ (y >> 24);
-		//return z;
-
-		y ^= x;
-		x = rotate16(x, 14);
-		x ^= (y << 2) ^ y;
-		y = rotate16(y, 7);
-		//return x + y;
-		//return rotate16(x + y, 6) + x;
-		//return permutator.permutate_value16(x + y) + y;
-		return permutator.permutate_value16(permutator.permutate_value16(x+y) + y);
-		//return rotate16(x ^ (y + ((y) << 3)), 9) + (x ^ (x >> 4));
-		//return rotate16(x, 6) ^ rotate16(x, 9) ^ x;
-		//Uint16 tmp = x + y; tmp = rotate16(tmp, 6) ^ rotate16(tmp, 9) ^ tmp; return rotate16(tmp, 6) + x;
+		Uint16 v1 = rng1.raw16();
+		Uint16 v2 = rng2.raw16();
+		Uint16 x = v1 ^ v2;
+		return x;
+		//Uint16 old = s4;
+		//s4 += s3; s3 += s2; s2 += s1; s1 += s4;
+		//s4 = s3; s3 = s2; s2 = s1; s1 += old;
+		//Uint16 a = ddRot16(s1) - s2;
+		//Uint16 b = ddRot16(s3) - s4;
+		//Uint16 c = ddRot16(s2) - ddRot16(s4);
+		//return ddRot16((s1 + s3) * 1) + ((s2 * 9) ^ rotate16(s2 * 9, 5)) + (s4 * 3);
+		//return (a & b) | (c & ~a);
+		//return (a & b) | (b & c) | (a & c);
+		//return a ^ b;
+		//return (a * 1) + (b * 1) + (c * 1);
+		//return (a * 11) + (b * 13) + (c * 15);
 	}
 	//allow PractRand to be aware of your internal state
 	//uses include: default seeding mechanism (individual PRNGs can override), state serialization/deserialization, maybe eventually some avalanche testing tools
 	void walk_state(PractRand::StateWalkingObject *walker) {
-		walker->handle(x);
-		walker->handle(y);
-		walker->handle(z);
-		walker->handle(index);
+		rng1.walk_state(walker);
+		rng2.walk_state(walker);
+		//walker->handle(s1);
+		//walker->handle(s2);
+		//walker->handle(s3);
+		//walker->handle(s4);
 	}
 	//seeding from integers
 	//not actually necessary, in the absence of such a method a default seeding-from-integer path will use walk_state to randomize the member variables
 	//note that a separate path exists for seeding-from-another-PRNG
-	void seed(Uint64 s) {
-		permutator.init(&known_good);
-		x = y = z = s;
-		y = s >> 32;
-		//for (int i = 0; i < 6; i++) raw32();
-		index = 0;
+	void seed(Uint64 sv) {
+		rng1.seed(sv);
+		rng2.seed(sv);
+//		s1 = s2 = s3 = s4 = sv;
 	}
 	//any name you want
 	std::string get_name() const {return "DummyRNG";}
@@ -217,8 +206,9 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 					if (dig < 10) std::printf(" ");
 				}
 			}
-			else if (a > 0.4) std::printf("%4.2f      ", p);
-			else              std::printf("%3.1f       ", p);
+			else if (result.type == result.TYPE_GOOD_P) std::printf("%5.3f     ", p);
+			else if (a >= 0.4)                          std::printf("%4.2f      ", p);
+			else                                        std::printf("%3.1f       ", p);
 		}
 		else if (result.type == result.TYPE_BAD_S || result.type == result.TYPE_GOOD_S) {
 			double s = result.get_suspicion();
@@ -294,7 +284,7 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 
 const char *seed_str = NULL;
 
-double show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bool smart_thresholds, double threshold, bool end_on_failure) {
+void show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bool smart_thresholds, double threshold, bool end_on_failure) {
 	std::printf("rng=%s", tman->get_rng()->get_name().c_str());
 
 	std::printf(", seed=");
@@ -360,7 +350,9 @@ double show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bo
 		std::printf("  ...and %d test result(s) without anomalies\n", int(results.size() - marked.size()));
 	std::printf("\n");
 	std::fflush(stdout);
-	if (end_on_failure && biggest_decimal_suspicion > 8.5) std::exit(0);
+	if (end_on_failure && biggest_decimal_suspicion > 8.5) {
+		std::exit(0);
+	}
 }
 double interpret_length(const std::string &lengthstr, bool normal_mode) {
 	//(0-9)*[.(0-9)*][((K|M|G|T|P)[B])|(s|m|h|d)]
@@ -453,19 +445,30 @@ bool interpret_seed(const std::string &seedstr, Uint64 &seed) {
 	return true;
 }
 
-#include "PractRand/tests/Birthday.h"
-#include "PractRand/tests/FPMulti.h"
-#include "PractRand/tests/DistFreq4.h"
-#include "PractRand/tests/Gap16.h"
+#include "PractRand/Tests/Birthday.h"
+#include "PractRand/Tests/FPMulti.h"
+#include "PractRand/Tests/FPF.h"
+#include "PractRand/Tests/DistFreq4.h"
+#include "PractRand/Tests/Gap16.h"
 PractRand::Tests::ListOfTests testset_BirthdaySystematic() {
-	//return PractRand::Tests::ListOfTests(new PractRand::Tests::FPMulti(3,0));
 	//return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdayAlt(10), new PractRand::Tests::Birthday32());
 	//return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdayAlt(22));
-	//return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdaySystematic(25));
+	return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdaySystematic128(26));
 	//return PractRand::Tests::ListOfTests(new PractRand::Tests::Birthday32());
 	//return PractRand::Tests::ListOfTests(new PractRand::Tests::Birthday64());
 	//return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdayLamda1(20));
-	return PractRand::Tests::ListOfTests(new PractRand::Tests::Rep16());
+}
+PractRand::Tests::ListOfTests testset_experimental() {
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::FPMulti(3,0));
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdayAlt(10), new PractRand::Tests::Birthday32());
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdayAlt(22));
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdaySystematic128(25));
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::Birthday32());
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::Birthday64());
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::BirthdayLamda1(20));
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::Rep16());
+	//return PractRand::Tests::ListOfTests(new PractRand::Tests::FPMulti());
+	return PractRand::Tests::ListOfTests(new Tests::FPF(4, 14, 6));
 }
 struct UnfoldedTestSet {
 	int number;
@@ -476,6 +479,7 @@ UnfoldedTestSet test_sets[] = {
 	{ 0, PractRand::Tests::Batteries::get_core_tests, "core" },//default value must come first
 	{ 1, PractRand::Tests::Batteries::get_expanded_core_tests, "expanded" },
 	{ 10, testset_BirthdaySystematic, "special (Birthday)" },
+	{ 20, testset_experimental, "experimental" },
 	{ -1, NULL, NULL }
 };
 int lookup_te_value(int te) {
@@ -856,6 +860,10 @@ int main(int argc, char **argv) {
 		//I'd like to test varying length entropy strings, but known good EPs are failing eventually when varying length is allowed for some reason
 		testing_rng = new EntropyPool_MetaRNG(rng,48,64);
 		testing_rng->seed(seed);
+	}
+	else {
+		std::printf("invalid mode, aborting\n");
+		std::exit(1);
 	}
 
 	std::printf("RNG = %s, seed = ", testing_rng->get_name().c_str());

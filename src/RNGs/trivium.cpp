@@ -25,7 +25,7 @@ static Uint64 shift_array64( Uint64 vec[2], unsigned long bits ) {
 	return (vec[bits / 64] << (bits & 63)) | (vec[1 + bits / 64] >> (64-(bits & 63)));
 }
 //raw:
-PractRand::RNGs::Raw::trivium::~trivium() {std::memset(this, 0, sizeof(this));}
+PractRand::RNGs::Raw::trivium::~trivium() {std::memset(this, 0, sizeof(*this));}
 Uint64 PractRand::RNGs::Raw::trivium::raw64() {//LOCKED, do not change
 	Uint64 tmp_a = shift_array64(c, 66) ^ shift_array64(c,111);
 	Uint64 tmp_b = shift_array64(a, 66) ^ shift_array64(a, 93);

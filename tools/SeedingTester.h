@@ -6,7 +6,7 @@ public:
 
 	std::set<Uint64> unordered_history;
 	std::deque<Uint64> history;
-	int history_limit;
+	unsigned int history_limit;
 
 	Seeder_MetaRNG(PractRand::RNGs::vRNG *base_rng_) : known_good(PractRand::SEED_NONE), history_limit(1024) {
 		base_rng = base_rng_;
@@ -75,8 +75,8 @@ public:
 	typedef PractRand::Uint64 Transform;
 	PractRand::RNGs::Polymorphic::hc256 known_good;
 	PractRand::RNGs::vRNG *base_entropy_pool;
-	int min_length, max_length;
-	int history_length;
+	unsigned int min_length, max_length;
+	unsigned int history_length;
 	std::vector<Uint8> current_seed;
 	Transform last_transform;
 	std::multiset<Uint64> unordered_history;//hashes only

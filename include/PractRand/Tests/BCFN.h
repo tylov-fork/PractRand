@@ -4,9 +4,10 @@ namespace PractRand {
 			BCFN now has a 3rd parameter.  Set to false it acts like the BCFN in versions 0.90 and earlier.  
 				Set to false it acts in a broadly similar manner, but is faster.  I don't *think* it's any worse, but am not sure.  
 			Also, BCFN now has some variants:
-				BCFN_MT - MUCH slower, but hopefully more powerful
-				BCFN_FF - slightly slower, but perhaps slightly more powerful.  
+				BCFN_FF - slightly slower, but perhaps slightly more powerful?  
 					looks like it doesn't add much
+				//BCFN_MT - MUCH slower, but hopefully more powerful?
+					not really implemented yet
 		*/
 		class BCFN : public TestBaseclass {
 		protected:
