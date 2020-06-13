@@ -72,7 +72,7 @@ void benchmark_RNG_speeds() {
 	PERF_POLYMORPHIC_ONLY(sha2_based_pool);
 	printf("crypto / high quality RNGs:\n");
 	PERF(hc256);
-//	PERF(trivium);//failing validation
+	PERF(trivium);
 	PERF(isaac32x256);
 	PERF(isaac64x256);
 	PERF(efiix32x384);
@@ -93,6 +93,7 @@ void benchmark_RNG_speeds() {
 	PERF_CANIDATE(ranrot_variant32)
 	PERF_CANIDATE(ranrot_variant64)
 	printf("16 & 8 bit candidate RNGs: (not recommended, but almost)\n");
+	PERF_CANIDATE(VeryFast16)
 	PERF_CANIDATE(ranrot_variant16)
 	PERF_CANIDATE(ranrot_variant8)
 	PERF_CANIDATE(sfc_alternative16)

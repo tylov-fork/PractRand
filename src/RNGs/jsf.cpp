@@ -108,8 +108,9 @@ void PractRand::RNGs::Raw::jsf64::walk_state(StateWalkingObject *walker) {
 	if (!(a|b) && !(c|d)) d = 1;
 }
 Uint16 PractRand::RNGs::Raw::jsf16::raw16() {
-	Uint16 e = a - ((b << 14) | (b >> 2));
-	a = b ^ ((c << 5) | (c >> 11));
+	//LOCKED, do not change
+	Uint16 e = a - ((b << 13) | (b >> 3));
+	a = b ^ ((c << 9) | (c >> 7));
 	b = c + d;
 	c = d + e;
 	d = e + a;

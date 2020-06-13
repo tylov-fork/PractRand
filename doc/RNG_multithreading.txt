@@ -48,40 +48,35 @@ local storage, just ordinary global variables.
 initialize the entropy pool with one or more calls to the add_entropy 
 methods.  The standard method is to call add_entropy_automatically(), 
 though that currently is a very poor implementation on unrecognized 
-platforms (it's fine on windows and *nix).  Then seed the RNG in the main thread from the 
-entropy pool.  
+platforms (it's fine on windows and *nix).  Then seed the RNG in the 
+main thread from the entropy pool.  
 4. Each time another thread is created, lock the mutex, use the 
 entropy pool to seed the RNG instance local to the new thread, then 
 unlock the mutex.  
 
-! WARNING: PractRand auto-seeding uses thread-local-storage (TLS) 
-variables internally.  If your compiler does not support them then 
-auto-seeding may not do as good a job of seeding in certain multi-
-threading cases.  
-
 So, all together, the simple version looks like this on MSVC:
   //in the .h file:
-  extern __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 rng;
+  extern __declspec(thread) PractRand::RNGs::Polymorphic::hc256 rng;
 
   //in the .cpp file:
-  __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
+  __declspec(thread) PractRand::RNGs::Polymorphic::hc256 rng(PractRand::SEED_AUTO);
 
 Or like this on GCC:
   //in the .h file:
-  extern __thread PractRand::RNGs::Polymorphic::isaac32x256 rng;
+  extern __thread PractRand::RNGs::Polymorphic::hc256 rng;
 
   //in the .cpp file:
-  __thread PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
+  __thread PractRand::RNGs::Polymorphic::hc256 rng(PractRand::SEED_AUTO);
 
 
 The complex version looks like this on MSVC:
   //in the .h file:
-  extern __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 rng;
+  extern __declspec(thread) PractRand::RNGs::Polymorphic::hc256 rng;
   extern CRITICAL_SECTION thread_startup_lock;
   extern PractRand::RNGs::Polymorphic::sha2_based_pool entropy_pool;
 
   //in the .cpp file:
-  __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
+  __declspec(thread) PractRand::RNGs::Polymorphic::hc256 rng(PractRand::SEED_AUTO);
   CRITICAL_SECTION thread_startup_lock;
   PractRand::RNGs::Polymorphic::sha2_based_pool entropy_pool;
 

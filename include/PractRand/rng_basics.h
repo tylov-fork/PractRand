@@ -76,8 +76,8 @@ namespace PractRand {
 			virtual void add_entropy32(Uint32);
 			virtual void add_entropy64(Uint64);
 			virtual void add_entropy_N(const void *, size_t length);
-			//add_entropy_automatically returns true if a good amount (> 128 bits) of entropy was added
-			//the milliseconds parameter is the maximum amount of time it is allowed spend collecting entropy
+			//add_entropy_automatically returns true if a good amount (>= 128 bits) of entropy was added
+			//the milliseconds parameter is the maximum amount of time it is allowed to block while waiting for entropy
 			virtual bool add_entropy_automatically(int milliseconds = 0);
 
 		//exotic methods 3: misc.

@@ -1,7 +1,7 @@
 PractRand (Practically Random) is a C++ library of pseudo-random number 
 generators (PRNGs, or just RNGs) and statistical tests for RNGs.  
 
-version 0.85
+version 0.86
 
 1. Randon Number Generation with PractRand
 Most development platforms come with random number generators that have 
@@ -53,11 +53,11 @@ of the relative strengths and breadths of the tests involved.
 B. Standard battery of tests can detect bias in a wide variety of RNGs 
 quickly.  See Tests_results.txt and/or Tests_engines.txt for more on 
 which biases it can detect how quickly relative to competing software 
-packages.  Basically, it can detect ~90% of biases that competing 
+packages.  Basically, it can detect ~95% of biases that competing 
 software packages can detect, plus several categories of bias that 
 competitors have a very hard time detecting.  On biases it can detect 
-it requires more random bits as input, but is often faster despite 
-that.  
+it sometimes requires more random bits as input, but is usually faster 
+despite that.  
 
 C. Tests are provided as legally unencumbered source code and static 
 libraries, so that data can be passed directly to them bypassing the 
@@ -65,6 +65,8 @@ hard disk speed and size limitations.  To the best of my knowledge
 PractRand is the *only* such software package (most competitors are 
 not intended to be linked with, and even those that are have license 
 restrictions on what they can be linked with and redistributed with).  
+Some competitors are intended to have RNG output piped to them... in 
+my experience this imposes a substantial performance overhead.  
 
 D. No realistic maximum sequence length for testing.  Competing 
 software packages generally either have an interface that makes long 
@@ -89,12 +91,21 @@ is a very important feature.
 
 Other packages for testing PRNGs:
 TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
+	TestU01 is pretty decent, though difficult to build on windows
 NIST STS - http://csrc.nist.gov/groups/ST/toolkit/rng/index.html
+	Widely used, but not as good as TestU01.  
 RaBiGeTe - http://www.webalice.it/cristiano.pi/rabigete/
+	The web page for RaBiGeTe seems to have disappeared?
 Dieharder - http://www.phy.duke.edu/~rgb/General/dieharder.php
+	The command line tools for Dieharder clearly need a lot more work.  
+	I haven't tried their library yet.  
 Diehard - http://www.stat.fsu.edu/pub/diehard/
+	A very weak test, with an output format that is difficult to read.  
+	Avoid this, it is only of historical interest.  
 ENT - http://www.fourmilab.ch/random/
+	A very weak test.  
 gjrand - http://gjrand.sourceforge.net/
+	Fairly obscure.  I have not tried it.  
 
 Documentation:
 

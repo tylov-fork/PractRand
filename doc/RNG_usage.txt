@@ -93,12 +93,12 @@ for more information on them.
 
 5.  Declare an instance of your RNG.  
 For single-threaded programs this is generally done as:
-PractRand::RNGs::Polymorphic::isaac32x256 my_rng( my_seed );
+PractRand::RNGs::Polymorphic::hc256 my_rng( my_seed );
 
 For a multi-threaded program this is typically done as:
-__thread PractRand::RNGs::Polymorphic::isaac32x256 my_rng( my_seed );
+__thread PractRand::RNGs::Polymorphic::hc256 my_rng( my_seed );
 or like this:
-__declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 my_rng( my_seed );
+__declspec(thread) PractRand::RNGs::Polymorphic::hc256 my_rng( my_seed );
 ...depending upon what compiler you are using.  
 
 6.  Get random numbers from your RNG.  
@@ -110,7 +110,7 @@ That class is also available under a number of other aliases:
 	PractRand::RNGs::Polymorphic::PolymorphicRNG
 
 Every PractRand RNG that is not designated as "raw" includes support 
-for the following methods:
+for all of the following methods:
 //integers packed full of random bits
 Uint8 raw8();
 Uint16 raw16();

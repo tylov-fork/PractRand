@@ -110,6 +110,7 @@ recommended RNGs
 	RNG             Quality     PractRand   TestU01
 	                rating      standard    *Crush
 	hc256           5           > 1 TB      pass
+	trivium         4           > 4 TB      pass?
 	efiix64x256     5           > 1 TB      pass?
 	efiix32x256     5           > 2 TB      pass
 	efiix16x256     5           > 1 TB      pass
@@ -117,27 +118,27 @@ recommended RNGs
 	isaac64x256     5           > 1 TB?     pass?
 	isaac32x256     5           > 4 TB      pass
 	arbee           4           > 1 TB      pass?
-	jsf64           4           > 2 TB      pass?
-	jsf32           4           > 4 TB      pass
-	jsf16           3           > 2 TB      pass
-	sfc64           3           > 2 TB      pass?
-	sfc32           2-3         > 4 TB      pass
-	sfc16           1-2         128 GB      pass
+	jsf64           3           > 2 TB      pass?
+	jsf32           3           > 4 TB      pass
+	jsf16           2           16 TB ?     pass
+	sfc64           2           > 2 TB      pass?
+	sfc32           2           > 4 TB      pass
+	sfc16           1           128 GB      pass
 	mt19937         3           > 4 TB      0/2/2
-	mcx32           3           > 8 TB      pass
-	mcx64           4           > 1 TB      pass?
-
+	xsm32           3           > 8 TB      pass
+	xsm64           4           > 1 TB      pass?
 
 candidate RNGs
 	ranrotvar64     2-3         ?           ?
-	ranrotvar32     2-3         ?           ?
-	ranrotvar16     1-3         ?           ?
-	ranrotvar8      0-3         ?           ?
+	ranrotvar32     1-3         ?           ?
+	ranrotvar16     0-2         ?           ?
+	ranrotvar8      0-1         256 GB      ?
 	veryfast64      2-4         ?           ?
-	veryfast32      2-4         2 TB        pass?
+	veryfast32      2-4         > 16 TB     pass?
+	veryfast16      0-2         64 GB       ?
 	sfc64_v4cand                ?           ?
 	sfc32_v4cand                ?           ?
-	sfc16_v4cand                32 TB !!    ?
+	sfc16_v4cand                > 32 TB !   ?
 	clcg96_32       2-3         > 4 TB      pass
 	lcg64_32        1           32 GB       0/4/?
 

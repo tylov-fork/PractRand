@@ -47,19 +47,19 @@ static inline Uint8 rotate4(Uint8 value, int bits) {
 	SeederRNG seeder1; seeder1.seed(s1, s2, s3, s4);\
 	for (unsigned long w=0; w < INDIRECTION_SIZE; w++) indirection_table[w] = Word(seeder1.raw64());\
 	for (unsigned long w=0; w < ITERATION_SIZE  ; w++) iteration_table  [w] = Word(seeder1.raw64());\
-	i = Word(seeder1.raw64()) & ~Word(255);\
+	i = Word(seeder1.raw64()) & ~ Word(ITERATION_SIZE-1);\
 	a = Word(seeder1.raw64());\
 	b = Word(seeder1.raw64());\
 	c = Word(seeder1.raw64());\
-	for (unsigned long w=0; w < ITERATION_SIZE + INDIRECTION_SIZE + 4; w++) raw ## BITS();\
-	SeederRNG seeder2; s1 = a, s2 = b, s3 = c; s4 = raw ## BITS(); seeder2.seed(s1, s2, s3, s4);\
-	for (unsigned long w=0; w < ITERATION_SIZE + INDIRECTION_SIZE + 4; w++) raw ## BITS();\
+	for (unsigned long w=0; w < INDIRECTION_SIZE + 32; w++) raw ## BITS();\
+	SeederRNG seeder2; seeder2.seed(a, b, c, Word(seeder1.raw64()));\
+	for (unsigned long w=0; w < 32; w++) raw ## BITS();\
 	for (unsigned long w=0; w < INDIRECTION_SIZE; w++) indirection_table[w] ^= Word(seeder2.raw64());\
-	for (unsigned long w=0; w < ITERATION_SIZE + 16; w++) raw ## BITS();
+	for (unsigned long w=0; w < ITERATION_SIZE + 32; w++) raw ## BITS();
 
 /*Uint8 PractRand::RNGs::Raw::efiix8x384::raw4() {
 	//not for real world use
-	//trial version for operating on 4 bit integers instead of 8
+	//research version for operating on 4 bit integers instead of 8
 	//for trying to produce failures / corner cases
 	EFIIX_ALGORITHM(4, 2);
 }//*/

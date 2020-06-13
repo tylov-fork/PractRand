@@ -3,7 +3,7 @@ You can see the raw testing interface (ie the baseclass from which all
 PractRand tests for raw datastreams are derived) in:
 include/PractRand/tests.h
 
-You can also see the tests in action in the sample program in test/test.cpp
+You can also see the tests in action in the sample program in test/RNG_test.cpp
 
 The process of testing a stream of data generally goes like this:
 1. Call the tests constructor, with the tests parameters.  The parameters 
@@ -32,8 +32,8 @@ should point to the part of the new array where the new stuff begins.  The
 maximum number of blocks that you may be required to prefix in this way is 
 PractRand::Tests::Testbaseclass::REPEATED_BLOCKS.  
 I know this direction may be confusing.  Try looking at sample programs 
-source code (currently test/test.cpp, the class "TestManager" in it.  That 
-class encapsulates complying with those demands.  
+source code (currently test/RNG_test.cpp, the class "TestManager" in it.  
+That class encapsulates complying with those demands.  
 Like the known good RNG parameter, only a few tests actually need the 
 repeated blocks, but all test users are supposed to comply with that part of 
 the interface so that all tests get a common interface.  

@@ -341,7 +341,7 @@ namespace PractRand {
 		RNGs::Raw::mt19937::self_test();
 		RNGs::Raw::hc256::self_test();
 		RNGs::Raw::isaac32x256::self_test();
-		//RNGs::Raw::trivium::self_test();//failing validation atm
+		RNGs::Raw::trivium::self_test();
 	}
 	void initialize_PractRand() {
 		if (!AutoSeedingStateWalker::initialized) 

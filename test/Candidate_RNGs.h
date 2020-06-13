@@ -3,28 +3,32 @@ Canidates currently under consideration:
 
 
 1. a variant of Ranrot (RanrotVariant64/32/16/8)
-	OVERALL EVALUTION: no close competitors atm, but no clear need for it either
-	niche: medium to fast speed, medium to low quality, medium size
-	speed: occasionally faster than any recommended RNG, sometimes only middling though
+	OVERALL EVALUTION: no close competitors atm, but no clear need for it either;
+		and a reduced-size version of efiix might be superior anyway
+	niche: medium speed, medium quality, medium size
+		particularly for 8 bit, which currently has nothing smaller than efiix8x384
+		would be the smallest / lightest weight buffered RNG, for whatever that's worth
+	speed: occasionally faster than any recommended RNG, usually only middling though
 	statistical quality: decent at word sizes past 16 bit, poor @ 8 & 16 bit
+		no short term correlation, and the long term correlation seems to be under control
+		but the medium term correlation, while not detected, is definitely there
 	portability: uses only simple operations
 	word sizes: viable at 8, 16, 32, & 64 bit ; quality suffers @ 8 & 16 bit though
 	full word output: yes
 	buffered: yes
 	random access: no
 	cryptographic security: none
-	short cycle protection: limited
+	short cycle protection: limited @ 8 & 16 bit, good @ 32 & 64 bit
 	cycle type: reversible multicyclic
-	size: 19 words
-	statespace: full on 18 words, 17 states on the last word
-		(17 * 2**144 @ 8 bit, 17 * 2**288 @ 16 bit, 17 * 2**576 @ 32 bit, 17 * 2**1152 @ 64 bit)
-	alternatives under consideration:
-		single-tap with 2 accumulators - entropy difuses across the buffer much more slowly, 
-		but overall quality is higher and speed is comparable
+	size: 48 words
+	statespace: full on 47 words, 45 states on the last word
+		(45 * 2**376 @ 8 bit, 45 * 2**752 @ 16 bit, 45 * 2**1504 @ 32 bit, 45 * 2**3008 @ 64 bit)
 
 3. a small fast RNG (VeryFast64/32/16)
 	OVERALL EVALUTION: insufficiently different from jsf64/32/16
-	niche: very fast small RNG
+	niche: 
+		fastest inline RNG of reasonable quality
+		with only 3 words of state, 1 temp var, and six so ops, it's cheap to inline
 	speed: often faster than any recommended RNG, generally at least competitive with the fastest
 	statistical quality: decent @ 32 bit & 64 bit, poor @ 16 bit
 	portability: uses only simple operations
@@ -41,15 +45,16 @@ Canidates currently under consideration:
 
 4. a possible new revision to the current sfc RNG (sfc_alternative64/32/16)
 	OVERALL EVALUTION: hard to justify
-	niche: same as sfc - 
-		a combination of the strengths of small fast RNG with the advantage of a guaranteed cycle length
-		it's certainly better in terms of state space
-		and it looks better than sfc to me in terms of statistical quality
-		in some speed tests it's significantly faster than sfc, but in others it is not
+	niche: similar to sfc - 
+		small size, fast speed, guaranteed cycle length at some word sizes
+		this version substantially improves quality
+		but... one major use of sfc is as an inline RNG
+			in that context, the fact that it takes just 3 registers plus 1 temp register is nice
+			this expands that to 4 registers plus 1 temp register, the same as jsf
 	speed: fast to very fast - sometimes appears faster than sfc, usually appears faster than jsf
-	statistical quality: almost as good as jsf
+	statistical quality: better than jsf
 	portability: uses only simple operations
-	word sizes: viable at 16, 32, & 64 bit
+	word sizes: viable at 16, 32, & 64 bit; almost viable at 8 bit
 	full word output: yes
 	buffered: no
 	random access: no
@@ -59,6 +64,15 @@ Canidates currently under consideration:
 	size: 4 words
 	statespace: full on all 4 words
 		(2**64 @ 16 bit, 2**128 @ 32 bit, 2**256 @ 64 bit)
+
+
+The current sfc occupies three distinct niches:
+	1. general small fast RNG
+	2. RNGs that are good for inlining due to small state, few ops, few temp vars, and high speed
+	3. RNGs that combine the general strengths of small fast RNGs with a guaranteed minimum cycle length
+For #1, jsf is better and already a recommended RNG
+For #2, VeryFast looks better than the current sfc, at least at 32 & 64 bit.  
+For #3, sfc_alternative looks better than the current sfc.  
 
 */
 #define POLYMORPHIC_CANDIDATE(rng, bits) \
@@ -83,37 +97,50 @@ public:
 		OUTPUT_BITS = 8 * sizeof(Word),
 		FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING
 	};
-	Word buffer[LAG1], position, counter;
+	Word buffer[LAG1], position, counter1, counter2;
 	static Word rotate(Word value, int bits) {return (value << bits) | (value >> (8*sizeof(value)-bits));}
 	Word step( Word prior, Word current, Word other ) {
 		return (rotate(current, SHIFT1) ^ rotate(other, SHIFT2)) + rotate(prior, SHIFT3);
 		//return (rotate(current, SHIFT1) ^ rotate(other, SHIFT2)) + (rotate(prior, SHIFT3) ^ prior);
 		//prior += prior << 2; prior ^= prior >> 3; return (current ^ other) + prior;
 	}
+	void refill() {
+		Word prior = buffer[LAG1-1] ^ counter1++;
+		for (int i = 0; i < LAG2; ) {
+			prior = buffer[i] = step(prior, buffer[i], buffer[i+LAG1-LAG2]); i++;
+			prior = buffer[i] = step(prior, buffer[i], buffer[i+LAG1-LAG2]); i++;
+			prior = buffer[i] = step(prior, buffer[i], buffer[i+LAG1-LAG2]); i++;
+		}
+		prior ^= counter2;
+		counter2 += counter1 ? 0 : 1;
+		for (int i = LAG2; i < LAG1; ) {
+			prior = buffer[i] = prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
+			prior = buffer[i] = prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
+			prior = buffer[i] = prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
+		}
+		position = LAG1 - 1;
+	}
 	Word _raw_native() {
 		if (position) return buffer[--position];
-		Word prior = buffer[LAG1-1] + counter++;
-		for (int i = 0; i < LAG2; i++)
-			prior = buffer[i] = step(prior, buffer[i], buffer[i+LAG1-LAG2]);
-		for (int i = LAG2; i < LAG1; i++) prior = buffer[i] = 
-			prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]);
-		return buffer[position = LAG1 - 1];
+		refill();
+		return buffer[position];
 	}
 	void walk_state(StateWalkingObject *walker) {
 		for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
 		walker->handle(position);
-		walker->handle(counter);
+		walker->handle(counter1);
+		walker->handle(counter2);
 		if (position > LAG1) position = 0;
 	}
 };
-class raw_ranrot_variant64 : public _RanrotVariant<Uint64,17,5,0,0,29> {public: Uint64 raw64() {return _raw_native();}};
-class raw_ranrot_variant32 : public _RanrotVariant<Uint32,17,5,0,0,13> {public: Uint32 raw32() {return _raw_native();}};
-class raw_ranrot_variant16 : public _RanrotVariant<Uint16,17,5,0,0, 7> {public: Uint16 raw16() {return _raw_native();}};
-class raw_ranrot_variant8  : public _RanrotVariant<Uint8 ,17,5,0,0, 3> {public: Uint8  raw8 () {return _raw_native();}};
+class raw_ranrot_variant64 : public _RanrotVariant<Uint64,45,14,0,0,29> {public: Uint64 raw64() {return _raw_native();}};
+class raw_ranrot_variant32 : public _RanrotVariant<Uint32,45,14,0,0,13> {public: Uint32 raw32() {return _raw_native();}};
+class raw_ranrot_variant16 : public _RanrotVariant<Uint16,45,14,0,0, 7> {public: Uint16 raw16() {return _raw_native();}};
+class raw_ranrot_variant8  : public _RanrotVariant<Uint8 ,45,24,0,0, 3> {public: Uint8  raw8 () {return _raw_native();}};
 POLYMORPHIC_CANDIDATE(ranrot_variant, 64)
 POLYMORPHIC_CANDIDATE(ranrot_variant, 32)
 POLYMORPHIC_CANDIDATE(ranrot_variant, 16)
-POLYMORPHIC_CANDIDATE(ranrot_variant, 8)
+POLYMORPHIC_CANDIDATE(ranrot_variant,  8)
 
 template<typename Word, int ROTATE, int RSHIFT, int LSHIFT>
 class _VeryFast {
@@ -145,7 +172,7 @@ public:
 		b = c ^ (c >> RSHIFT);
 		c = rotate(c,ROTATE) + old;
 		return old;//*/
-		//?, 16 bit version fails @ ? GB, 32 bit version ?
+		//?, 16 bit version fails @ 16-32 GB, 32 bit version ?
 		/*old = a + b;
 		a = b + (b << LSHIFT);
 		b = c ^ (c >> RSHIFT);

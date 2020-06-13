@@ -89,18 +89,6 @@
     <ClInclude Include="..\include\PractRand\sha2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\PractRand\RNGs\efiix16x256.h">
-      <Filter>Header Files\RNGs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\PractRand\RNGs\efiix32x256.h">
-      <Filter>Header Files\RNGs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\PractRand\RNGs\efiix64x256.h">
-      <Filter>Header Files\RNGs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\PractRand\RNGs\efiix8x256.h">
-      <Filter>Header Files\RNGs</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\PractRand\RNGs\hc256.h">
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>

@@ -1,13 +1,14 @@
-post-0.85:
+post-0.86:
 	high priority items
-		test & fix trivium implementation
 		adaptor to produce a polymorphic RNG from a raw RNG automatically
 			(to simplify users sticking their own RNG in to the test program at full performance)
-		multithreaded testing program
 		revise basic testing interface
-		review serialization interface
+		review serialization & seeding interface
+	add benchmarks for seeding
+		and optimize any slow-but-easily-improved seeding functions
+		maybe add alternate fast-seeding interfaces too
 	add more self-tests, regression tests, etc
-		test vectors for ISAAC64, SHA2-512, jsf32, & trivium (which is likely broken atm)
+		test vectors for ISAAC64, SHA2-512, & jsf32
 		checks that fast-forward / rewind works correctly
 		checks that entropy pooling works correctly
 	review / reorganize header files
@@ -49,16 +50,17 @@ post-0.85:
 			allow a single test to be multithread?
 		increase automation & quality of calibration process
 	test program(s)
-*		add multithreading (using SDL?  or native WIN32?)
 		improve clarity & quality of example code (TestManager)
-			possibly move TestManager class in to library
+			possibly move TestManager class in to library or a shared header
 	choices in library to be reconsidered:
 		names of randlf, randli
+			perhaps: rand_sint32, rand_sint64, rand_uint32, rand_uint64, rand_float, rand_double, fast_uint32
 		ranges to randf, randi, randlf, randli: [min..max) or [min..max]
 		should unseeded RNGs require explicit SEED_NONE flag?
 		change return type of RNG::get_name to something that doesn't require STL (ie write to buffer)?
 		should split add_entropy* methods off from vRNG in to a new child class?
 *		serialization interface needs more work & thought I think
+			same for seeding of non-polymorphic RNGs
 		???
 	review and add to documentation
 		detailed descriptions of RNGs, particularly recommended RNGs

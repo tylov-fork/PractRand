@@ -1,3 +1,23 @@
+version 0.86
+	RNGs algorithms:
+		changes to specific RNGs:
+			jsf16
+				it was using the wrong shifts for some reason, fixed
+				(that should improve quality)
+			efiix8x384, efiix16x384, efiix32x384, efiix64x384
+				tweaked seeding algorithm to improve speed
+			trivium
+				fixed bugs
+				improved validation
+	test programs:
+		new test programs:
+			Multithreaded RNG test
+				like the old RNG_test, but uses multiple threads.  
+				currently it likes to use about 5 threads total on the standard test set
+				(1 for the RNG, 1 for each core test, 1 for all the extra foldings)
+				but it doesn't keep those occupied all the time
+				it has a bad habit of recreating its threads frequently instead of keeping a pool of workers
+
 version 0.85
 	fixed various issues preventing compilation on recent versions of gcc
 		tested on gcc 4.6.1

@@ -8,6 +8,15 @@
 			how the TestBlocks for the tests are filled.  These tend to 
 			cause tests results to not be identical between big and 
 			little endian platforms, though the differences are minor.  
+	The recommended RNGs themselves are intended to return identical 
+	output on big and little endian platforms.  The ones that can act 
+	as entropy pools are intended to respond identically to the same 
+	input across big and little endian platforms.  However, small errors 
+	in endian portability may have crept in.  Furthermore, in many 
+	scenarios it can be very difficult for a user to correctly handle 
+	endianness portability, indepent of the behavior of library.  Thus, 
+	it is recommended that users who need strict endian independence 
+	think carefully about what that means and do plenty of testing.  
 
 2. Portability of PractRand itself:
 	I have built PractRand on:
@@ -25,8 +34,10 @@
 			this stuff all basically just translates to a reasonably 
 			compliant C++ compiler and a normal hardware environment 
 			typical of modern PCs and most embedded chips.  
-		support for 8, 16, 32, and 64 bit signed and unsigned integers
 		memory be addressed in 8-bit units (sizeof(Uint8) == 1)
+		support for 8, 16, 32, and 64 bit signed and unsigned integers
+		including unsigned right-shifts on all unsigned integer types
+			signed right-shifts are not required
 		basic C++ support including namespaces and templates
 			 all decent C++ compilers qualify
 		the standard C/C++ library, including STL
@@ -44,8 +55,8 @@
 				and even then nothing very bad happens if it's not compliant
 				and it can be adjusted for non-IEEE formats in RNG_internals.h
 
-
 	In addition to that, the example programs may require:
 		C++ RTTI (part of the C++ language)
+		either pthreads or win32 (for multithreaded test programs)
 
 

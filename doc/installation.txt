@@ -15,7 +15,7 @@ compile and link all .cpp files in the PractRand src/ directory and
 all of its subdirectories, recursively.  At the moment that means:
 src/*.cpp
 src/RNGs/*.cpp
-src/RNGs/entropy_pools/*.cpp
+src/RNGs/other/*.cpp
 PractRand is intended to be built as a static library.  
 
 3.  Linking with PractRand:

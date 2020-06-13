@@ -13,7 +13,6 @@
 //master header, includes everything in PractRand for both 
 //  practical usage and research... 
 //  EXCEPT it does not include specific algorithms
-//  also it does not include PractRand/RNG_adaptors.h as that includes lots of templated stuff
 #include "PractRand_full.h"
 
 
@@ -42,6 +41,7 @@
 #include "PractRand/RNGs/isaac32x256.h"
 #include "PractRand/RNGs/isaac64x256.h"
 #include "PractRand/RNGs/hc256.h"
+#include "PractRand/RNGs/trivium.h"
 #include "PractRand/RNGs/arbee.h"
 #include "PractRand/RNGs/sha2_based_pool.h"
 
@@ -63,35 +63,32 @@ class Raw_DummyRNG {
 public:
 	enum {
 		OUTPUT_TYPE = PractRand::RNGs::OUTPUT_TYPES::NORMAL_1,
-		OUTPUT_BITS = 16,
+		OUTPUT_BITS = 32,
 		FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING
 	};
 	//RNG state goes here:
-	Uint16 a, b, c, d;
-	Uint16 raw16() {//RNG algorithm goes here:
-		Uint16 old = a + (a << 3);
-		a = b ^ (b >> 5);
-		b = c + old + d++;
-		c = old + ((c << 7) | (c >> 9));
-		return old;
-		//32 bit version of this passed 16 TB
-//		Uint32 old = a + (a << 3);
-//		a = b ^ (b >> 7);
-//		b = c + old;
-//		c = old + ((c << 13) | (c >> 19));
-//		return old;
+	Uint32 a, b, c;
+	Uint32 raw32() {//RNG algorithm goes here:
+		Uint32 old = a+b+c;
+		a = b ^ c;
+		b = c;
+		c = old + ((c << 13) | (c >> (32-13)));
+		return a;
+		/*Uint32 return_value;
+		if (1 == std::fread(&return_value, sizeof(return_value), 1, stdin)) return return_value;
+		std::fprintf(stderr, "error reading input\n");
+		std::exit(0);*/
 	}
 	void walk_state(StateWalkingObject *walker) {
 		walker->handle(a);
 		walker->handle(b);
 		walker->handle(c);
-		walker->handle(d);
 	}
 };
-class Polymorphic_DummyRNG : public PractRand::RNGs::vRNG16 {
+class Polymorphic_DummyRNG : public PractRand::RNGs::vRNG32 {
 public:
 	Raw_DummyRNG implementation;
-	Uint16 raw16() {return implementation.raw16();}
+	Uint32 raw32() {return implementation.raw32();}
 	void walk_state(StateWalkingObject *walker) {implementation.walk_state(walker);}
 	std::string get_name() const {return std::string("DummyRNG");}
 };
@@ -106,19 +103,26 @@ class TestManager {
 public:
 	std::vector<Tests::TestBlock> buffer;
 	RNGs::vRNG *rng;
+	RNGs::vRNG *known_good;
+	Tests::ListOfTests *tests;
 	int max_buffer_amount;
 	int prefix_blocks;
 	int main_blocks;
 	Uint64 blocks_so_far;
-	TestManager(RNGs::vRNG *rng_, int max_buffer_amount_ = 1 << (25-10)) {
+	TestManager(RNGs::vRNG *rng_, Tests::ListOfTests *tests_, RNGs::vRNG *known_good_, int max_buffer_amount_ = 1 << (25-10)) {
 		rng = rng_;
+		tests = tests_;
+		known_good = known_good_;
 		blocks_so_far = 0;
 		max_buffer_amount = max_buffer_amount_;
 		prefix_blocks = 0;
 		main_blocks = 0;
 		buffer.resize(max_buffer_amount + Tests::TestBaseclass::REPEATED_BLOCKS);
+		for (unsigned int i = 0; i < tests->tests.size(); i++) tests->tests[i]->init(known_good);
 	}
-	void use_blocks(Tests::TestBaseclass *test) {test->test_blocks(&buffer[prefix_blocks], main_blocks);}
+	~TestManager() {
+		for (unsigned int i = 0; i < tests->tests.size(); i++) tests->tests[i]->deinit();
+	}
 	int prep_blocks(Uint64 &blocks) {
 		Uint64 _delta_blocks = blocks;
 		if (_delta_blocks > max_buffer_amount) _delta_blocks = max_buffer_amount;
@@ -141,17 +145,17 @@ public:
 		blocks_so_far += delta_blocks;
 		return delta_blocks;
 	}
-	int prep_more_blocks(Uint64 &blocks) {
-		Uint64 _delta_blocks = blocks;
-		if (_delta_blocks + main_blocks > max_buffer_amount) _delta_blocks = max_buffer_amount - main_blocks;
-		int delta_blocks = int(_delta_blocks);
-		blocks -= delta_blocks;
-		if (delta_blocks)
-			buffer[prefix_blocks + main_blocks].fill(rng, int(delta_blocks));
 
-		main_blocks += delta_blocks;
-		blocks_so_far += delta_blocks;
-		return delta_blocks;
+	void reset() {
+		for (unsigned int i = 0; i < tests->tests.size(); i++) tests->tests[i]->deinit();
+		for (unsigned int i = 0; i < tests->tests.size(); i++) tests->tests[i]->init(known_good);
+	}
+	void test(Uint64 num_blocks) {
+		while (num_blocks) {
+			prep_blocks(num_blocks);
+			for (unsigned int i = 0; i < tests->tests.size(); i++)
+				tests->tests[i]->test_blocks(&buffer[prefix_blocks], main_blocks);
+		}
 	}
 };
 
@@ -168,14 +172,15 @@ void print_result(const std::string &tname, double result, double pvalue) {
 		std::printf("%+10.1f   ", result);
 	}
 	if (pvalue != -1 && pvalue >= 0 && pvalue <= 1) {
-		if (std::fabs(pvalue-0.5) > 0.4999) std::printf("p=%7.5f  ", pvalue);
-		else if (std::fabs(pvalue-0.5) > 0.499) std::printf("p=%6.4f   ", pvalue);
-		else if (std::fabs(pvalue-0.5) > 0.49) std::printf("p=%5.3f    ", pvalue);
-		else if (std::fabs(pvalue-0.5) > 0.4) std::printf("p=%4.2f     ", pvalue);
+		double s = std::fabs(pvalue-0.5);
+		if (s > 0.4999) std::printf("p=%7.5f  ", pvalue);
+		else if (s > 0.499) std::printf("p=%6.4f   ", pvalue);
+		else if (s > 0.49) std::printf("p=%5.3f    ", pvalue);
+		else if (s > 0.4) std::printf("p=%4.2f     ", pvalue);
 		else std::printf("p=%3.1f      ", pvalue);
-		if (std::fabs(pvalue-0.5) > 0.49999999) std::printf("FAIL");
-		else if (std::fabs(pvalue-0.5) > 0.4999) std::printf(" very suspicious");
-		else if (std::fabs(pvalue-0.5) > 0.49) std::printf(" suspicious");
+		if (s > 0.49999999) std::printf("FAIL");
+		else if (s > 0.4999) std::printf(" very suspicious");
+		else if (s > 0.49) std::printf(" suspicious");
 		else std::printf(" pass");
 	}
 	else {
@@ -234,34 +239,15 @@ void do_statistical_tests() {
 	std::time_t start_time = std::time(NULL);
 	std::clock_t start_clock = std::clock();
 
-	PractRand::RNGs::Polymorphic::isaac32x256 known_good(PractRand::SEED_AUTO);
+	PractRand::RNGs::Polymorphic::hc256 known_good(PractRand::SEED_AUTO);
 	Uint32 rng_seed = known_good.raw32();
 
 //	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::lcg32_16_extended;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::clcg64_16;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::ranrot32;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::fibmul32_16;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::fibmul64_32;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::ranrot3tap32;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::simpleE;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::xorwow32x5;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::xorshift32x4;
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::cxlcg96_16_varqual(0);
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::BaysDurhamShuffle16(new PractRand::RNGs::Polymorphic::NotRecommended::cxlcg96_16_varqual(20), 8);
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::clcg96_32_varqual(0);
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::cxm64_varqual(3);
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::mt19937_unhashed();
 //	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::NotRecommended::BaysDurhamShuffle32(
 //		new PractRand::RNGs::Polymorphic::NotRecommended::xorshift32x4, 4);
-//	RNGs::vRNG *rng = new Candidates::polymorphic_ranrot_variant8(PractRand::SEED_NONE);
-//	RNGs::vRNG *rng = new Candidates::polymorphic_sfc_alternative8(PractRand::SEED_NONE);
-//	RNGs::vRNG *rng = new Candidates::polymorphic_VeryFast16(PractRand::SEED_NONE);
-//	RNGs::vRNG *rng = new Candidates::polymorphic_mcx32(PractRand::SEED_NONE);
-	RNGs::vRNG *rng = new RNGs::Polymorphic::sfc16(PractRand::SEED_NONE);
-//	RNGs::vRNG *rng = new RNGs::Polymorphic::xsm32(PractRand::SEED_NONE);
-//	RNGs::vRNG *rng = new RNGs::Polymorphic::efiix8x384(PractRand::SEED_NONE);
-//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::rarns16(PractRand::SEED_NONE);
-//	RNGs::vRNG *rng = new Polymorphic_DummyRNG();
+//	RNGs::vRNG *rng = new Candidates::polymorphic_VeryFast32(PractRand::SEED_NONE);
+//	RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::efiix8x384(PractRand::SEED_NONE);
+	RNGs::vRNG *rng = new Polymorphic_DummyRNG();
 	rng->seed(rng_seed);
 
 	std::printf("RNG = %s, seed = 0x%x\n\n", rng->get_name().c_str(), rng_seed);
@@ -271,23 +257,18 @@ void do_statistical_tests() {
 //	std::printf("rng->randli(0, 13):    %8d  -  a random integer in [0..13)\n", int(rng->randli(0, 13)));
 //	std::printf("\n");
 
-	TestManager tman(rng);
 	Tests::ListOfTests tests = Tests::Batteries::get_standard_tests(rng);
 //	Tests::ListOfTests tests = Tests::Batteries::get_expanded_standard_tests(rng);
-	for (unsigned int i = 0; i < tests.tests.size(); i++) tests.tests[i]->init(&known_good);
+	TestManager tman(rng, &tests, &known_good);
 
 	//Start by testing 32 kilobytes, then double the amount to test repeatedly.  
-	//Stop after testing 32 terabytes.  
+	//Stop after testing 256 terabytes.  
 	//After each round of testing finishes print interium results.  
-	//Skip the printing if it's been less than 3 seconds since this started.  
+	//Skip the printing if it's been less than 1.6 seconds since this started.  
 	Uint64 test_size = 1024 * 32;
-	while (test_size <= 1ull<<45) {
-		Uint64 blocks_left = test_size/Tests::TestBlock::SIZE - tman.blocks_so_far;
+	while (test_size <= 1ull<<48) {
+		tman.test(test_size/Tests::TestBlock::SIZE - tman.blocks_so_far);
 		test_size <<= 1;
-		while (blocks_left) {
-			tman.prep_blocks(blocks_left);
-			for (unsigned int i = 0; i < tests.tests.size(); i++) tman.use_blocks(tests.tests[i]);
-		}
 		int clocks_passed = std::clock() - start_clock;//may wrap too quickly
 		int seconds_passed = std::time(NULL) - start_time;
 		double time_passed = seconds_passed > 100 ? seconds_passed : clocks_passed / (double)CLOCKS_PER_SEC;

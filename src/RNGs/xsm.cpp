@@ -95,7 +95,6 @@ Uint64 PractRand::RNGs::Raw::xsm64::raw64() {
 	return tmp + rotate(old, 32);
 }
 void PractRand::RNGs::Raw::xsm64::step_backwards() {
-	const Uint64 K = 0x92ec64765925a395ull;
 	bool carry = lcg_low < lcg_adder;
 	lcg_low -= lcg_adder;
 	lcg_high -= lcg_low + carry;

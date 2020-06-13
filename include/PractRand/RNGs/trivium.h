@@ -1,6 +1,3 @@
-//disabled because it's failing validation at the moment
-//should get enabled in a future version once it's working properly
-#if 0
 namespace PractRand {
 	namespace RNGs {
 		namespace Raw {
@@ -33,4 +30,3 @@ namespace PractRand {
 		PRACTRAND__LIGHT_WEIGHT_RNG(trivium)
 	}
 }
-#endif//0

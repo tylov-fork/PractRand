@@ -25,7 +25,7 @@ sfc64       2**     4****  1*      24 bytes   2**192     2**64    2**191
 jsf64       3***    4****  0       32 bytes   2**256-1   1        2**255
 arbee       4****   3***   1*      40 bytes   2**320     2**64    2**319
 xsm64       4****   3***   1*      32 bytes   2**191     2**128   2**128
-efiix64x384 5*****  2**    1*      3104 bytes 2**24832   2**64    2**12416
+efiix64x384 5*****  2**    1*      3104 bytes 2**24832   2**64    2**
 isaac64x256 5*****  2**    2**     4128 bytes 2**16592   2**72    2**8300
 
 * The following RNGs are recommended for normal use on 32 bit CPUs.  
@@ -33,7 +33,7 @@ Engine      quality speed  theory  size       states     min(len) E(len)
 sfc32       2**     4****  0       12 bytes   2**96      2**32    2**95
 jsf32       3***    4****  0       16 bytes   2**128-4   2**1     2**127
 xsm32       3***    3***   1*      16 bytes   2**95      2**64    2**64
-efiix32x384 5*****  2**    0       1552 bytes 2**12416   2**32    2**6208
+efiix32x384 5*****  2**    0       1552 bytes 2**12416   2**32    2**
 mt19937     2**     2**    4****   2500 bytes 2**19937-1 2**19937-1 2**19937-1
 isaac32x256 5*****  2**    2**     2064 bytes 2**8296    2**40    2**4152
 hc256       5*****  1*     3***    8580 bytes 2**65547   2**11    2**32773
@@ -42,11 +42,11 @@ hc256       5*****  1*     3***    8580 bytes 2**65547   2**11    2**32773
 Engine      quality speed  theory  size       states     min(len) E(len)
 sfc16       1*      4****  0       6 bytes    2**48      2**16    2**47
 jsf16       2**     4****  0       8 bytes    2**64-1    1        2**63
-efiix16x384 5*****  2**    0       776 bytes  2**6208    2**16    2**3104
+efiix16x384 5*****  2**    0       776 bytes  2**6208    2**16    2**
 
 * The following RNGs are recommended for normal use on 8 bit CPUs.  
 Engine      quality speed  theory  size       states     min(len) E(len)
-efiix8x384  5*****  2**    0       388 bytes  2**3104    2**8     2**1552
+efiix8x384  5*****  2**    0       388 bytes  2**3104    2**8     2**
 (not much variety at 8 bit... if anyone needs more let me know... the 16 
 bit ones should work acceptably on 8 bit CPUs too though)
 
@@ -59,16 +59,16 @@ in addition to being listed here.
 Engine          quality speed  size        word    purpose
 xsm32           3***    3***   16 bytes    32 bit  random access / seeking
 xsm64           4****   3***   32 bytes    64 bit  random access / seeking
-arbee           4****   4****  40 bytes    */64bit entropy accumulation (fast)
-sha2_based_pool 5*****  0      302 bytes   8/64    entropy accumulation + crypto (strong)
-efiix8x384      5*****  2**    388 bytes   8 bit   crypto (weak)
-efiix16x384     5*****  2**    776 bytes   16 bit  crypto (weak)
+arbee           4****   4****  40 bytes    64 bit* entropy accumulation (fast)
+sha2_based_pool 5*****  0      302 bytes   8/64*   entropy accumulation + crypto (strong)
+efiix8x384      5*****  2**    388 bytes   8 bit   crypto (very weak)
+efiix16x384     5*****  2**    776 bytes   16 bit  crypto (very weak)
 efiix32x384     5*****  2**    1552 bytes  32 bit  crypto (weak)
 efiix64x384     5*****  2**    3104 bytes  64 bit  crypto (weak)
 isaac32x256     5*****  2**    2064 bytes  32 bit  crypto (moderate)
 isaac64x256     5*****  2**    4128 bytes  64 bit  crypto (moderate)
 hc256           5*****  1*     8580 bytes  32 bit  crypto (strong)
-//trivium         5*****  0      48 bytes    64 bit  crypto (moderate) (not yet available)
+trivium         4****   0      48 bytes    64 bit  crypto (moderate)
 
 Notes on special purposes:
 1. random access: allows you to skip forwards or backwards within the cycle 
@@ -106,6 +106,7 @@ when used in the same way in all future versions, unless bugs are discovered:
 	isaac64x256 ("64 bit ISAAC")
 	mt19937 ("The Mersenne Twister")
 	hc256 ("HC-256")
+	trivium
 Other recommended RNGs in PractRand may vary from version to version, though 
 they should stabilize by the time PractRand approaches version 1.0.  
 
@@ -161,9 +162,10 @@ small fast RNGs:
 			statespace:       2**48 / 2**96 / 2**192
 			multi-cyclic:     yes
 			reversible:       yes
-indirection-based RNGs:
+crypto / high quality RNGs:
 	These RNGs have *very* good statistical properties, and offer some degree 
-	of cryptographic security.  They also tend to be slow to seed.  
+	of cryptographic security.  They also tend to be slow to seed.  All except 
+	trivium are indirection-based.  
 	isaac32x256 / isaac64x256
 		actual names: ISAAC, ISAAC64
 		This algorithm is included because of its combination of decent speed 
@@ -186,7 +188,7 @@ indirection-based RNGs:
 			size:             2064 / 4128 bytes
 			statespace:       2**8296 / 2**16584
 			multi-cyclic:     yes
-			reversible:       yes
+			reversible:       yes?
 	hc256
 		actual name: HC-256
 		This algorithm is included because it is believed to be quite 
@@ -210,7 +212,7 @@ indirection-based RNGs:
 			size:             8580 bytes
 			statespace:       2**65547
 			multi-cyclic:     yes
-			reversible:       yes
+			reversible:       yes?
 	efiix8x384 / efiix16x384 / efiix32x384 / efiix64x384
 		This algorithm is included because of its combination of reasonable 
 		speed with very good statistical quality.  It is the fastest of the 
@@ -235,11 +237,10 @@ indirection-based RNGs:
 			size:             388 / 776 / 1552 / 3104 bytes
 			statespace:       2**2080 / 2**4160 / 2**8320 / 2**16640
 			multi-cyclic:     yes
-			reversible:       yes
+			reversible:       no?
 	trivium
-		note: not yet fully added, will be here in a future version
-		This algorithm is included because of its combination of small size 
-		combined with cryptographic security.  It is not as secure as HC-256, 
+		This algorithm is included because of its of small size combined 
+		with cryptographic security.  It is not as secure as HC-256, 
 		but still offers a significant degree of security.  
 		details:
 			passes all tests: yes?
@@ -256,7 +257,7 @@ indirection-based RNGs:
 			size:             48 bytes
 			statespace:       2**288
 			multi-cyclic:     yes
-			reversible:       yes
+			reversible:       yes?
 popular RNGs:
 	mt19937
 		This is the Mersenne Twister.  It is a twisted LFSR with hashed output.  
@@ -266,9 +267,9 @@ popular RNGs:
 		good "theory" rating) with acceptable speed & statistical properties.  So 
 		if you want an RNG that has a good theory rating and doesn't compromise 
 		speed or statistical properties too much then this is a solid choice.  
-		This is the only RNG in PractRand to be fully linear.  It produce adequate 
-		output quality desite its linearity due to its combination of large state 
-		size and relatively complex output function.  
+		This is the only recommended RNG in PractRand to be fully linear.  It 
+		produces adequate output quality desite its linearity due to its 
+		combination of large state size and relatively complex output function.  
 		This algorithm has no bad cycles (it is single-cycle), though it does have 
 		bad regions within its cycle.  
 		details:
@@ -391,9 +392,9 @@ quality: (rated from 0 to 5 stars)
 		1 star - must pass 1 GB of PractRand standard
 			also, must pass TestU01 SmallCrush
 		2 star - must pass 16 GB of PractRand standard
-			also, must not fail more than 3 subtests of TestU01 Crush
+			also, must not fail more than 2 subtests of TestU01 Crush
 		3 star - must pass 256 GB of PractRand standard
-			also, must not fail more than 2 subtests of TestU01 BigCrush
+			also, must not fail more than 2 subtests each of BigCrush and Crush
 		4 star - must pass 1 TB of PractRand standard
 			also, must pass TestU01 Crush & BigCrush
 		5 star - must not have any known failures on general tests
@@ -421,14 +422,14 @@ quality: (rated from 0 to 5 stars)
 		4 star - pretty solid
 		5 star - very solid
 		Note that this is not entirely independent of empirical 
-		testing - I look at those results when ana
+		testing - I look at those results when evaluating RNGs for trustworthyness.
 	quality subscores for PractRand RNGs
 		name                  overall    empirical  cycle    states  trusted
-		jsf16                 2          5          2        3       2.5
+		jsf16                 2          4          2        3       2.5
 		jsf32                 3          5          4        3       3
 		jsf64                 3          5          5        5       3
-		sfc16 (v3)            1          4          2        2       1.5
-		sfc32 (v3)            2          5          3        3       2
+		sfc16 (v3)            1          2          1        2       1.5
+		sfc32 (v3)            2          4          3        3       2
 		sfc64 (v3)            2          5          5        4       2
 		xsm32                 3?         5?         4        3       3?
 		xsm64                 4?         5?         5        4       4?
@@ -440,10 +441,21 @@ quality: (rated from 0 to 5 stars)
 		efiix32x384           5          5          5        5       5
 		efiix64x384           5          5          5        5       5
 		hc256                 5          5          5        5       5
-		mt19937               2          2          5        5       2.5
+		trivium               4.5        5          5        5       4.5
+		mt19937               2.5        3          5        5       2.5
 		sha2_based_pool       5          5          5        5       5
-		trivium               5?         5?         5        5       5
-	subscores for some non-PractRand RNG examples:
+	quality subscores for some candidates for PractRand recommended RNGs:
+		sfc16_v4cand          2          4          2        2       2.5
+		sfc32_v4cand          3          5          4        3       3.5
+		sfc64_v4cand          3.5        5          5        5       3.5
+		vf16                  1          2          1        2       2
+		vf32                  3          5          3        3       3
+		vf64                  3          5          5        4       3
+		ranrot_alternative8   3          3          5        5       3
+		ranrot_alternative16  3          5          5        5       3
+		ranrot_alternative32  3          5          5        5       3
+		ranrot_alternative64  3          5          5        5       3
+	quality subscores for some non-PractRand RNG examples:
 		name                  overall    empirical  cycle    states  trusted
 		typical libc rand     0          0          1        1       0
 		rand48                0          0          2        2       0
@@ -592,7 +604,7 @@ statespace: (unitless)
 		length target by a factor of 2**10.  If it's marginally acceptable, but 
 		only if it's REALLY rare then pad by a factor of 2**30.  If you want there 
 		to never occur a time where the minimum cycle length requirement is not 
-		met, not even once, then pad by a factor of 2**50.  
+		met, not even once, then pad by a factor of 2**60.  
 	requirements for statespace:
 		As a rule of thumb a statespace of 2**60 is adequate for casual uses, a 
 		statespace of 2**120 is adequate for serious uses, and a statespace of 

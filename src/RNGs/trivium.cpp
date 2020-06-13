@@ -1,7 +1,3 @@
-//disabled as it's failing validation at this time
-//will have to figure out what I screwed up and fix it for the next version
-
-#if 0
 #include <string>
 #include "PractRand/config.h"
 #include "PractRand/endian.h"
@@ -13,6 +9,7 @@
 
 using namespace PractRand;
 
+
 //polymorphic:
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C64(trivium)
 void PractRand::RNGs::Polymorphic::trivium::seed(Uint64 s) {implementation.seed(s);}
@@ -21,21 +18,21 @@ void PractRand::RNGs::Polymorphic::trivium::seed(const Uint8 *seed_and_iv, int l
 static Uint64 shift_array64( Uint64 vec[2], unsigned long bits ) {
 	bits -= 64;
 	if (!(bits % 64)) return vec[bits/64];
-	return (vec[bits / 64] >> (bits & 63)) | (vec[1 + bits / 64] << (64-(bits & 63)));
+	return (vec[bits / 64] << (bits & 63)) | (vec[1 + bits / 64] >> (64-(bits & 63)));
 }
 //raw:
 Uint64 PractRand::RNGs::Raw::trivium::raw64() {//LOCKED, do not change
-	Uint64 tmpa = shift_array64(c, 66) ^ shift_array64(c, 111);
-	Uint64 tmpb = shift_array64(a, 66) ^ shift_array64(a, 93);
-	Uint64 tmpc = shift_array64(b, 69) ^ shift_array64(b, 84);
-	Uint64 newa = shift_array64(a, 69) ^ tmpa ^ (shift_array64(c, 110) & shift_array64(c, 109));
-	Uint64 newb = shift_array64(b, 78) ^ tmpb ^ (shift_array64(a, 92) & shift_array64(a, 91));
-	Uint64 newc = shift_array64(c, 87) ^ tmpc ^ (shift_array64(b, 83) & shift_array64(b, 82));
-	a[1] = a[0]; a[0] = newa;
-	b[1] = b[0]; b[0] = newb;
-	c[1] = c[0]; c[0] = newc;
+	Uint64 tmp_a = shift_array64(c, 66) ^ shift_array64(c, 111);
+	Uint64 tmp_b = shift_array64(a, 66) ^ shift_array64(a, 93);
+	Uint64 tmp_c = shift_array64(b, 69) ^ shift_array64(b, 84);
+	Uint64 new_a = tmp_a ^ shift_array64(a, 69) ^ (shift_array64(c, 110) & shift_array64(c, 109));
+	Uint64 new_b = tmp_b ^ shift_array64(b, 78) ^ (shift_array64(a, 92) & shift_array64(a, 91));
+	Uint64 new_c = tmp_c ^ shift_array64(c, 87) ^ (shift_array64(b, 83) & shift_array64(b, 82));
+	a[1] = a[0]; a[0] = new_a;
+	b[1] = b[0]; b[0] = new_b;
+	c[1] = c[0]; c[0] = new_c;
 
-	return tmpa ^ tmpb ^ tmpc;
+	return tmp_a ^ tmp_b ^ tmp_c;
 }
 void PractRand::RNGs::Raw::trivium::seed(Uint64 s) {//LOCKED, do not change
 	Uint8 vec[8];
@@ -55,20 +52,29 @@ void PractRand::RNGs::Raw::trivium::seed(const Uint8 *seed_and_iv, int length) {
 	};
 	SeedVec s;
 	int elen = length > 10 ? 10 : length;
-	for (int i = 0; i < elen; i++) s.as8[i] = seed_and_iv[i];
-	for (int i = elen; i < 16; i++) s.as8[i] = 0;
-	for (int i = 0; i < 2; i++) this->a[i] = little_endian_conversion64(s.as64[i]);
+	for (int i = 0; i < 6; i++) s.as8[i] = 0;
+	for (int i = 0; i < elen; i++) s.as8[i+6] = seed_and_iv[i];
+	for (int i = elen; i < 10; i++) s.as8[i+6] = 0;
+	for (int i = 0; i < 2; i++) this->a[i] = little_endian_conversion64(s.as64[1-i]);
+//	a[1] = 0x0080000000000000;
+//	a[0] = 0x0000000000000000;
+//	a[1] = 0;
+//	a[0] = 0x8000000000000000;
 
 	length -= 10;
+	seed_and_iv += 10;
 	length = length > 0 ? length : 0;
 	SeedVec iv;
-	for (int i = 0; i < length; i++) iv.as8[i] = seed_and_iv[i+10];
-	for (int i = length; i < 16; i++) iv.as8[i] = 0;
-	for (int i = 0; i < 2; i++) this->b[i] = little_endian_conversion64(iv.as64[i]);
-
-	c[0] = Uint64(7) << (128-111);
-	c[1] = 0;
-	//for (int i = 0; i < 1152; i+=64) raw64();
+	for (int i = 0; i < 16-length; i++) iv.as8[i] = 0;
+	for (int i = 16-length; i < 16; i++) iv.as8[i] = seed_and_iv[i-(16-length)];
+	for (int i = 0; i < 2; i++) this->b[i] = little_endian_conversion64(iv.as64[1-i]);
+	//       hlhlhlhlhlhlhlhl
+	//b[1] = 0x0000000000000000;
+	//b[0] = 0x1000000000000000;
+	//       hlhlhlhlhlhlhlhl
+	c[0] = 0;
+	c[1] = Uint64(7) << (128-111);
+	//for (int i = 0; i < 1152; i+=1) raw1();
 	for (int i = 0; i < 18; i++) raw64();
 }
 void PractRand::RNGs::Raw::trivium::walk_state(StateWalkingObject *walker) {
@@ -80,15 +86,32 @@ void PractRand::RNGs::Raw::trivium::walk_state(StateWalkingObject *walker) {
 	walker->handle(c[0]);
 	walker->handle(c[1]);
 }
-void PractRand::RNGs::Raw::trivium::self_test() {
-	Raw::trivium rng;
-	Uint8 seed_and_iv[10+8] = {0};
-	seed_and_iv[0] = 0x80;
-	rng.seed(seed_and_iv, 10+8);
-	Uint64 r = rng.raw64();
-	if (Uint32(r) != 0x26bfe0fb) {
-		printf("%02x %02x %02x %02x %02x %02x %02x %02x\n", Uint8(r>>0), Uint8(r>>8), Uint8(r>>16), Uint8(r>>24), Uint8(r>>32), Uint8(r>>40), Uint8(r>>48), Uint8(r>>56));
-		issue_error("trivium::self_test() failed");
+
+static void validate_trivium_result(Uint64 output, Uint64 reference) {
+	//convert format of reference
+	//	it will always be in the wrong endianness, regardless of platform
+	//	due to how it was cut & pasted
+	reference = PractRand::invert_endianness64(reference);
+	//raise an error if they don't match
+	if (output != reference) {
+		//Uint64 r = output;
+		//printf("%02x %02x %02x %02x %02x %02x %02x %02x\n", Uint8(r>>0), Uint8(r>>8), Uint8(r>>16), Uint8(r>>24), Uint8(r>>32), Uint8(r>>40), Uint8(r>>48), Uint8(r>>56));
+		//for (int i = 0; i < 16; i++) printf("%X", int(Uint8(r >> (i*4)) & 15));
+		//printf("\n");
+		PractRand::issue_error("PractRand::RNGs::Raw::trivium failed validation");
 	}
 }
-#endif//0
+void PractRand::RNGs::Raw::trivium::self_test() {
+	Raw::trivium rng;
+	Uint8 seed_and_iv[10+10] = {0};
+	rng.seed(seed_and_iv, 14);
+	validate_trivium_result(rng.raw64(), 0xFBE0BF265859051Bull);
+	seed_and_iv[0] = 0x80; rng.seed(seed_and_iv, 14); seed_and_iv[0] = 0x00; 
+	validate_trivium_result(rng.raw64(), 0x38EB86FF730D7A9Cull);
+	seed_and_iv[9] = 0x80; rng.seed(seed_and_iv, 14); seed_and_iv[9] = 0x00; 
+	validate_trivium_result(rng.raw64(), 0x5D492E77F8FE62D7ull);
+	seed_and_iv[13] = 0x10; rng.seed(seed_and_iv, 14); seed_and_iv[13] = 0x00; 
+	validate_trivium_result(rng.raw64(), 0xB0820A503ABB0329ull);
+	seed_and_iv[17] = 0x01; rng.seed(seed_and_iv, 18); seed_and_iv[17] = 0x00; 
+	validate_trivium_result(rng.raw64(), 0x9A5C56169E7FA406ull);
+}
