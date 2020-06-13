@@ -1,0 +1,46 @@
+post-initial-release:
+	figure out where the giant size for the .lib files is coming from
+	add compatibility with C++0x TR1 RNG distributions
+	double-check licenses/patents on RNG algorithms & code
+	add self-tests, regression tests, etc
+	test program
+		add multithreading (using SDL?  or maybe native WIN32?)
+	choices in library to be reconsidered:
+		names of randlf, randli
+		ranges to randf, randi, randlf, randli: [min..max) or [min..max]
+		should unseeded RNGs require explicit SEED_NONE flag?
+		should rename vRNG to PolymorphicRNG?
+		change return type of RNG::get_name to something that doesn't require STL (ie write to buffer)?
+		should split add_entropy* methods off from vRNG in to a new child class?
+		???
+	improvements to example program(s)
+		multithreading testing
+	put together chart showing which RNGs fail which tests when
+		RNGs on list should include various qualities in each category:
+			simple w/o multiplication
+				bin48_16, sapparot, ...
+			simple w/ multiplication
+				lcg32_16, lcg48_16, cmwc, ...
+			cyclic buffer
+				mm, lfsr?, mwc4691, ...
+			indirection
+				rc4_weakened, ibaa8x4, ibaa16x4, rc4, isaac32x16
+			special
+				icg32_16, ???
+	review and add to documentation
+		RNGs rated vs various criteria
+		detailed descriptions of RNGs, particularly recommended RNGs
+		RNG basics
+		RNG selection
+		RNG qualities
+		RNG distributions
+		RNG seed management and entropy collection
+		RNGs and multithreading
+		RNGs and exotic platforms
+		RNGs and cryptography
+		RNG testing / RNG tests
+		apply_standard_tests(RNG, length)
+		apply_common_standard_test_foldings(RNG, length)
+		apply_all_standard_test_foldings(RNG, length)
+		RNG theory and analysis
+

@@ -1,0 +1,103 @@
+
+========================================================================
+Use of PractRand Random Number Generators in multithreaded programs:
+========================================================================
+
+In general, the RNGs in PractRand are not inherently thread-safe.  If 
+two threads attempt to use the same instance, the behavior is undefined.  
+
+While a lock could be added to an RNG to make it thread-safe, that is 
+highly undesirable from a performance perspective.  The recommended 
+solution is to have a seperate RNG object for each thread.  The easiest 
+way to do that is to tell the compiler that you want the variable 
+located in thread-local-storage.  On MSVC you do that by prefixing the 
+type name with "__declspec(thread)".  On GCC you do that by prefixing 
+the type name with "__thread".  Most other major C++ compiler use one 
+of those two.  
+
+Also, when picking an RNG for a multithreaded application, it may be 
+wise to go slightly higher on statistical quality and statespace size 
+than you would for an equivalent single-threaded application.  See the 
+document on choosing RNG algorithms for more on that subject.  
+
+The next question is, how do you seed each threads RNG?  The simple 
+answer is, the auto-seeding mechanism is mostly thread-safe, so you 
+can just initialize each RNG with the parameter PractRand::SEED_AUTO.  
+However... the auto-seeding mechanism is less than perfect.  It has 
+access to relatively little entropy, does not even attempt 
+cryptographically secure seeding, is not intended for reproducable 
+seeding.  Also, if PractRand::initialize_PractRand() has not yet been 
+called when autoseed runs then autoseed will call it - and 
+PractRand::initialize_PractRand() is not thread-safe.  Normally 
+that's not an issue because if AUTO_SEED is used on a thread-local 
+RNG then the first call will occur in the main thread prior to the 
+creation of any other threads, so everything is safe.  However if 
+your app creates threads before global variables finish initializing 
+or otherwise could have the first autoseeding concurrent with the 
+second autoseeding, then you have a problem.  
+
+The answer recommended for programs that may need higher quality 
+seeding, cryptographically secure RNG seeding / entropy collection,
+threads launching before global constructors have finished 
+initializing, or reproducable seeding is:
+1. As before, pick an RNG algorithm and declare a global instance in 
+thread local storage.  However, initialize it with SEED_NONE instead 
+of SEED_AUTO.  
+2. Also declare a polymorphic entropy pool and a mutex of some kind 
+(on Win32 I use a CRITICAL_SECTION).  These should NOT be in thread 
+local storage, just ordinary global variables.  
+3. Before the RNG is used, and before any other threads are launched, 
+initialize the entropy pool with one or more calls to the add_entropy 
+methods.  The standard method is to call add_entropy_automatically(), 
+though that current is a poor implementation, particularly on 
+non-windows platforms.  Then seed the RNG in the main thread from the 
+entropy pool.  
+4. Each time another thread is created, lock the mutex, use the 
+entropy pool to seed the RNG instance local to the new thread, then 
+unlock the mutex.  
+
+
+So, all together, the simple version looks like this on MSVC:
+  //in the .h file:
+  extern __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 rng;
+
+  //in the .cpp file:
+  __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
+
+Or like this on GCC:
+  //in the .h file:
+  extern __thread PractRand::RNGs::Polymorphic::isaac32x256 rng;
+
+  //in the .cpp file:
+  __thread PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
+
+
+The complex version looks like this on MSVC:
+  //in the .h file:
+  extern __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 rng;
+  extern CRITICAL_SECTION thread_startup_lock;
+  extern PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool seeder;
+
+  //in the .cpp file:
+  __declspec(thread) PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
+  CRITICAL_SECTION thread_startup_lock;
+  PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool seeder;
+
+  //inside main():
+  InitializeCriticalSection(&thread_startup_lock);
+  seeder->add_entropy_from_platform();
+  //additional seeder.add_entropy* calls go here if needed
+  seeder->flush_buffers();
+  rng.seed(seeder);
+
+  //inside per-thread initialization function:
+  EnterCriticalSection(&thread_startup_lock);
+  rng.seed(seeder);
+  LeaveCriticalSection(&thread_startup_lock);
+
+
+On GCC... I'm not quite sure what the non-windows equivalent of 
+critical sections looks like, but you should be able to get the 
+gist of it from the MSVC code.  
+
+

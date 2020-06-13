@@ -1,0 +1,17 @@
+
+Not much documentation yet, hopefully that will get fixed in the 
+next version.  The test program shows off testing on a simple 
+RNG though.  
+
+Tests:
+	Gap16 - a simple 16 bit gap test
+	BCFN - checks for long range linear correlations;
+		in practice this often detects Fibonacci style RNGs that 
+		rely upon large lags to defeat other statistical tests
+	DC6 - checks for short range linear correlations
+	Transforms:
+		(these appear as tests but are simply wrappers for other tests)
+		multiplex - simply routes operations on this test to multiple subtests
+		lowbits - for each 1,2,4,or 8 bytes this takes the lowest 1,2,4,8,16, 
+			or 32 bits and routes them to the wrapped tests)
+		FirstNofM - 

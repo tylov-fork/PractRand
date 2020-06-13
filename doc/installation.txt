@@ -1,0 +1,22 @@
+1.  Configuring PractRand:
+The file include/PractRand/config.h contains PractRands configuration.  
+Depending upon your platform and compiler, you may need to edit it.  It 
+includes comments that tell you what to do.  
+
+2.  Building PractRand:
+PractRand currently comes with precomiled static libraries (.lib files) 
+built with MSVC for WIN32.  
+If you can't use the precompiled .lib files it comes with then you'll 
+need to rebuild PractRand.  
+It comes with an MSVC project file.  
+It does *NOT* come with build files for make / autoconf / etc.  
+If you can't use the MSVC project file then you'll need to manually 
+compile and link all .cpp files in the PractRand src/ directory and 
+all of its subdirectories, recursively.  At the moment that means:
+src/*.cpp
+src/RNGs/*.cpp
+src/RNGs/entropy_pools/*.cpp
+PractRand is intended to be built as a static library.  
+
+3.  Linking with PractRand:
+Same as for any other static library on your compiler.  

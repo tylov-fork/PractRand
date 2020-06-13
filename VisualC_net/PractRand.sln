@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand", "PractRand.vcproj", "{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand Console Test (integrated)", "PractRand Console Test (integrated)\PractRand Console Test (integrated).vcproj", "{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand_Full", "PractRand_Full\PractRand_Full.vcproj", "{5036F8F4-679D-4B76-9465-BE2430AB1CF3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}.Debug|Win32.Build.0 = Debug|Win32
+		{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}.Release|Win32.ActiveCfg = Release|Win32
+		{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}.Release|Win32.Build.0 = Release|Win32
+		{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}.Debug|Win32.Build.0 = Debug|Win32
+		{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}.Release|Win32.ActiveCfg = Release|Win32
+		{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}.Release|Win32.Build.0 = Release|Win32
+		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Debug|Win32.Build.0 = Debug|Win32
+		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Release|Win32.ActiveCfg = Release|Win32
+		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

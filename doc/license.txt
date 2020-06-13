@@ -1,0 +1,35 @@
+I release all of my work on PractRand to the public domain.  
+
+All statistical tests in PractRand are wholly my own work, and 
+are public domain.  
+
+All the auxillary code is by myself and thus public domain.  
+
+For the other RNGs...
+
+mwlac* is designed and coded by myself, and thus public domain.  
+
+efiix* is designed and coded by myself, and thus public domain.  
+
+isaac* is designed by Robert Jenkins, and he has released it to 
+the public domain.  The implementation is mostly his code with a 
+little of my own.  
+
+jsf* is designed by Robert Jenkins.  I believe that he intended 
+to release it to the public domain, but I'll have to double-check 
+that.  
+
+hc256 is an unencumbered algorithm.  The code is a mix of the 
+reference code and my own code.  I'm afraid I can't recall if the 
+reference code was public domain or what, I'll have to double-check.  
+See the eStream project for more details on HC-256 and HC-128.  
+
+lcg64_32 is an unencumbered algorithm.  The implementation was 
+coded by myself, and is thus public domain.  
+
+clcg96_32 is an unencumbered algorithm.  The implementation was 
+coded by myself, and is thus public domain.  
+
+mt19937 is an unencumbered algorithm (though it wasn't always IIRC).  
+The implementation was mostly coded by... I do not recall.  I'll 
+have to look around a bit.  
