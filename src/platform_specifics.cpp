@@ -11,6 +11,7 @@
 #endif
 #include <string>
 #include <ctime>
+#include <cstring>
 #include <cstdlib>
 #include <cstdio>
 

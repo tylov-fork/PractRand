@@ -2,7 +2,7 @@
 #define __PRACTRAND_ENDIAN_H__
 
 #ifndef __PRACTRAND_CONFIG_H__
-#include "PractRand/config.h"
+#include "config.h"
 #endif
 
 #if defined PRACTRAND_TARGET_IS_LITTLE_ENDIAN && defined PRACTRAND_TARGET_IS_BIG_ENDIAN

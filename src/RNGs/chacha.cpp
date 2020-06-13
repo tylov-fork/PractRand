@@ -1,4 +1,5 @@
 
+#include <cstring>
 #include <string>
 #include <sstream>
 #include "PractRand/config.h"

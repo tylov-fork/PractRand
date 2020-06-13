@@ -14,6 +14,7 @@
     <ClInclude Include="..\..\tools\Candidate_RNGs.h" />
     <ClInclude Include="..\..\tools\MultithreadedTestManager.h" />
     <ClInclude Include="..\..\tools\multithreading.h" />
+    <ClInclude Include="..\..\tools\RNG_from_name.h" />
     <ClInclude Include="..\..\tools\TestManager.h" />
   </ItemGroup>
   <ItemGroup>

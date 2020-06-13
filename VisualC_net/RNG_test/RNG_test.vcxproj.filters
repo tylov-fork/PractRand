@@ -27,6 +27,9 @@
     <ClInclude Include="..\..\tools\Candidate_RNGs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\tools\RNG_from_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\tools\RNG_test.cpp">

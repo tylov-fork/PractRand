@@ -1,7 +1,7 @@
 class MultithreadedTestManager : public TestManager {
 	class TestThread {
-		Tests::TestBlock *base_block;
-		Tests::TestBaseclass *test;
+		PractRand::Tests::TestBlock *base_block;
+		PractRand::Tests::TestBaseclass *test;
 		Uint64 numblocks;
 		Threading::Lock lock;
 		bool finished;
@@ -17,7 +17,7 @@ class MultithreadedTestManager : public TestManager {
 			delete this;
 			return true;
 		}
-		TestThread(Tests::TestBaseclass *test_, Tests::TestBlock * base_block_, Uint64 numblocks_)
+		TestThread(PractRand::Tests::TestBaseclass *test_, PractRand::Tests::TestBlock * base_block_, Uint64 numblocks_)
 		:
 			base_block(base_block_),
 			test(test_),
@@ -65,8 +65,8 @@ class MultithreadedTestManager : public TestManager {
 		}
 	}*/
 public:
-	//std::vector<Tests::TestBlock> buffer1, buffer2;
-	std::vector<Tests::TestBlock> alt_buffer;
+	//std::vector<PractRand::Tests::TestBlock> buffer1, buffer2;
+	std::vector<PractRand::Tests::TestBlock> alt_buffer;
 	//RNGs::vRNG *rng;
 	//RNGs::vRNG *known_good;
 	//Tests::ListOfTests *tests;
@@ -75,14 +75,14 @@ public:
 	//int main_blocks;
 	//Uint64 blocks_so_far;
 	void multithreaded_prep_blocks(Uint64 num_blocks) {
-		int num_prefix_blocks = Tests::TestBaseclass::REPEATED_BLOCKS;
+		int num_prefix_blocks = PractRand::Tests::TestBaseclass::REPEATED_BLOCKS;
 		if (num_prefix_blocks > prefix_blocks + main_blocks)
 			num_prefix_blocks = prefix_blocks + main_blocks;
 		if (num_prefix_blocks) {
 			memcpy(
 				&alt_buffer[0], 
 				&buffer[prefix_blocks + main_blocks - num_prefix_blocks], 
-				Tests::TestBlock::SIZE * num_prefix_blocks
+				PractRand::Tests::TestBlock::SIZE * num_prefix_blocks
 			);
 		}
 		prefix_blocks = num_prefix_blocks;
@@ -91,9 +91,9 @@ public:
 		blocks_so_far += main_blocks;
 	}
 public:
-	MultithreadedTestManager(RNGs::vRNG *rng_, Tests::ListOfTests *tests_, RNGs::vRNG *known_good_, int max_buffer_amount_ = 1 << (27-10)) : TestManager(rng_, tests_, known_good_, max_buffer_amount_) {
+	MultithreadedTestManager(PractRand::RNGs::vRNG *rng_, PractRand::Tests::ListOfTests *tests_, PractRand::RNGs::vRNG *known_good_, int max_buffer_amount_ = 1 << (27-10)) : TestManager(rng_, tests_, known_good_, max_buffer_amount_) {
 		//buffer1.resize(max_buffer_amount + Tests::TestBaseclass::REPEATED_BLOCKS);
-		alt_buffer.resize(max_buffer_amount + Tests::TestBaseclass::REPEATED_BLOCKS);
+		alt_buffer.resize(max_buffer_amount + PractRand::Tests::TestBaseclass::REPEATED_BLOCKS);
 		for (unsigned int i = 0; i < tests->tests.size(); i++) tests->tests[i]->init(known_good);
 	}
 	void test(Uint64 num_blocks) {
@@ -108,7 +108,7 @@ public:
 		}
 		wait_on_threads();
 	}
-	virtual void reset(RNGs::vRNG *rng_ = NULL) {//resets contents for starting a new test run ; if rng is NULL then it will reuse the current RNG
+	virtual void reset(PractRand::RNGs::vRNG *rng_ = NULL) {//resets contents for starting a new test run ; if rng is NULL then it will reuse the current RNG
 		for (unsigned int i = 0; i < tests->tests.size(); i++) tests->tests[i]->deinit();
 		for (unsigned int i = 0; i < tests->tests.size(); i++) tests->tests[i]->init(known_good);
 		if (rng_) rng = rng_;

@@ -87,9 +87,17 @@ namespace PractRand {
 /* 
 4. SIMD stuff can greatly speed up the ChaCha RNG
 (not used by much yet, only ChaCha so far and only on MSVC)
+
+SIMD strongly NOT recommended at this time, as I haven't come up with a 
+clean way to force a properly aligned malloc to be used when appropriate.  
+(in theory the spec may guarantee that all mallocs are aligned 
+appropriately, but in practice that does not seem to be the case)
+I may have to have the Raw::ChaCha class contain pointers at memory blocks 
+instead of memory blocks themselves, there doesn't seem to be any other 
+way to allow a sane interface.  
 */
 
-//#define PRACTRAND_NO_SIMD
+#define PRACTRAND_NO_SIMD
 
 #if defined _MSC_VER
 #define PRACTRAND_ALIGN_128 __declspec(align(16))

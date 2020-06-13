@@ -3,12 +3,20 @@ Specific Tests in PractRand:
 Recommended tests:
 	BCFN - checks for long range linear correlations (bit counting);
 		in practice this often detects Fibonacci style RNGs that 
-		rely upon large lags to defeat other statistical tests; 
-		only a single integer parameter is needed, it is the 
-		log-base-2 of the size of the table is uses internally - 
-		recommended values are 10 to 15, larger values if cache is 
-		large and/or main memory is low latency, lower values if 
-		cache is small and/or main memory is high latency.  
+		rely upon large lags to defeat other statistical tests.  
+		Two integer parameters are used - the first is the minimum 
+		"level" it checks for bias at (it checks all higher levels 
+		that it has enough data for), higher values are faster but 
+		can miss shorter range correlations.  The recommended 
+		minimum level is 2, as that helps it skip the slowest parts 
+		and avoids redundancy with DC6 checking for the shortest 
+		range linear correlations, while still doing a reasonable 
+		amount of work for how much memory it has to scan.  
+		The second integer parameter helps determine the amount 
+		of memory and cache it will use in testing.  It is the 
+		log-base-2 of the size of the tables it uses internally.  
+		Recommended values are 10 to 15, larger values if cache is 
+		large, lower values if cache is small.  
 	DC6 - checks for short range linear correlations (bit counting); 
 		takes several parameters that determine the size of 
 		integers it operates on internally, the number of adjacent 
@@ -16,8 +24,8 @@ Recommended tests:
 		information it uses for each such integer; for recommended 
 		values see the code for get_core_tests() and 
 		get_expanded_core_tests() in test_batteries.cpp.  
-	Gap16 - a variation on the classic "Gap" test; no parameters 
-		required
+	Gap16 - A variation on the classic "Gap" test.  No parameters 
+		are needed.  
 Transforms:
 	(these appear as tests but are simply wrappers for other tests)
 	multiplex - simply routes operations on this test to multiple 
@@ -30,7 +38,9 @@ Transforms:
 Non-recommended tests:
 	FPF - "floating point frequency" test; contrary to the name 
 		it's purely integer math.  Can be very slow on some settings.  
-		Tends to not be very good.  
+		Tends to not be very good, but for RNGs that have short range 
+		patterns that do not line up with byte boundaries it can do 
+		better than the other tests sometimes.  
 	CoupGap - "Coupon / Gap hybrid" test; still in development;
 		behavior is similar to most gap tests
 	...many more still to come

@@ -64,6 +64,6 @@
 			but only a 1 byte heap allocation per thread created
 
 	In addition to that, the tools (as opposed to the libraries) may require:
+		a command line environment
 		either pthreads or win32 (not actually required, but recommended)
-
 

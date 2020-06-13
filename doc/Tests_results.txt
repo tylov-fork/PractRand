@@ -23,9 +23,8 @@ RaBiGeTe ext        2       0      1       0       1       0      0
 number of RNGs bias was found in VS test battery VS time
                    10 secs  1 min   5 mins   30 mins   4 hours
 PractRand std      20       37      45       61        69
-TestU01 *Crush     20       20*     20*      46        50
-RaBiGeTe ext       23       25      29       38        38*
- * = test suite does not support this duration, using a shorter duration instead
+TestU01 *Crush     20       --      --       46        50
+RaBiGeTe ext       23       25      29       38        --
 Times are very rough figures based upon modern desktop x86 CPUs, but using only one core (no multithreading).  
 (times were fairly similar on a variety of such CPUs, including 3 GHz Core 2s and Core i5s)
 
@@ -54,9 +53,10 @@ nor were "Transforms applied to various low quality RNGs".
 
 PractRand std:
 	The standard test battery of PractRand.  
-	The only test suite to offer interim / progressive results.  
-	The only test suite to allow very long tests.  
+	The only test suite to allow functionally unlimited test lengths.  
+	The only test suite to offer interim results.  
 	caveats:
+		Cheats slightly on all RNGs by looking at the metadata - it treats 8 bit RNGs slightly differently than 32 bit RNGs, etc
 		Requires more bits to find bias than any other test suite (of those listed).  
 		May be cheating slightly on the LCGs - it often runs out the periods on those instead of finding bias the normal way.  
 		Multithreading is supported, but max speedup tends to be limited to about 3x.  
@@ -65,18 +65,19 @@ PractRand std:
 		1 minute:   PractRand standard 4 GB
 		5 minutes:  PractRand standard 16 GB
 		30 minutes: PractRand standard 128 GB
-		4 hours:    PractRand standard 4 TB
+		4 hours:    PractRand standard 1 TB
 
 TestU01 *Crush:
 	Meaning SmallCrush, Crush, and BigCrush from TestU01.  
-	The only test suite (of those listed) with a big name academic in the field behind it.  
+	The only test suite with a big name academic in the field behind it.  
+	The only test to guarantee (on default setting anyway) that all subtest results are 100% independant.  
 	caveats:
-		More sensitive to RNG speed than the other test suites (of those listed) at default settings.  
 		Does not support multithreading.  
+		More sensitive to RNG speed than the other test suites (of those listed) at default settings.  
 	vs time:
 		10 seconds: SmallCrush
-		1 minute:   -- (used SmallCrush)
-		5 minutes:  -- (used SmallCrush)
+		1 minute:   --
+		5 minutes:  --
 		30 minutes: Crush
 		4 hours:    BigCrush
 
@@ -96,7 +97,7 @@ RaBiGeTe ext:
 		1 minute:   RaBiGeTe extended 16 Mb
 		5 minutes:  RaBiGeTe extended 64 Mb
 		30 minutes: RaBiGeTe extended 512 Mb (actually took about 40 minutes)
-		4 hours:    -- (used RaBiGeTe extended 512 Mb)
+		4 hours:    --
 
 Dieharder:
 	The normal "-a" option produced very bad results (few biases found, several false positives) and was disqualified.  
@@ -435,13 +436,14 @@ tests that were not included:
 			C. Its results do not seem to improve in power with sequence 
 				length consistently enough.  
 	TestU01 Pseudo-diehard
-		This test battery was not used because it is too low quality.  
+		This test battery was not used because its quality is too low.  
 	NIST RNG tests
-		???
 		This test battery was not used because:
-			A. The currently released code is incapable of multiple test 
-				runs on RNGs linked with it in a single run, making 
-				administering the tests somewhat difficult.  
+			A. Severe difficulty with longer test runs due to not only 
+				keeping the whole sequence in memory, but also 
+				inflating the sequence to store only one bit per byte.  
+			B. Poor quality relative to speed, poor maximum quality 
+				given the short maximum sample lengths.  
 	Dieharder
 		default set of tests (-a)
 			Not used because it was too inefficient.  

@@ -64,7 +64,7 @@ public:
 
 	Uint32 a, b, c;
 	Uint32 raw32() {//RNG algorithm goes here:
-		Uint32 old = a + (b >> 1);
+		Uint32 old = a + (c >> 0);
 		a = b ^ c;
 		b = c;
 		c = old + ((c << 13) | (c >> (32-13)));
@@ -84,8 +84,9 @@ public:
 	std::string get_name() const {return std::string("DummyRNG");}
 };
 
-void print_result(const PractRand::TestResult &result, bool print_header = false) {
+double print_result(const PractRand::TestResult &result, bool print_header = false) {
 	if (print_header) std::printf("  Test Name                     Raw         Processed     Evaluation\n");
+	//                                     10        20        30        40        50        60        70        80
 	std::printf("  ");
 	//NAME
 	if (true) {
@@ -182,6 +183,11 @@ void print_result(const PractRand::TestResult &result, bool print_header = false
 		}
 	}
 
+	double dec = std::log(2.) / std::log(10.0);
+	double as = (std::fabs(result.get_suspicion()) + 1) * dec;
+	double wmod = std::log(result.get_weight()) / std::log(0.5) * dec;
+	double rs = as - wmod;
+	//double ap = std::fabs(0.5 - result.get_pvalue());
 	//MESSAGE DESCRIBING RESULT IN ENGLISH
 	if (true) {
 		/*
@@ -198,11 +204,6 @@ void print_result(const PractRand::TestResult &result, bool print_header = false
 			probable failures with (barely) enough room for ambiguity are indented 1 space
 			the most extreme failures get a sequence of exclamation marks to distinguish them
 		*/
-		double dec = std::log(2.) / std::log(10.0);
-		double as = (std::fabs(result.get_suspicion()) + 1) * dec;
-		double wmod = std::log(result.get_weight()) / std::log(0.5) * dec;
-		double rs = as - wmod;
-		//double ap = std::fabs(0.5 - result.get_pvalue());
 		if (false) ;
 		else if (rs >999) std::printf("  FAIL !!!!!!!!!");
 		else if (rs >325) std::printf("  FAIL !!!!!!!! ");
@@ -220,22 +221,7 @@ void print_result(const PractRand::TestResult &result, bool print_header = false
 		else              std::printf("normal          ");
 	}
 	std::printf("\n");
-}
-void handle_results(std::vector<TestResult> &results, Uint64 blocks, int *suspicious_results) {
-	const double E = 0.1;//desired number of expected printed messages for a good RNG
-	double total_weight = 0;
-	for (int i = 0; i < results.size(); i++) total_weight += results[i].get_weight();
-	std::vector<int> marked;
-	for (int i = 0; i < results.size(); i++) {
-		results[i].set_weight(results[i].get_weight() / total_weight);
-		double threshold = E * results[i].get_weight();
-		if (std::fabs(0.5 - results[i].get_pvalue()) < 0.5 * (1 - threshold)) continue;
-		marked.push_back(i);
-	}
-	for (int i = 0; i < marked.size(); i++) {
-		print_result(results[marked[i]], i == 0);
-	}
-	*suspicious_results = marked.size();
+	return rs;
 }
 
 class Seeder_MetaRNG : public PractRand::RNGs::vRNG64 {
@@ -439,7 +425,7 @@ public:
 };
 
 
-void show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bool smart_thresholds, double threshold) {
+double show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bool smart_thresholds, double threshold, bool end_on_failure) {
 	std::printf("rng=%s", tman->get_rng()->get_name().c_str());
 
 	std::printf(", seed=");
@@ -478,8 +464,10 @@ void show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bool
 		}
 		marked.push_back(i);
 	}
+	double biggest_decimal_suspicion = 0;
 	for (int i = 0; i < marked.size(); i++) {
-		print_result(results[marked[i]], i == 0);
+		double decimal_suspicion = print_result(results[marked[i]], i == 0);
+		if (decimal_suspicion > biggest_decimal_suspicion) biggest_decimal_suspicion = decimal_suspicion;
 	}
 	if (marked.size() == results.size())
 		;
@@ -488,6 +476,7 @@ void show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bool
 	else
 		std::printf("  ...and %d test result(s) without anomalies\n", int(results.size() - marked.size()));
 	std::printf("\n");
+	if (end_on_failure && biggest_decimal_suspicion > 8) std::exit(0);
 }
 double interpret_length(const std::string &lengthstr, bool normal_mode) {
 	//(0-9)*[.(0-9)*][((K|M|G|T|P)[B])|(s|m|h|d)]
@@ -675,6 +664,9 @@ int main(int argc, char **argv) {
 		std::printf("                 the minimum and before the maximum.\n");
 		std::printf("                 See the notes on lengths for details on how to express the\n");
 		std::printf("                 lengths you want.\n");
+		std::printf("  -tlfail        Halts testing after interim results are displayed if those\n");
+		std::printf("                 results include any failures.\n");
+		std::printf("  -tlmaxonly     The opposite of -tlfail  (default)\n");
 		std::printf("other options:\n");
 		std::printf("  -multithreaded  enables multithreaded testing.  Typically up to 5 cores can\n");
 		std::printf("                  be used at once.\n");
@@ -726,6 +718,7 @@ int main(int argc, char **argv) {
 
 	bool do_self_test = true;
 	bool use_multithreading = false;
+	bool end_on_failure = false;
 	Uint64 seed = known_good.raw32();//64 bit space, as that's what the interface accepts, but 32 bit random value so that by default it's not too onerous to record/compare/whatever the value by hand
 	bool smart_thresholds = true;
 	double threshold = 0.2;
@@ -790,6 +783,10 @@ int main(int argc, char **argv) {
 		else if (!std::strcmp(argv[i], "-tlmin")) i++;
 		else if (!std::strcmp(argv[i], "-tlmax")) i++;
 		else if (!std::strcmp(argv[i], "-tlshow")) i++;
+		//-tlfail
+		//-tlmaxonly
+		else if (!std::strcmp(argv[i], "-tlfail")) end_on_failure = true;
+		else if (!std::strcmp(argv[i], "-tlmaxonly")) end_on_failure = false;
 
 		//-threads
 		//-nothreads
@@ -866,7 +863,7 @@ int main(int argc, char **argv) {
 	}
 	else if (mode == 2) {
 		if (!(rng->get_flags() & PractRand::RNGs::FLAG::SUPPORTS_ENTROPY_ACCUMULATION)) {
-			std::printf("Entropy pooling is not supported by this RNG, so mode --ttep is invale.\n");
+			std::printf("Entropy pooling is not supported by this RNG, so mode --ttep is invalid.\n");
 			std::printf("aborting\n");
 			std::exit(0);
 		}
@@ -957,16 +954,16 @@ int main(int argc, char **argv) {
 			}
 			int action = show_datas.begin()->second;
 			if (action == TL_SHOW) {
-				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold);
+				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold, end_on_failure);
 				already_shown = true;
 			}
 			else if (action == TL_MIN) {
 				showing_powers_of_2 = true;
-				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold);
+				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold, end_on_failure);
 				already_shown = true;
 			}
 			else if (action == TL_MAX) {
-				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold);
+				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold, end_on_failure);
 				return 0;
 			}
 			else {std::printf("internal error: unrecognized test length code, aborting\n");std::exit(1);}
@@ -978,12 +975,12 @@ int main(int argc, char **argv) {
 			int action = show_times.begin()->second;
 			show_times.erase(show_times.begin());
 			if (action == TL_SHOW) {
-				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold);
+				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold, end_on_failure);
 				already_shown = true;
 			}
 			else if (action == TL_MIN) showing_powers_of_2 = true;
 			else if (action == TL_MAX) {
-				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold);
+				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold, end_on_failure);
 				return 0;
 			}
 			else {std::printf("internal error: unrecognized test length code, aborting\n");std::exit(1);}
@@ -991,7 +988,7 @@ int main(int argc, char **argv) {
 
 		if (blocks_tested == next_power_of_2) {
 			if (showing_powers_of_2) {
-				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold);
+				if (!already_shown) show_checkpoint(tman, mode, seed, time_passed, smart_thresholds, threshold, end_on_failure);
 				already_shown = true;
 			}
 			next_power_of_2 <<= 1;

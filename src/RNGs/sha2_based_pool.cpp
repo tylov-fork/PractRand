@@ -1,3 +1,4 @@
+#include <cstring>
 #include <string>
 #include "PractRand/config.h"
 #include "PractRand/rng_basics.h"

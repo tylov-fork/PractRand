@@ -3,7 +3,7 @@ namespace PractRand {
 		namespace Raw {
 			//implemented in RNGs/chacha.cpp
 #ifdef PRACTRAND_ALIGN_128
-			class PRACTRAND_ALIGN_128 chacha {
+			class __declspec(align(16)) chacha {
 #else
 			class chacha {
 #endif

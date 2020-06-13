@@ -4,10 +4,11 @@ public domain.
 All statistical tests in PractRand are wholly my own work, and are 
 public domain.  
 
-All the auxillary code, including the example programs, are my own 
+All the auxillary code, including the command line tools, are my own 
 work and public domain.  
 
-All of the recommended RNGs are unencumbered:
+All of the recommended RNGs are unencumbered.  I do not know of any 
+patents covering any part of them:
 	jsf* was designed by Robert Jenkins, and he has released it to 
 	the public domain.  The implementation is mostly his code with a 
 	little of my own.  
@@ -43,17 +44,19 @@ All of the recommended RNGs are unencumbered:
 	see also: http://cr.yp.to/snuffle/ip.pdf
 	The implementation included is my own.  
 	
-	chacha: I believe this the author intended this to be covered under the 
+	chacha: I believe the author intended this to be covered under the 
 	same license as salsa, but unfortunately I can't find any explicit 
-	statement to that effect yet.  I think he hasn't gotten around to it 
+	statement to that effect.  I think he hasn't gotten around to it 
 	yet.  If the IP situation is important to you, use Salsa instead 
 	just in case.  They have identical interfaces and features so that 
 	should be no issue.  
-	The implementation included is my own.  
+	The implementations included are my own.  
 
 The "NotRecommended" / "other" RNGs included in the full version... are 
 more numerous and less important - they are intended for comparison 
 purposes, and not intended to actually ship with any real product.  The 
 code for them was either written by myself or copied from a publicly 
-accessible web page, forum or usenet post, or academic paper.  
+accessible web page, forum or usenet post, or academic paper.  I do 
+not know of any patent situation involving the algorithms, but have not 
+paid any great attention to them.  
 

@@ -22,7 +22,7 @@ include is PractRand.h and a header for the specific RNG algorithm
 that you wish to use:
 
 #include "PractRand.h"
-#include "PractRand/RNGs/isaac32x256.h"
+#include "PractRand/RNGs/hc256.h"
 
 If your program has multiple source files that need to be able 
 to use the RNG then you may need to #include those in each source 
@@ -39,11 +39,11 @@ RNG_interface_variants.txt for details on raw RNGs.
 produce a different sequence on each run of your program.  You give 
 the RNGs constructor a parameter of PractRand::SEED_AUTO and it takes 
 care of the rest.  This is generally easy and effective.  It should 
-work for most multithreaded programs.  It is *NOT* sufficient for 
+work for most multithreaded programs.  It is not sufficient for 
 cryptographic usage though.  If your RNG has already been constructed 
 and you want to overrides its current state with an automatic seeding 
 then call the autoseed() method.  
-eg PractRand::RNGs::Polymorphic::isaac32x256 rng(PractRand::SEED_AUTO);
+eg PractRand::RNGs::Polymorphic::hc256 rng(PractRand::SEED_AUTO);
 or rng.autoseed();
 
 4b. integer seeding: Typically used when you want to force the 
@@ -57,7 +57,7 @@ pass it the literal value "0" then it may get confused because 0 is
 also NULL, which could be a pointer of the type used for seeding 
 in 4c below.  Note that seeding from a single integer is NEVER 
 sufficient for cryptographic usage.  
-eg PractRand::RNGs::Polymorphic::isaac32x256 rng(13);
+eg PractRand::RNGs::Polymorphic::hc256 rng(13);
 or rng.seed(13);
 
 4c. seeding from another RNG: You can seed one RNG from a second 
@@ -111,25 +111,31 @@ That class is also available under a number of other aliases:
 
 Every PractRand RNG that is not designated as "raw" includes support 
 for all of the following methods:
+
 //integers packed full of random bits
 Uint8 raw8();
 Uint16 raw16();
 Uint32 raw32();
 Uint64 raw64();
+
 //uniform 32 bit integers
 Uint32 randi(Uint32 max);//uniform random number in [0..max)
 Uint32 randi(Uint32 min, Uint32 max);//uniform random number in [min..max)
+
 //uniform 32 bit integers, faster but biased
 //note: avoid using these two on low-end embedded CPUs - they use multiplication internally
 Uint32 randi_fast(Uint32 max);//uniform random number in [0..max), with bias
 Uint32 randi_fast(Uint32 min, Uint32 max);//uniform random number in [min..max), with bias
+
 //uniform 64 bit integers (long integer)
 Uint64 randli(Uint64 max);//uniform random number in [0..max)
 Uint64 randli(Uint64 min, Uint64 max);//uniform random number in [min..max)
+
 //uniform random floats
 float randf(); //uniform random number in [0..1)
 float randf(float max); //uniform random number in [0..max)
 float randf(float min, float max); //uniform random number in [min..max)
+
 //uniform random doubles (long floating point)
 double randlf(); //uniform random number in [0..1)
 double randlf(double max); //uniform random number in [0..max)

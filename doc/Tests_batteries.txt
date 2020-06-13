@@ -27,7 +27,7 @@ standard - get_standard_tests() - This is the recommended battery of
 	detecting bias on a per-second basis.  
 core - get_core_tests() - Not generally recommended.  This is the same 
 	as the "standard" battery except that it does not put extra effort 
-	in to targeting certain bits.  
+	in to targeting the low bits.  
 
 Additional batteries are provided by PractRand for the sake of 
 completeness, but are not recommended.  Those are:

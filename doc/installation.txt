@@ -28,3 +28,6 @@ g++ -o RNG_output tools/RNG_output.cpp libPractRand.a -O3 -Iinclude -pthread
 
 3.  Linking with PractRand:
 Same as for any other static library on your compiler.  
+
+Which might mean -lPractRand on the gcc / *nix example above if the static 
+library is named libPractRand.a and gcc can figure out where it's located.  

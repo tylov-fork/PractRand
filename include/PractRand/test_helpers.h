@@ -19,6 +19,7 @@ namespace PractRand {
 		double math_pvalue_to_normaldist ( double pvalue );
 		//long double gap_probs( int first, int last, long double baseprob = (255.0 / 256.0) );
 
+
 		int count_bits8 (Uint8 a);
 		int count_bits16(Uint16 a);
 		int count_bits32(Uint32 a);

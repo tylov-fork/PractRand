@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <cstring>
 #include <cstdlib>
 
 #include "PractRand/config.h"

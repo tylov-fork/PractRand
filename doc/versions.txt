@@ -1,3 +1,15 @@
+version 0.89
+	RNGs:
+		chacha:
+			disabled SIMD path, as alignment was not correct on dynamic allocations (isn't that counter to the spec?)
+	tools:
+		RNG_test:
+			added -tlfail / -tlmaxonly command line options
+				-tlfail causes it to stop testing once a failure is found
+				-tlmaxonly causes it to continue testing after failures are found (the default, at the moment)
+	other:
+		fixed a portability issue with header files that got introduced at the last moment in 0.88
+		some documentation changes (still needs more work)
 version 0.88
 	Important Bugfix:
 		a serious bug introduced at the last minute in 0.87 in sha2_based_pool
