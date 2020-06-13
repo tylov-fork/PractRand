@@ -1,4 +1,4 @@
-post-0.81:
+post-0.82:
 	double-check licenses/patents on RNG algorithms & code
 		mt19937 - revise to eliminate any code other than my own?
 	ack, the sha2 code requires reproduction of its copyright notice
@@ -19,6 +19,8 @@ post-0.81:
 	add self-tests, regression tests, etc
 	revise RNG "efiix"
 		possibly split it in to two RNGs, one for speed one for security
+	consider revising RNG mwlac
+		some variants offer guarantees of no short cycles, but may be slower and/or lower quality
 	test program(s)
 		add multithreading (using SDL?  or maybe native WIN32?)
 	choices in library to be reconsidered:

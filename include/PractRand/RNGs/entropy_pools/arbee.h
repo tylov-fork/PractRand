@@ -26,6 +26,7 @@ namespace PractRand {
 					void add_entropy16(Uint16 value);
 					void add_entropy32(Uint32 value);
 					void add_entropy64(Uint64 value);
+					void flush_buffers() {}
 				};
 			}
 		}
@@ -53,6 +54,7 @@ namespace PractRand {
 					void add_entropy16(Uint16 value);
 					void add_entropy32(Uint32 value);
 					void add_entropy64(Uint64 value);
+					void flush_buffers();
 				};
 			}
 		}

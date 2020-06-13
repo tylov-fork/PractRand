@@ -14,6 +14,8 @@
 #include "PractRand/tests/gap16.h"
 #include "PractRand/tests/DistC6.h"
 #include "PractRand/tests/BCFN.h"
+#include "PractRand/tests/FPF.h"
+#include "PractRand/tests/CoupGap.h"
 #include "PractRand/tests/transforms.h"
 
 using namespace PractRand;
@@ -629,7 +631,7 @@ void PractRand::Tests::BCFN::init( PractRand::RNGs::vRNG *known_good ) {
 	for (int i = 0; i < LEVELS; i++) {
 		int tbitsl = tbits;// - (i+3)/4;
 		if (tbitsl <= 0) {
-			_asm int 3
+			issue_error();
 		}
 		int tsize = 1 << tbitsl;
 		mask[i] = tsize - 1;
@@ -1034,7 +1036,310 @@ double PractRand::Tests::BCFN::result_to_pvalue ( Uint64 blocks, double r ) {
 
 
 
-PractRand::Tests::Transforms::multiplex::multiplex(const char *name_, ListOfTests &testlist)
+
+
+
+
+
+Uint8 PractRand::Tests::FPF::count_leading_zeroes_table[COUNT_LEADING_ZEROES_TABLE_SIZE];
+PractRand::Tests::FPF::FPF(int stride_bits_L2_ , int sig_bits_ , int exp_bits_ ) {
+	stride_bits_L2 = stride_bits_L2_;
+	sig_bits = sig_bits_;
+	exp_bits = exp_bits_;
+	if (sig_bits > MAX_SIG_BITS) issue_error();
+}
+void PractRand::Tests::FPF::init( RNGs::vRNG *known_good ) {
+	unsigned long max_exp = (1 << exp_bits) - 1;
+	if (max_exp - 1 + sig_bits > 64) max_exp = 64 + 1 - sig_bits;
+	unsigned long max_sig = (1 << sig_bits) - 1;
+	unsigned long footprint = sig_bits + max_exp;
+	unsigned long stride_bits = 1 << stride_bits_L2;
+
+	int total_size = (max_sig + 1) * (max_exp + 1);
+//	int bits = sig_bits + exp_bits;
+	counts.set_size(total_size);
+	static bool zeroes_table_inited = false;
+	if (!zeroes_table_inited) {
+		zeroes_table_inited = true;
+		for (int i = 0; i < COUNT_LEADING_ZEROES_TABLE_SIZE; i++) {
+			int k;
+			for (k=0; (k < COUNT_LEADING_ZEROES_TABLE_BITS) && !((i>>k)&1); k++) ;//number of leading 0s, max 7
+			count_leading_zeroes_table[i] = k;
+		}
+	}
+	blocks = 0;
+}
+void PractRand::Tests::FPF::deinit( ) {
+	counts.set_size(0);
+}
+std::string PractRand::Tests::FPF::get_name() const {
+	std::ostringstream str;
+	str << "FPF-" << sig_bits << "+" << exp_bits << "/" << (1 << stride_bits_L2);
+	return str.str();
+}
+unsigned long PractRand::Tests::FPF::count_leading_zeroes32( Uint32 value ) {
+	unsigned long part = value;
+	part = value & (COUNT_LEADING_ZEROES_TABLE_SIZE-1);
+	unsigned long r = count_leading_zeroes_table[part];
+	if (part) return r;
+	while (r < 32) {
+		value >>= COUNT_LEADING_ZEROES_TABLE_BITS;
+		part = value & (COUNT_LEADING_ZEROES_TABLE_SIZE-1);
+		r += count_leading_zeroes_table[part];
+		if (part) return r;
+	}
+	return 32;
+}
+double PractRand::Tests::FPF::get_result() {
+	unsigned long max_exp = (1 << exp_bits) - 1;
+	if (max_exp - 1 + sig_bits > 64) max_exp = 64 + 1 - sig_bits;
+	unsigned long max_sig = (1 << sig_bits) - 1;
+	unsigned long footprint = sig_bits + max_exp;
+	unsigned long stride_bits = 1 << stride_bits_L2;
+
+	int total_size = (max_sig + 1) * (max_exp + 1);
+	double samples = (blocks * TestBlock::SIZE * 8.0 + 1 - footprint) / stride_bits;
+	if (samples < 0) return 0;
+	std::vector<double> probs; probs.resize(total_size);
+	const Uint64 *counts_ = counts.get_array();
+	std::vector<Uint64> counts2; counts2.resize(total_size);
+	double actual_samples = 0;
+	for (int i = 0; i < total_size; i++) {
+		counts2[i] = counts_[i];
+		actual_samples += counts_[i];
+	}
+	int usable_exp = max_exp;
+	for (unsigned int fe = 0; fe <= max_exp; fe++) {
+		int lossL2 = fe;
+		if (fe == max_exp) lossL2 = fe-1;
+		double p = pow(.5, sig_bits + lossL2 + 1);
+		double subcount = 0;
+		for (unsigned int i = 0; i <= max_sig; i++) {
+			int index = (fe << sig_bits) + i;
+			probs[index] = p;
+			subcount += counts2[index];
+		}
+		double expected = p * pow(2.0,sig_bits) * samples;
+		if (subcount < 40 && usable_exp > fe) usable_exp = fe;
+	}
+
+	total_size = (max_sig + 1) * (usable_exp + 1);
+	double thresh = 5 + footprint * 2.0 / stride_bits;
+	int reduced_size = simplify_prob_table(total_size, samples / thresh, &probs[0], &counts2[0], true, true);
+	double r = g_test(reduced_size, &probs[0], &counts2[0]);
+	r = math_chisquared_to_normal(r, reduced_size-1);
+	return r;
+}
+void PractRand::Tests::FPF::test_blocks(TestBlock *data, int numblocks) {
+	unsigned long max_exp = (1 << exp_bits) - 1;
+	if (max_exp - 1 + sig_bits > 64) max_exp = 64 + 1 - sig_bits;
+	unsigned long max_sig = (1 << sig_bits) - 1;
+	unsigned long footprint = sig_bits + max_exp;
+	unsigned long stride_bits = 1 << stride_bits_L2;
+
+	if (max_exp + sig_bits - 1 <= 32) {
+		if (stride_bits >= 32) {//small footprint, long stride
+			long stride32 = 1 << (stride_bits_L2 - 5);
+			long max = numblocks * (TestBlock::SIZE / 4);
+			for (long i = 0; i < max; i += stride32) {
+				Uint32 cur = data->as32[i];
+				unsigned long e = count_leading_zeroes32(cur);
+				unsigned long sig;
+				if (e >= max_exp) {
+					e = max_exp;
+					sig = (cur >> e) & max_sig;
+				}
+				else {
+					sig = (cur >> (e+1)) & max_sig;
+				}
+				unsigned long index = (e << sig_bits) + sig;
+				counts.increment(index);
+			}
+		}
+		else {//small footprint, short stride
+			long max32 = numblocks * (TestBlock::SIZE / 4);
+			Uint32 cur;
+			long start;
+			if (blocks) {
+				cur = reverse_bits32(data->as32[-1]);
+				start = 0;
+			}
+			else {
+				cur = reverse_bits32(data->as32[0]);
+				start = 1;
+			}
+			unsigned long word_parts = 32 >> stride_bits_L2;
+			for (long i = start; i < max32; i += 1) {
+				Uint32 word = data->as32[i];
+				for (unsigned long sub_word = 0; sub_word < word_parts; sub_word++) {
+					for (unsigned long j = 0; j < stride_bits; j++) {
+						cur = (cur << 1) | (word & 1);
+						word >>= 1;
+					}
+					unsigned long e = count_leading_zeroes32(cur);
+					unsigned long sig;
+					if (e >= max_exp) {
+						e = max_exp;
+						sig = (cur >> e) & max_sig;
+					}
+					else {
+						sig = (cur >> (e+1)) & max_sig;
+					}
+					unsigned long index = (e << sig_bits) + sig;
+					counts.increment(index);
+				}
+			}
+		}
+	}
+	else {
+		if (stride_bits >= 32) {//large footprint, long stride
+			long stride32 = 1 << (stride_bits_L2 - 5);
+			long max = numblocks * (TestBlock::SIZE / 4) - 1;
+			for (long i = blocks ? -1 : 0; i < max; i += stride32) {
+				Uint32 cur = data->as32[i];
+				unsigned long e = count_leading_zeroes32(cur);
+				unsigned long sig;
+				if (e < 32 - sig_bits) {
+					sig = (cur >> (e+1)) & max_sig;
+				}
+				else {
+					Uint64 cur2 = cur | (Uint64(reverse_bits32(data->as32[i+1])) << 32);
+					if (e < max_exp) {
+						sig = Uint32(cur2 >> (e+1)) & max_sig;
+					}
+					else {
+						e = max_exp;
+						sig = Uint32(cur2 >> e) & max_sig;
+					}
+				}
+				unsigned long index = (e << sig_bits) + sig;
+				counts.increment(index);
+			}
+		}
+		else {//large footprint, short stride
+			long max32 = numblocks * (TestBlock::SIZE / 4) - 1;
+			long start;
+			Uint32 cur;
+			if (blocks) {
+				cur = reverse_bits32(data->as32[-2]);
+				start = -1;
+			}
+			else {
+				cur = reverse_bits32(data->as32[0]);
+				start = 1;
+			}
+			unsigned long word_parts = 32 >> stride_bits_L2;
+			for (long i = start; i < max32; i += 1) {
+				Uint32 word = data->as32[i];
+				for (unsigned long sub_word = 0; sub_word < word_parts; sub_word++) {
+					for (unsigned long j = 0; j < stride_bits; j++) {
+						cur = (cur << 1) | (word & 1);
+						word >>= 1;
+					}
+					unsigned long e = count_leading_zeroes32(cur);
+					unsigned long sig;
+					if (e < 32 - sig_bits) {
+						sig = (cur >> (e+1)) & max_sig;
+					}
+					else {
+						Uint64 cur2 = cur | (Uint64(reverse_bits32(data->as32[i+1])) << 32);
+						if (e < max_exp) {
+							sig = Uint32(cur2 >> (e+1)) & max_sig;
+						}
+						else {
+							e = max_exp;
+							sig = Uint32(cur2 >> e) & max_sig;
+						}
+					}
+					unsigned long index = (e << sig_bits) + sig;
+					counts.increment(index);
+				}
+			}
+		}
+	}
+	blocks += numblocks;
+}
+
+
+void PractRand::Tests::CoupGap::init( RNGs::vRNG *known_good ) {
+	autofail = 0;
+	blocks = 0;
+	symbols_ready = 0;
+	for (int i = 0; i < 256; i++) {
+		sym_has_appeared[i] = false;
+		next_younger_sym[i] = (i+1) & 255;
+		youngest_sym = 255;
+		oldest_sym = 0;
+//		last_sym_pos[i] = 0;
+	}
+	count_syms_by_oldest_sym.reset_counts();
+//	count_gaps_by_oldest_sym.reset_counts();
+}
+std::string PractRand::Tests::CoupGap::get_name( ) const {
+	return std::string("CoupGap");
+}
+double PractRand::Tests::CoupGap::get_result() {
+	if (autofail) return 9876543210.;
+	if (blocks < 256) return 0;
+
+	std::vector<double> probs;
+	probs.resize(65536);
+	for (int i = 0; i < 65536; i++) probs[i] = 1 / 65536.0;
+	const Uint64 *counts_ = count_syms_by_oldest_sym.get_array();
+	const double *probs_ = &probs[0];
+	double raw = g_test(65536, probs_, counts_);
+	return (raw - 3 * 65536) / (256 * 32);
+}
+void PractRand::Tests::CoupGap::test_blocks(TestBlock *data, int numblocks) {
+	if (autofail) return;
+	int i;
+	Uint32 ofs = Uint32(blocks) * TestBlock::SIZE;
+	int max = TestBlock::SIZE * numblocks;
+	for (i = 0; i < max; i++, ofs++) {
+		unsigned long sym = data[0].as8[i];
+//		Uint32 last_pos = last_sym_pos[sym];
+
+		if (symbols_ready == 256) {
+//			Uint32 oldest_age = ofs - last_sym_pos[oldest_sym] - 256;
+//			if (oldest_age > MAX_OLDEST_AGE-1) oldest_age = MAX_OLDEST_AGE-1;
+//			Uint32 current_age = ofs - last_pos - 1;
+//			if (current_age > MAX_CURRENT_AGE-1) current_age = MAX_CURRENT_AGE-1;
+			count_syms_by_oldest_sym.increment(sym * 256 + oldest_sym);
+//			count_gaps_by_oldest_sym.increment(oldest_sym + (current_age << 8));
+		}
+		else if (!sym_has_appeared[sym]) {
+			sym_has_appeared[sym] = true;
+			symbols_ready ++;
+		}
+
+		//update linked list
+//		last_sym_pos[sym] = ofs;
+		if (oldest_sym == sym) {
+			oldest_sym = next_younger_sym[sym];
+		}
+		next_younger_sym[youngest_sym] = sym;
+		youngest_sym = sym;
+	}
+	Uint64 oblocks = blocks;
+	blocks += numblocks;
+//	if ((oblocks>>17) != (blocks>>17)) {//once every 128 megabytes or so... prevent overflow
+//		for (i = 0; i < 256; i++) {
+//			int n = last_sym_pos[i];
+//			if (n == -1) continue;
+//			if ((ofs - n) > 12345678) {
+//				autofail += 1;
+//			}
+//		}
+//	}
+}
+
+
+
+
+
+
+
+PractRand::Tests::Transforms::multiplex::multiplex(const char *name_, const ListOfTests &testlist)
 {
 	for (unsigned int i = 0; i < testlist.tests.size(); i++) subtests.push_back(testlist.tests[i]);
 	if (name_) name = name_;

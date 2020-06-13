@@ -1,3 +1,16 @@
+version 0.82
+	fixed various issues preventing compilation on gcc
+		now builds on MSVC & gcc/MinGW
+		hopefully compatible with others as well
+	added more tests:
+		FPF - Floating Point Frequency, not very useful, slow on some settings
+		CoupGap - Coupon / Gap hybrid, still in development but usable
+	revised sample program slightly
+		added get_more_tests in addition to get_core_tests and get_standard_tests*
+		adjusted misc. details
+	tweaked some RNGs:
+		arbee: tweaked entropy accumulation & interface slightly
+
 version 0.81
 	fixed the missing symbol "randi_fast_implementation"
 	fixed the bloated file sizes on PractRand.lib and PractRand_full.lib

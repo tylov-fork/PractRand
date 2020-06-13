@@ -7,7 +7,7 @@ namespace PractRand {
 				std::string name;
 				Uint64 blocks_already;//# of blocks outputed to subtests
 			public:
-				multiplex ( const char *name_, ListOfTests &testlist );
+				multiplex ( const char *name_, const ListOfTests &testlist );
 				virtual void init( RNGs::vRNG *known_good );
 				virtual double get_result();
 				virtual void deinit();
@@ -28,7 +28,7 @@ namespace PractRand {
 				std::vector<TestBlock> buffered;
 				int leftovers;//if non-zero then the last buffered block is treated as unready
 			public:
-				Transform_Baseclass( const char *name_, ListOfTests &testlist, int flush_size_ = 4*1024 ) :
+				Transform_Baseclass( const char *name_, const ListOfTests &testlist, int flush_size_ = 4*1024 ) :
 					multiplex(name_, testlist), flush_size(flush_size_)
 				{}
 				virtual void init( RNGs::vRNG *known_good );
@@ -43,7 +43,7 @@ namespace PractRand {
 				int outbitsL;//1,2,4, or 8
 				int unitsL;//0= 8 bit input words, 1 = 16 bit input words
 			public:
-				shrink ( const char *name_, ListOfTests &testlist, int pattern_, int outbitsL_=1, int unitsL_=0 )
+				shrink ( const char *name_, const ListOfTests &testlist, int pattern_, int outbitsL_=1, int unitsL_=0 )
 				:
 					Transform_Baseclass(name_, testlist),
 					pattern(pattern_),
@@ -59,7 +59,7 @@ namespace PractRand {
 				int lowbitsL;//0 = 1 bit of output per input word, 1 = 2 bits of output per input word, 2=4,3=8,4=15,5=32
 				int unitsL;//0= 8 bit input words, 1 = 16 bit input words, 2 = 32, 3 = 64
 			public:
-				lowbits ( const char *name_, ListOfTests &testlist, int lowbitsL_=1, int unitsL_=0 )
+				lowbits ( const char *name_, const ListOfTests &testlist, int lowbitsL_=1, int unitsL_=0 )
 				:
 					Transform_Baseclass(name_, testlist), 
 					lowbitsL(lowbitsL_), 
@@ -84,7 +84,7 @@ namespace PractRand {
 				int bytes_stride;
 				int input_phase;
 			public:
-				FirstNofM ( const char *name_, ListOfTests &testlist, int bytes_used_, int bytes_stride_ )
+				FirstNofM ( const char *name_, const ListOfTests &testlist, int bytes_used_, int bytes_stride_ )
 				:
 					Transform_Baseclass(name_, testlist), 
 					bytes_used(bytes_used_), 

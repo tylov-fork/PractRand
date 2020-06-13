@@ -14,6 +14,10 @@ namespace PractRand {
 	double math_chisquared_to_pvalue ( double chisquared, double DoF );
 	double math_chisquared_to_normal ( double chisquared, double DoF );
 	double math_pvalue_to_chisquared ( double pvalue, double DoF );
-
 	//long double gap_probs( int first, int last, long double baseprob = (255.0 / 256.0) );
+
+	Uint8  reverse_bits8 (Uint8);
+	Uint16 reverse_bits16(Uint16);
+	Uint32 reverse_bits32(Uint32);
+	Uint64 reverse_bits64(Uint64);
 }

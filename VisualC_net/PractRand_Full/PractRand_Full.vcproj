@@ -371,11 +371,19 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\include\PractRand\Tests\CoupGap.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\include\PractRand\Tests\DistC6.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\include\PractRand\Tests\gap16.h"
+					RelativePath="..\..\include\PractRand\Tests\FPF.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\include\PractRand\Tests\Gap16.h"
 					>
 				</File>
 				<File

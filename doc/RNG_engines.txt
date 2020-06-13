@@ -305,14 +305,15 @@ speed: (rated from 0 to 5 stars)
 theory: (rated from 0 to 5 stars)
 	This rating corresponds to how much the RNG or the math it uses 
 	has been studied, how well its properties are known.  An RNG with 
-	zero stars in this area has no academic papers published about it 
-	and an unknown shortest cycle length (though predictions are made 
-	about the average cycle length of such RNGs and the probability of 
-	finding a short cycle by accident, and such predictions are 
-	generally accurate).  An RNG with 5 stars in this category has 
-	numerous academic papers published about it and fully known cycle 
-	lengths.  Intermediate numbers of stars generally represent 
-	intermediate amounts of knowledge and attention from academics.  
+	zero stars in this area has no academic papers published about it, 
+	an unknown number of cycles, and an unknown shortest cycle length 
+	(though predictions are made about the average cycle length of such 
+	RNGs and the probability of finding a short cycle by accident, and 
+	such predictions are generally accurate).  An RNG with 5 stars in 
+	this category has numerous academic papers published about it and 
+	fully known cycle lengths.  Intermediate numbers of stars generally 
+	represent intermediate amounts of knowledge and attention from 
+	academics.  
 
 output: (usually either 8, 16, 32, or 64 bit integers)
 	This is the number of bits that the RNG produces at a time 
@@ -324,7 +325,9 @@ output: (usually either 8, 16, 32, or 64 bit integers)
 
 word: (usually either 8, 16, 32, or 64 bit integers)
 	This is the size of integers that the RNG does math on internally.  
-	Mostly you don't need to worry about this unless you want to.  
+	Mostly you don't need to worry about this unless you want to.  Broadly 
+	an RNG will perform better if its word size is 32 on 32 bit machines, 
+	or 64 on 64 bit machines, etc.  
 
 size: (in bytes)
 	This is the size in bytes of the RNG implementation.  Generally a 

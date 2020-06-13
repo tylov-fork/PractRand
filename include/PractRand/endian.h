@@ -19,8 +19,8 @@ namespace PractRand {
 		return (v >> 16) | (v << 16);
 	}
 	static inline Uint64 invert_endianness64(Uint64 v) {
-		v = ((v & 0xFF00FF00FF00FF00) >> 8) | ((v & 0x00ff00ff00ff00ff) << 8);
-		v = ((v & 0xFFFF0000FFFF0000) >> 16) | ((v & 0x0000ffff0000ffff) << 16);
+		v = ((v & 0xFF00FF00FF00FF00ull) >> 8) | ((v & 0x00ff00ff00ff00ffull) << 8);
+		v = ((v & 0xFFFF0000FFFF0000ull) >> 16) | ((v & 0x0000ffff0000ffffull) << 16);
 		return (v >> 32) | (v << 32);
 	}
 #if defined PRACTRAND_TARGET_IS_LITTLE_ENDIAN

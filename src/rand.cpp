@@ -9,7 +9,7 @@
 #include "PractRand/rng_internals.h"
 
 #include "PractRand/RNGs/entropy_pools/arbee.h"
-//#include "PractRand/RNGs/entropy_pools/sha2_based_pool.h"
+#include "PractRand/RNGs/entropy_pools/sha2_based_pool.h"
 
 namespace PractRand {
 	void issue_error ( const char *msg ) {
@@ -49,11 +49,12 @@ namespace PractRand {
 	};
 	class AutoSeedingStateWalker : public StateWalkingObject {
 	public:
-		enum {SIZE = 2};
+		enum {SIZE = 4};
 		static bool initialized;
 		static Uint64 shared_data[SIZE];
 
 		PractRand::RNGs::Raw::EntropyPools::arbee seeder;
+		//PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool seeder;
 		AutoSeedingStateWalker(void *ptr1) : seeder() {
 			if (!initialized) initialize();
 			
@@ -77,14 +78,15 @@ namespace PractRand {
 			seeder.add_entropy64(autoseeding_count++);
 #endif
 			for (int i = 0; i < SIZE; i++) seeder.add_entropy64(shared_data[i]);
-			for (int i = 0; i < 8; i++) seeder.raw64();
+			seeder.flush_buffers();
+			//for (int i = 0; i < 2; i++) seeder.raw64();
 		}
 		static void initialize() {
-			//PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool entropy_pool;
 			if (initialized) return;
-			PractRand::RNGs::Polymorphic::EntropyPools::arbee entropy_pool;
-			entropy_pool.add_entropy_automatically(1);
 			initialized = true;
+			PractRand::RNGs::Polymorphic::EntropyPools::sha2_based_pool entropy_pool;
+			//PractRand::RNGs::Polymorphic::EntropyPools::arbee entropy_pool;
+			entropy_pool.add_entropy_automatically(1);
 			for (int i = 0; i < SIZE; i++) {
 				shared_data[i] = entropy_pool.raw64();
 			}

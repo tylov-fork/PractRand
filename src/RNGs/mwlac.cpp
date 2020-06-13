@@ -40,7 +40,7 @@ void PractRand::RNGs::Raw::mwlac32::walk_state(StateWalkingObject *walker) {
 }
 Uint64 PractRand::RNGs::Raw::mwlac64::raw64() {
 	Uint64 oa = a;
-	a = (b * 0xa7c3ab63cf6585f5) ^ (a >> 25);
+	a = (b * 0xa7c3ab63cf6585f5ull) ^ (a >> 25);
 	b = c + (oa >> 4);
 	c = d;
 	d += ~oa;

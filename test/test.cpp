@@ -8,15 +8,20 @@
 #include <list>
 //#include <map>
 
-//using namespace PractRand;
-
+//master header, includes everything in PractRand for both 
+//  practical usage and research... 
+//  EXCEPT it does not include specific algorithms
 #include "PractRand_full.h"
 
+//specific testing algorithms, to detect bias in supposedly random numbers
 #include "PractRand/Tests/BCFN.h"
-#include "PractRand/Tests/gap16.h"
+#include "PractRand/Tests/Gap16.h"
 #include "PractRand/Tests/DistC6.h"
 #include "PractRand/Tests/transforms.h"
+#include "PractRand/Tests/FPF.h"
+#include "PractRand/Tests/CoupGap.h"
 
+//specific RNG algorithms, to produce (pseudo-)random numbers
 #include "PractRand/RNGs/lcg64_32.h"
 #include "PractRand/RNGs/clcg96_32.h"
 #include "PractRand/RNGs/jsf16.h"
@@ -31,22 +36,17 @@
 #include "PractRand/RNGs/isaac32x256.h"
 #include "PractRand/RNGs/isaac64x256.h"
 #include "PractRand/RNGs/hc256.h"
-#include "PractRand/RNGs/mt19937.h"
+#include "PractRand/RNGs/entropy_pools/arbee.h"
+#include "PractRand/RNGs/entropy_pools/sha2_based_pool.h"
+#include "PractRand/RNGs/entropy_pools/isaac_with_sha2_pool.h"
 
 using namespace PractRand;
 
-
 /*
-A minimal RNG implementation to test
-
-I just made this algorithm up off the top of my head.  
-I tested it with TestU01.  
-SmallCrush: passes
-Crush: fails 1 test, suspicious results (p ~= 10**-4) on 3 other tests
-BigCrush: fails 10 tests, suspicous results on 5 tests, highly suspicious results on 2 tests
-It takes 10 to 20 seconds for it to fail the testing in this program on my computer.  
+A minimal RNG implementation, just enough to make is usable.  
+Deliberately flawed, though still better than most platforms default RNGs
 */
-class DummyRNG {
+class Raw_DummyRNG {
 public:
 	enum {
 		OUTPUT_TYPE = PractRand::RNGs::OUTPUT_TYPES::NORMAL_1,
@@ -56,11 +56,10 @@ public:
 	Uint32 a, b, c;
 	Uint32 raw32() {
 		Uint32 tmp = b ^ ((a << 19) | (a >> 13));
-		Uint32 tmp2 = a;
-		a = b + c;
-		b = c + tmp2;
-		c = tmp + 0xa7f91431;
-		return tmp;
+		a = ~b + c;
+		b = c;
+		c += tmp;
+		return b;
 	}
 	void walk_state(StateWalkingObject *walker) {
 		walker->handle(a);
@@ -70,7 +69,7 @@ public:
 };
 class Polymorphic_DummyRNG : public PractRand::RNGs::vRNG32 {
 public:
-	DummyRNG implementation;
+	Raw_DummyRNG implementation;
 	Uint32 raw32() {return implementation.raw32();}
 	void walk_state(StateWalkingObject *walker) {implementation.walk_state(walker);}
 	std::string get_name() const {return std::string("DummyRNG");}
@@ -129,6 +128,21 @@ public:
 	}
 };
 
+Tests::ListOfTests get_more_tests() {
+	return Tests::ListOfTests(
+		new Tests::BCFN(0, 14),
+		new Tests::DistC6(9,0, 1,0,0),
+		new Tests::DistC6(6,1, 1,0,0),
+		new Tests::DistC6(5,2, 1,0,0),
+		new Tests::DistC6(5,3, 1,0,1),
+		new Tests::DistC6(4,3, 0,0,1),
+		new Tests::Gap16(),
+		new Tests::FPF(5, 14, 6),
+		new Tests::FPF(1, 13, 6),
+		new Tests::CoupGap(),
+		NULL
+	);
+}
 Tests::ListOfTests get_core_tests() {
 	return Tests::ListOfTests(
 		new Tests::BCFN(2, 13),
@@ -201,20 +215,23 @@ void print_result(const char *tname, double result, double pvalue) {
 	printf("\n");
 }
 
-void main(int argc, char **argv) {
+int main(int argc, char **argv) {
 	PractRand::initialize_PractRand();
 	std::time_t start_time = std::time(NULL);
 
-	RNGs::vRNG *known_good = new PractRand::RNGs::Polymorphic::hc256(PractRand::SEED_AUTO);
-	Uint64 rng_seed = known_good->raw32();//known_good->raw64();
+	RNGs::vRNG *known_good = new PractRand::RNGs::Polymorphic::isaac32x256(PractRand::SEED_AUTO);
+	Uint32 rng_seed = known_good->raw32();
+
 	//RNGs::vRNG *rng = new PractRand::RNGs::Polymorphic::lcg64_32(rng_seed);
 	RNGs::vRNG *rng = new Polymorphic_DummyRNG();
 	rng->seed(rng_seed);
-	printf("RNG = %s, seed = 0x%llx\n\n", rng->get_name().c_str(), rng_seed);
+
+	printf("RNG = %s, seed = 0x%x\n\n", rng->get_name().c_str(), rng_seed);
 	printf("a random floating point number in [0,1) using that RNG: %f\n\n", rng->randf());
 
 	TestManager targ(rng);
 	Tests::ListOfTests tests = get_standard_tests(rng->get_native_output_size());
+	//Tests::ListOfTests tests = get_many_tests();
 	for (unsigned int i = 0; i < tests.tests.size(); i++) tests.tests[i]->init(known_good);
 
 	//Start by testing 32 kilobytes, then double the amount to test repeatedly.  
@@ -224,14 +241,14 @@ void main(int argc, char **argv) {
 	Uint64 test_size = 1024 * 32;
 	while (test_size < 1ull<<45) {
 		Uint64 blocks_left = test_size/Tests::TestBlock::SIZE - targ.blocks_so_far;
-		test_size <<= 1;//
+		test_size <<= 1;
 		while (blocks_left) {
 			targ.prep_blocks(blocks_left);
 			for (unsigned int i = 0; i < tests.tests.size(); i++) targ.use_blocks(tests.tests[i]);
 		}
 		int time_passed = std::time(NULL) - start_time;
 		if (time_passed <= 1) continue;
-		printf("rng=%s, seed=0x%llx, length=2^%.0f bytes, time=%d seconds\n", 
+		printf("rng=%s, seed=0x%x, length=2^%.0f bytes, time=%d seconds\n", 
 			rng->get_name().c_str(), 
 			rng_seed, 
 			std::log(double(Tests::TestBlock::SIZE) * targ.blocks_so_far) / std::log(2.0),
@@ -263,6 +280,7 @@ void main(int argc, char **argv) {
 	}
 	for (unsigned int i = 0; i < tests.tests.size(); i++) tests.tests[i]->deinit();
 	for (unsigned int i = 0; i < tests.tests.size(); i++) delete tests.tests[i];
+	return 0;
 }
 
 

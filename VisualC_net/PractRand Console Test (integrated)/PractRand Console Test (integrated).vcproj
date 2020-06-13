@@ -177,7 +177,7 @@
 				>
 			</File>
 			<Filter
-				Name="PractRand"
+				Name="PractRand_full"
 				>
 				<File
 					RelativePath="..\..\src\automatic_entropy.cpp"

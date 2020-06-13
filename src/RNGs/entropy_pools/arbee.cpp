@@ -32,7 +32,11 @@ void PractRand::RNGs::Raw::EntropyPools::arbee::seed(Uint64 s) {
 	i = 0;
 	raw64();
 	raw64();
+	raw64();
 	mix();
+	raw64();
+	raw64();
+	raw64();
 }
 void PractRand::RNGs::Raw::EntropyPools::arbee::walk_state(StateWalkingObject *walker) {
 	walker->handle(a);
@@ -50,17 +54,14 @@ void PractRand::RNGs::Raw::EntropyPools::arbee::add_entropy32(Uint32 value) {
 	a ^= value;
 	c += value;
 	raw64();
-	mix();
 	raw64();
 }
 void PractRand::RNGs::Raw::EntropyPools::arbee::add_entropy64(Uint64 value) {
 	a ^= value;
 	c += value;
 	raw64();
-	mix();
 	raw64();
 	mix();
-	raw64();
 }
 
 
@@ -100,4 +101,7 @@ void PractRand::RNGs::Polymorphic::EntropyPools::arbee::reset_state() {
 }
 void PractRand::RNGs::Polymorphic::EntropyPools::arbee::walk_state(StateWalkingObject *walker) {
 	implementation.walk_state(walker);
+}
+void PractRand::RNGs::Polymorphic::EntropyPools::arbee::flush_buffers() {
+	implementation.flush_buffers();
 }

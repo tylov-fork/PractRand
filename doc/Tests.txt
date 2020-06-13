@@ -1,10 +1,7 @@
 
-Not much documentation yet, hopefully that will get fixed in the 
-next version.  The test program shows off testing on a simple 
-RNG though.  
-
-The testing interface is not well documented, but you can see much of it 
-in include/PractRand/tests.h
+You can see the raw testing interface (ie the baseclass from which all 
+PractRand tests for raw datastreams are derived) in:
+include/PractRand/tests.h
 
 You can also see the tests in action in the sample program in test/test.cpp
 
@@ -24,7 +21,9 @@ wish to fill it with a different data source then you'll have to do that
 manually.  
 4. Pass the block of memory to the test, using the tests test_blocks() 
 method.  The parameters are a pointer at the array of TestBlocks and the 
-number of TestBlocks in that array.  
+number of TestBlocks in that array.  Generally no more than half a 
+gigabyte should be passed to test_blocks() in any single call, as some 
+tests malfunction when handled 1 GB or more in a single call.  
 [optional:] 5. Create more arrays of TestBlocks full of random bits 
 and pass them to the test with test_blocks().  However, now you are 
 supposed to have the tail end of the previous array of blocks prefixed on 
@@ -35,9 +34,9 @@ PractRand::Tests::Testbaseclass::REPEATED_BLOCKS.
 I know this direction may be confusing.  Try looking at sample programs 
 source code (currently test/test.cpp, the class "TestManager" in it.  That 
 class encapsulates complying with those demands.  
-Like the known good RNG, only a few tests actually need the repeated blocks, 
-but all test users are supposed to comply with that part of the interface 
-so that all tests get a common interface.  
+Like the known good RNG parameter, only a few tests actually need the 
+repeated blocks, but all test users are supposed to comply with that part of 
+the interface so that all tests get a common interface.  
 6. Call the tests get_result() method.  This will return a number.  
 Unfortunately, there is no standard meaning to this number.  If you know 
 what test you're dealing with then you may know how to deal with this 
@@ -48,23 +47,26 @@ results to a p-value unless the recommended parameterization was used.  Even
 those tests that do end up converting to a p-value often only use crude 
 aproximate p-values.  
 [optional:] 8. You can repeat the above procedure starting with step 5.  It 
-will remember the data it had recieved before and new data is effectively 
-post-pended on to the old.  This means you can effectively get interim results 
-part way through a longer test without spoiling the longer test.  
+will remember the data it had recieved before just as if you had not called 
+get_result().  This means you can get interim results part way through a 
+longer test without spoiling the longer test.  
 9. Call the deinit() method of the test.  This resets the test state.  In 
 some (but not all) cases this will free up most of the memory used by the 
-test.  
+test.  The test parameters are not reset - they remain the same until the 
+test is destructed.  
 [optional:] 10. Repeat from step 2 above.  
 11. Destruct the test object.  At this point all memory used by the test 
 should be released.  
 
 
 Specific Tests:
-	Gap16 - a 16 bit gap test
-	BCFN - checks for long range linear correlations;
-		in practice this often detects Fibonacci style RNGs that 
-		rely upon large lags to defeat other statistical tests
-	DC6 - checks for short range linear correlations
+	Recommended tests:
+		Gap16 - a fairly simple variant of the standard "Gap", on 
+			16 bit words
+		BCFN - checks for long range linear correlations;
+			in practice this often detects Fibonacci style RNGs that 
+			rely upon large lags to defeat other statistical tests
+		DC6 - checks for short range linear correlations
 	Transforms:
 		(these appear as tests but are simply wrappers for other tests)
 		multiplex - simply routes operations on this test to multiple subtests
@@ -72,3 +74,10 @@ Specific Tests:
 			or 32 bits and routes them to the wrapped tests)
 		shrink - 
 		FirstNofM - 
+	Non-recommended tests:
+		FPF - "floating point frequency" test; contrary to the name 
+			it's purely integer math.  Can be very slow on some settings.  
+			Tends to not be very good.  
+		CoupGap - "Coupon / Gap hybrid" test; still in development;
+			behaves similar to most gap tests
+		...many more still to come
