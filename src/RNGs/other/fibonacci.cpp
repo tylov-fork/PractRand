@@ -45,7 +45,6 @@ namespace PractRand {
 								low ^= i >> b;
 								if (b) high ^= i << (8-b);
 							}
-
 						}
 						table1[i] = low;
 						table2[i] = high;
@@ -66,7 +65,7 @@ namespace PractRand {
 					for (int i = 0; i < 55; i++) walker->handle(cbuf[i]);
 					if (index1 >= 55) index1 %= 55;
 					index2 = index1 - 24;
-					if (index2 >= 55) index2 += 55;
+					if (index2 >= 55) index2 += 55;//it's an unsigned value
 				}
 				//Mitchell-Moore modified: LFib16(Uint32, 55, 24, ADD) >> 16
 				Uint16 mm16of32::raw16() {
@@ -82,7 +81,7 @@ namespace PractRand {
 					for (int i = 0; i < 55; i++) walker->handle(cbuf[i]);
 					if (index1 >= 55) index1 %= 55;
 					index2 = index1 - 24;
-					if (index2 >= 55) index2 += 55;
+					if (index2 >= 55) index2 += 55;//it's an unsigned value
 				}
 				//Mitchell-Moore modified: LFib32(Uint32, 55, 24, ADD) >> 16
 				Uint32 mm32_awc::raw32() {
@@ -93,18 +92,41 @@ namespace PractRand {
 					cbuf[index1] = tmp3;
 					carry = (tmp3 - tmp1) >> 31;
 					if ((tmp3 == tmp1) && tmp2) carry = 1;
-					if ( ++index1 == 55 ) index1 = 0;
-					if ( ++index2 == 55 ) index2 = 0;
+					if (++index1 == 55) index1 = 0;
+					if (++index2 == 55) index2 = 0;
 					return tmp3;
 				}
-				std::string mm32_awc::get_name() const {return "mm32_awc";}
+				std::string mm32_awc::get_name() const { return "mm32_awc"; }
 				void mm32_awc::walk_state(StateWalkingObject *walker) {
 					walker->handle(carry);
 					walker->handle(index1);
 					for (int i = 0; i < 55; i++) walker->handle(cbuf[i]);
 					if (index1 >= 55) index1 %= 55;
 					index2 = index1 - 24;
-					if (index2 >= 55) index2 += 55;
+					if (index2 >= 55) index2 += 55;//it's an unsigned value
+					carry &= 1;
+				}
+				//Mitchell-Moore modified: LFib32(Uint32, 55, 24, ADC) >> 16
+				Uint16 mm16of32_awc::raw16() {
+					Uint32 tmp1, tmp2, tmp3;
+					tmp1 = cbuf[index1];
+					tmp2 = cbuf[index2];
+					tmp3 = tmp1 + tmp2 + carry;
+					cbuf[index1] = tmp3;
+					carry = (tmp3 - tmp1) >> 31;
+					if ((tmp3 == tmp1) && tmp2) carry = 1;
+					if (++index1 == 55) index1 = 0;
+					if (++index2 == 55) index2 = 0;
+					return Uint16(tmp3);
+				}
+				std::string mm16of32_awc::get_name() const { return "mm16of32_awc"; }
+				void mm16of32_awc::walk_state(StateWalkingObject *walker) {
+					walker->handle(carry);
+					walker->handle(index1);
+					for (int i = 0; i < 55; i++) walker->handle(cbuf[i]);
+					if (index1 >= 55) index1 %= 55;
+					index2 = index1 - 24;
+					if (index2 >= 55) index2 += 55;//it's an unsigned value
 					carry &= 1;
 				}
 

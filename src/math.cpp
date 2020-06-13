@@ -392,22 +392,26 @@ namespace PractRand {
 			return sum;
 		}
 		static double math_erf ( double a ) {
-			double scale = 2 / std::sqrt(3.14159265358979);
-			double a2 = a*a;
-			double x = a2*a;
-			//double f = 1;
-			double r = a - x / 3;
-			int i = 1;
-			while (x > 0.000000000000000001) {
-				x *= a2;
-				x /= i*2;
-				r += x / (4.0 * i + 1);
-				x *= a2;
-				x /= i*2+1;
-				r -= x / (4.0 * i + 3);
-				i++;
+			if (a < 0) return -math_erf(-a);
+			if (a < 8) {
+				double scale = 2 / std::sqrt(3.14159265358979);
+				double a2 = a*a;
+				double x = a2*a;
+				//double f = 1;
+				double r = a - x / 3;
+				int i = 1;
+				while (x > 0.000000000000000001) {
+					x *= a2;
+					x /= i * 2;
+					r += x / (4.0 * i + 1);
+					x *= a2;
+					x /= i * 2 + 1;
+					r -= x / (4.0 * i + 3);
+					i++;
+				}
+				return scale * r;
 			}
-			return scale * r;
+			else return 1;
 		}
 		static double math_inverse_erf ( double x ) {
 			if (x < 0) return -math_inverse_erf(-x);

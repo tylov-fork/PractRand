@@ -320,7 +320,8 @@ void find_test_distributions() {
 
 	//Tests::ListOfTests tests(new Tests::BCFN2(2,13));
 	//Tests::ListOfTests tests(new Tests::Gap16());
-	Tests::ListOfTests tests(new Tests::BRank(40));
+	//Tests::ListOfTests tests(new Tests::BRank(40));
+	Tests::ListOfTests tests(new Tests::BCFN_FF(2, 13));
 	//Tests::ListOfTests tests = Tests::Batteries::get_core_tests();
 	//Tests::ListOfTests tests = Tests::Batteries::get_expanded_core_tests();
 	//Tests::ListOfTests tests(new Tests::DistC6(9,0, 1,0,0));
@@ -348,7 +349,8 @@ void find_test_distributions() {
 			if (next_checkpoint < CHUNKY) next_checkpoint <<= 1; else next_checkpoint += CHUNKY;
 			std::printf("\n\n\n\n");
 			std::printf("==================================================\n");
-			std::printf("checkpoint @ %d\n", int(n) );
+			if (n & 1023) std::printf("checkpoint @ %d\n", int(n));
+			else std::printf("checkpoint @ %dK\n", int(n) >> 10);
 			/*if (test_size < 10ull << 20) std::printf("for length = %d KB\n", test_size >> 10);
 			else if (test_size < 10ull << 30) std::printf("for length = %d MB\n", test_size >> 20);
 			else if (test_size < 10ull << 40) std::printf("for length = %d GB\n", test_size >> 30);

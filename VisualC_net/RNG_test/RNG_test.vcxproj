@@ -139,6 +139,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>../Release/PractRand_Full.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

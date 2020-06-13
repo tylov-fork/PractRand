@@ -15,7 +15,7 @@
 #include "PractRand/RNGs/all.h"
 
 namespace PractRand {
-	const char *version_str = "0.92";
+	const char *version_str = "0.93";
 	void (*error_callback)(const char *) = NULL;
 	void issue_error ( const char *msg ) {
 		if (error_callback) error_callback(msg);
@@ -105,7 +105,7 @@ namespace PractRand {
 			if (exp >= 0x4000) exp -= 0x8000;
 			v = (sign ? -1.0 : 1.0) * std::ldexp((double)tmp_sig, exp-64);
 		}
-		virtual Uint32 get_properties() const {return FLAG_READ_ONLY;}
+		virtual Uint32 get_properties() const {return 0;}
 	};
 	class GenericIntegerSeedingStateWalker : public StateWalkingObject {
 	public:

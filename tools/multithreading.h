@@ -95,6 +95,7 @@ namespace Threading {
 	void create_thread( THREADFUNC_RETURN_TYPE (THREADFUNC_CALLING_CONVENTION *func)(void*), void *param ) {
 		pthread_t thread;
 		pthread_create(&thread, NULL, func, param);
+		pthread_detach(thread);
 	}
 	Lock::Lock() {
 		//InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)&impl_data, 2000);

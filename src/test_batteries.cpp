@@ -119,13 +119,13 @@ namespace PractRand {
 					//new Tests::BCFN(2, 13, true ), //	2.8 seconds/GB
 					//new Tests::BCFN(1, 13, true ), //	4.1 seconds/GB
 					//new Tests::BCFN(0, 13, true ), //	6.8 seconds/GB
-					new Tests::BCFN_FF(2, 13),  //	4.0 seconds/GB
+					new Tests::BCFN_FF(2, 13),    //	4.0 seconds/GB		the :freq results p-values aren't very good atm
 					//new Tests::BCFN_FF(1, 13),  //	6.9 seconds/GB
 					//new Tests::BCFN_FF(0, 13),  //	12.0 seconds/GB
 					//new Tests::BCFNMT(1, 11),  //	19.6 seconds/GB
 
 					//medium range tests:
-					new Tests::BRank(18), //			~4.0 s/GB
+					new Tests::BRank(18), //			~4.0 s/GB          18
 
 					//short range tests:
 					new Tests::DistC6(9,0, 1,0,0),//	3.3->2.7 s/GB

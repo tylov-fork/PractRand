@@ -8,7 +8,7 @@ namespace Special_RNGs {
 			std::fprintf(stderr, "error reading standard input\n");
 			std::exit(0);
 		}
-		enum { BUFF_SIZE = 8192 };
+		enum { BUFF_SIZE = 4096 / sizeof(Word) };
 		Word *pos, *end;
 		bool ended;
 		Word buffer[BUFF_SIZE];
@@ -294,6 +294,8 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(xorshift32x4)
 		REGISTER_RNG_0(xorwow32of96)
 		REGISTER_RNG_0(xorwow32x6)
+		REGISTER_RNG_0(xoroshiro128plus)
+		REGISTER_RNG_0(xoroshiro128plus_2p64)
 		REGISTER_RNG_0(sapparot)
 		REGISTER_RNG_0(sap16of48)
 		REGISTER_RNG_0(sap32of96)
@@ -359,6 +361,7 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(mm32)
 		REGISTER_RNG_0(mm16of32)
 		REGISTER_RNG_0(mm32_awc)
+		REGISTER_RNG_0(mm16of32_awc)
 		REGISTER_RNG_0(mwc4691)
 		REGISTER_RNG_0(cbuf_accum)
 		REGISTER_RNG_0(dual_cbuf)

@@ -15,6 +15,7 @@ namespace PractRand {
 			public:
 				Uint64 raw64();
 				void seed(Uint64 s);
+				void seed(vRNG *seeder_rng);
 				void walk_state(StateWalkingObject *walker);
 				void seek_forward (Uint64 how_far_low64, Uint64 how_far_high64);
 				void seek_backward(Uint64 how_far_low64, Uint64 how_far_high64);
@@ -26,7 +27,8 @@ namespace PractRand {
 			class xsm64 : public vRNG64 {
 				PRACTRAND__POLYMORPHIC_RNG_BASICS_H(xsm64)
 				void seed(Uint64 s);
-				virtual void seek_forward128 (Uint64 how_far_low64, Uint64 how_far_high64);
+				void seed(vRNG *seeder_rng);
+				virtual void seek_forward128(Uint64 how_far_low64, Uint64 how_far_high64);
 				virtual void seek_backward128(Uint64 how_far_low64, Uint64 how_far_high64);
 			};
 		}

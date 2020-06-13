@@ -14,6 +14,7 @@ class MultithreadedTestManager : public TestManager {
 				Threading::sleep(0);
 				return false;
 			}
+			lock.leave();
 			delete this;
 			return true;
 		}
@@ -51,19 +52,6 @@ class MultithreadedTestManager : public TestManager {
 	}
 
 
-	/*std::vector<void*> work_units;
-	void *(*issue_work_unit)(void (*work_func)(void *param));//work_unit is responsible for calling std::free on param when it retires
-	bool (*retire_work_unit)(void *handle, void **param);//returns true on success
-	void retire_all_work_units() {
-		while(!work_units.empty()) {
-			void *last = work_units.back();
-			void *param;
-			if (retire_work_unit(last, &param)) {
-				threads.pop_back();
-				std::free(param);
-			}
-		}
-	}*/
 public:
 	//std::vector<PractRand::Tests::TestBlock> buffer1, buffer2;
 	std::vector<PractRand::Tests::TestBlock> alt_buffer;
@@ -80,8 +68,8 @@ public:
 			num_prefix_blocks = prefix_blocks + main_blocks;
 		if (num_prefix_blocks) {
 			memcpy(
-				&alt_buffer[0], 
-				&buffer[prefix_blocks + main_blocks - num_prefix_blocks], 
+				&buffer[0], 
+				&alt_buffer[prefix_blocks + main_blocks - num_prefix_blocks], 
 				PractRand::Tests::TestBlock::SIZE * num_prefix_blocks
 			);
 		}

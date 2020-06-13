@@ -40,6 +40,15 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
+				//Mitchell-Moore modified: LFib16(Uint32, 55, 24, ADC)
+				class mm16of32_awc : public vRNG16 {
+					Uint32 cbuf[55];
+					Uint8 index1, index2, carry;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 
 				class lfsr_medium : public vRNG8 {
 					enum {SIZE=55, LAG=25};//0 < LAG < SIZE-2

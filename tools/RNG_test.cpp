@@ -39,6 +39,10 @@ using namespace PractRand;
 
 PractRand::RNGs::Polymorphic::hc256 known_good(PractRand::SEED_AUTO);
 
+//for access to some functions the dummy PRNG might want to use:
+#include "PractRand/rng_internals.h"
+
+
 //helpers for the test programs, to deal with RNG names, test usage, etc
 #include "RNG_from_name.h"
 
@@ -62,7 +66,7 @@ double get_time_period() { return 1.0 / CLOCKS_PER_SEC; }
 
 /*
 A minimal RNG implementation, just enough to make it usable.  
-Deliberately flawed, though still better than most platforms default RNGs
+Deliberately flawed, though still better than many platforms default RNGs
 */
 
 //#include "PractRand/endian.h"
@@ -100,7 +104,7 @@ public:
 double print_result(const PractRand::TestResult &result, bool print_header = false) {
 	if (print_header) std::printf("  Test Name                         Raw       Processed     Evaluation\n");
 	//                                     10        20        30        40        50        60        70        80
-	std::printf("  ");
+	std::printf("  ");//2 characters
 	//NAME
 	if (true) {// 34 characters
 		std::printf("%s", result.name.c_str());
@@ -227,7 +231,8 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 		else if (rs >8.5) std::printf("  FAIL           ");
 		else if (rs >6.0) std::printf(" VERY SUSPICIOUS ");
 		else if (rs >4.0) std::printf("very suspicious  ");
-		else if (rs >2.5) std::printf("suspicious       ");
+		else if (rs >3.0) std::printf("suspicious       ");
+		else if (rs >2.0) std::printf("mildly suspicious");
 		else if (rs >1.0) std::printf("unusual          ");
 		else              std::printf("normal           ");
 	}
@@ -244,7 +249,7 @@ public:
 	std::deque<Uint64> history;
 	int history_limit;
 
-	Seeder_MetaRNG(PractRand::RNGs::vRNG *base_rng_, int history_limit_=1024) : history_limit(history_limit_) {
+	Seeder_MetaRNG(PractRand::RNGs::vRNG *base_rng_, int history_limit_= 1024 ) : history_limit(history_limit_) {
 		base_rng = base_rng_;
 		current_seed = known_good.raw64();
 		record_seed(current_seed);
@@ -377,7 +382,7 @@ public:
 	}
 	Uint64 hash_message(const std::vector<Uint8> &message) {
 		base_entropy_pool->reset_entropy();
-		base_entropy_pool->add_entropy_N(&message[0], current_seed.size());
+		base_entropy_pool->add_entropy_N(&message[0], message.size());
 		//base_entropy_pool->add_entropy64(0);
 		base_entropy_pool->flush_buffers();
 		return base_entropy_pool->raw64();
@@ -461,8 +466,16 @@ double show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bo
 
 	std::vector<PractRand::TestResult> results;
 	tman->get_results(results);
-	double total_weight = 0;
-	for (int i = 0; i < results.size(); i++) total_weight += results[i].get_weight();
+	double total_weight = 0, min_weight = 9999999;
+	for (int i = 0; i < results.size(); i++) {
+		double weight = results[i].get_weight();
+		total_weight += weight;
+		if (weight < min_weight) min_weight = weight;
+	}
+	if (min_weight <= 0) {
+		std::printf("error: result weight too small\n");
+		std::exit(1);
+	}
 	std::vector<int> marked;
 	for (int i = 0; i < results.size(); i++) {
 		results[i].set_weight(results[i].get_weight() / total_weight);
@@ -533,19 +546,19 @@ double interpret_length(const std::string &lengthstr, bool normal_mode) {
 		scale = 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0;
 		break;
 	case 's':
-		scale = -1;
+		scale = -1;//one second
 		expect_B = false;
 		break;
 	case 'm':
-		scale = -60;
+		scale = -60;//one minute
 		expect_B = false;
 		break;
 	case 'h':
-		scale = -3600;
+		scale = -3600;//one hour
 		expect_B = false;
 		break;
 	case 'd':
-		scale = -86400;
+		scale = -86400;//one day
 		expect_B = false;
 		break;
 	}
@@ -595,7 +608,7 @@ int main(int argc, char **argv) {
 		std::printf("Alternatively, use stdin as an RNG name to read raw binay data piped in from an\n");
 		std::printf("external RNG.\n");
 		std::printf("options available include -a, -e, -p, -tf, -te, -ttnormal, -ttseed64, -ttep,\n");
-		std::printf("-tlmin, -tlmax, -tlshow, -threads, -nothreads, and -seed.\n");
+		std::printf("-tlmin, -tlmax, -tlshow, -multithreaded, -singlethreaded, and -seed.\n");
 		std::printf("For more information run: %s -help\n\n", argv[0]);
 		std::exit(0);
 	}
@@ -653,11 +666,8 @@ int main(int argc, char **argv) {
 		std::printf("                 another seed is chosen at a low hamming distance from the\n");
 		std::printf("                 prior seed and another 8 bytes of RNG output are given to the\n");
 		std::printf("                 tests.\n");
-		std::printf("                 This is repeated indefinitely, with care taken to avoid\n");
-		std::printf("                 duplicate seeds.  Eventually (after about a quarter billion\n");
-		std::printf("                 seeds are used) issues start to crop up due to the limited\n");
-		std::printf("                 size of the seedspace and the inability to keep a complete\n");
-		std::printf("                 record of previously chosen seeds.\n");
+		std::printf("                 This is repeated indefinitely, with care taken to minimize\n");
+		std::printf("                 the amount of duplicate seeds used.  \n");
 		//           12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		std::printf("  -ttep          Test target: Entropy pooling.  This should only be done on\n");
 		std::printf("                 RNGs that support entropy pooling.  It is similar to \n");
@@ -693,7 +703,8 @@ int main(int argc, char **argv) {
 		std::printf("  -singlethreaded disables multithreaded testing.  (default)\n");
 		std::printf("  -seed SEED      specifies a 64 bit integer to seed the tested RNG with.  If\n");
 		std::printf("                  no seed is specified then a seed will be chosen randomly.  \n");
-		std::printf("                  The value should be expressed in hexadecimal.\n");
+		std::printf("                  The value should be expressed in hexadecimal.  An '0x' prefix\n");
+		std::printf("                  on the seed is acceptable but not necessary.\n");
 		std::printf("notes on lengths:\n");
 		//           12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		std::printf("  Each of the test length options requires a field named LENGTH.  These fields\n");
@@ -918,11 +929,12 @@ int main(int argc, char **argv) {
 		}
 		rng->seed(seed);
 		//I'd like to test varying length entropy strings, but known good EPs are failing eventually when varying length is allowed for some reason
-		testing_rng = new EntropyPool_MetaRNG(rng,35,35,1<<10);
+		testing_rng = new EntropyPool_MetaRNG(rng,48,64,1<<14);
 	}
 
-	std::printf("RNG = %s, PractRand version %s, seed = 0x", testing_rng->get_name().c_str(), PractRand::version_str);
-	if (seed >> 32) std::printf("%lx%08lx", long(seed>>32), long((seed<<32)>>32));
+	std::printf("RNG_test using PractRand version %s\n", PractRand::version_str);
+	std::printf("RNG = %s, seed = 0x", testing_rng->get_name().c_str());
+	if (seed >> 32) std::printf("%lx%08lx", long(seed >> 32), long((seed << 32) >> 32));
 	else std::printf("%lx", long(seed));
 	const char *test_set_names[2] = {"normal", "expanded"};
 	const char *folding_names[3] = {"none", "standard", "extra"};

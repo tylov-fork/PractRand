@@ -105,6 +105,22 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
+				class xoroshiro128plus : public vRNG64 {
+					// from David Blackman and Sebastiano Vigna (vigna@acm.org), see http://vigna.di.unimi.it/xorshift/
+					Uint64 state0, state1;
+				public:
+					Uint64 raw64();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class xoroshiro128plus_2p64 : public vRNG64 {
+					// as xoroshiro128plus, but it skips 2**64-1 outputs between each pair of outputs (testing its recommended parallel sequences)
+					Uint64 state0, state1;
+				public:
+					Uint64 raw64();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 
 
 				//by Ilya O. Levin, see http://www.literatecode.com/2004/10/18/sapparot/

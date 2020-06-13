@@ -180,7 +180,7 @@ Dieharder (custom):
 
 NIST STS (Statistical Test Suite)
 	I've made a few modifications to improve performance and allow it to 
-	work on large samples than it could normally.  
+	work on larger samples than it could normally.  
 	It's producing false positives for me on the non-overlapping template 
 	test, when using larger sample sizes and larger numbers of samples.  At 
 	128 samples the largest sample size I can safely use on that test is 8 
@@ -195,6 +195,30 @@ NIST STS (Statistical Test Suite)
 	per byte, among other inefficiencies.  It is also extremely weak, with 
 	the very poor efficiency, poor sensivity, and poor or very poor breadth.  
 
+gjrand mcp / pmcp
+	Results for this aren't incorporated in to this document yet, but should 
+	be in the next version.  Preliminary results are VERY good.  I may have 
+	raid its set of tests for ideas or something.  And most of the tests 
+	in it are fairly original too, it tends to combine well with other 
+	test suites.  
+	When limited to 10 seconds, I use mcp --small, for 1 minute I use 
+	mcp --standard, for 5 minutes mcp --big, for half an hour... there's no 
+	good option for that one, for 4 hours I use mcp --huge, and for 24 hours 
+	I use mcp --tera.  The times there don't work out very nicely since he 
+	uses factors of 10 between each test level, but gjrand still does so 
+	well I don't see any need to coddle it.  pmcp is also multithreaded out 
+	of the box, I think.  
+	In terms of interface, IMHO it's not as good as PractRand or TestU01, 
+	but better than anything else.  The final summary is extremely readable 
+	but missing the identity of which tests it failed (a relativeely high 
+	priority datum I think).  The individual test results are too verbose, 
+	printing out numbers that have no meaning to those who don't know how 
+	the tests work internally (which isn't documented so far as I can tell).
+	The documentation fails to cover a few too many areas.  
+	The "slightly bad" result evaluation shows false positives occasionally, 
+	but the "SERIOUSLY BAD" never does, so that's very reasonable behavior.  
+	Overall it's an awesome set of tests with a reasonable interface.  
+
 
 *****************************************************************************
 2. Full results
@@ -206,10 +230,10 @@ recommended RNGs
 	                rating    standard   *Crush    Extended
 	hc256           5         > 1 TB      pass      pass      
 	trivium         5         > 4 TB      pass      pass      
-	efiix64x256     5         > 1 TB      pass?     pass?     
-	efiix32x256     5         > 2 TB      pass      pass      
-	efiix16x256     5         > 1 TB      pass      pass      
-	efiix8x256      5         > 2 TB      pass      pass      
+	efiix64x384     5         > 1 TB      pass?     pass?     
+	efiix32x384     5         > 2 TB      pass      pass      
+	efiix16x384     5         > 1 TB      pass      pass      
+	efiix8x384      5         > 2 TB      pass      pass      
 	isaac64x256     5         > 1 TB?     pass?     pass?     
 	isaac32x256     5         > 4 TB      pass      pass      
 	chacha(8+)      5         > 4 TB?     pass?     pass?     
@@ -335,19 +359,20 @@ other RNGs - cyclic buffer based (or other static structures)
 	                 subscores   standard    *Crush      Extended*1  -a         custom
 	mm32             0/5/5/0     2 MB        1/8/12      pass        pass       1/1/1
 	mm16of32         0/5/5/0     1 GB        0/0/2       pass?       pass       0/0/1
-	mm32_awc         1/5/5/0     256 MB      0/8/11      pass?       pass       0/1/1
-	mwc4691          0/5/5/0     2 GB        pass        pass        pass       pass
-	cbuf_accum       1/5/5/2     128 MB      pass        pass        pass       pass
-	dual_cbuf        2/5/5/2     4 MB        pass        16 Mb       pass       pass
-	dual_cbuf_accum  3/5/5/2     4 MB        pass        16 Mb       pass       pass
+	mm32_awc         0/5/5/1     256 MB      0/8/11      pass?       pass       0/1/1
+	mm16of32_awc     0/5/5/1     1 GB        0/8/11      pass?       pass       0/1/1
+	mwc4691          1/5/5/1     2 GB        pass        pass        pass       pass
+	cbuf_accum       0/5/5/2     128 MB      pass        pass        pass       pass
+	dual_cbuf        0/5/5/2     4 MB        pass        16 Mb       pass       pass
+	dual_cbuf_accum  0/5/5/2     4 MB        pass        16 Mb       pass       pass
 	fibmul16of32     1/5/5/1     16 GB       pass        pass        pass       pass
 	fibmul32of64     3/5/5/2     512 GB      pass        pass        pass       pass
 	ranrot32         1/5/5/2     2 GB        pass        pass        pass       0/0/1
 	ranrot3tap32     2/5/5/3     32 GB       pass?       pass        pass       pass
 	mt19937_unhashed 2/5/5/1     32 GB       0/2/2       pass        pass       pass
 	salsa(3 rounds)  0/5/5/0     4 KB        13/??/??    16 Kb       FAIL       2/5/5
-	chacha(3 rounds) 1/5/5/1     32 MB       0/6/28      2 Mb        pass       0/1/2
-	salsa(4 rounds)  2/5/5/2     16 GB       pass(just)  256 Mb      pass       0/0/1
+	chacha(3 rounds) 0/5/5/1     32 MB       0/6/28      2 Mb        pass       0/1/2
+	salsa(4 rounds)  1/5/5/2     16 GB       pass(just)  256 Mb      pass       0/0/1
 	chacha(4 rounds) 5/5/5/3     > 4 TB      pass        pass        pass       pass
 	*** 10 sec                   7 (512 MB)  2 (SC)      2 (2 Mb)    --         2
 	*** 1 minute                 10 (4 GB)   --          4 (16 Mb)   --         4
@@ -360,20 +385,20 @@ Results marked with an asterisk still need to be re-run for PractRand 0.91.
 other RNGs - indirection based
 	RNG             Quality     PractRand   TestU01    RaBiGeTe    Dieharder  Dieharder
 	                subscores   standard    *Crush     Extended*1  -a         custom
-	ibaa8x2          1/0/0/1    512 MB      0/8/19     512 Mb      pass       pass
-	ibaa8x4          2/1/1/2    8 GB        pass       pass        pass       pass
-	ibaa8x8          5/3/2/3    1 TB        pass       pass        pass       pass
-	ibaa16x2         2/2/2/2    32 GB       pass       pass        pass       pass
-	ibaa16x4         5/3/3/2    > 4 TB      pass?      pass        pass       pass
-	ibaa32x2         4/3/3/2    2 TB*       pass?      pass        pass       pass
-	rc4_weakened     2/5/5/2    8 GB        0/1/1      pass        pass       pass
-	rc4              4/5/5/3    1 TB        pass       pass        pass       pass
-	isaac16x4        0/4/3/2    1 MB        0/0/1      pass        pass       pass
-	isaac16x8        0/5/4/3    128 MB      pass       pass?       pass?      pass?
-	isaac16x16       3/5/5/4    2 TB        pass?      pass?       pass?      pass?
-	isaac32x4        1/5/4/2    8 MB        pass       pass        pass       pass
-	isaac32x8        1/5/5/3    256 MB      pass       pass?       pass       pass
-	isaac32x16       3/5/5/4    16 TB*      pass?      pass?       pass       pass?
+	ibaa8x2         0/0/0/1     512 MB      0/8/19     512 Mb      pass       pass
+	ibaa8x4         1/1/1/2     8 GB        pass       pass        pass       pass
+	ibaa8x8         4/3/2/3     1 TB        pass       pass        pass       pass
+	ibaa16x2        2/2/2/2     32 GB       pass       pass        pass       pass
+	ibaa16x4        5/3/3/2     > 4 TB      pass?      pass        pass       pass
+	ibaa32x2        4/3/3/2     2 TB*       pass?      pass        pass       pass
+	rc4_weakened    1/5/5/2     8 GB        0/1/1      pass        pass       pass
+	rc4             4/5/5/3     1 TB        pass       pass        pass       pass
+	isaac16x4       0/4/3/2     1 MB        0/0/1      pass        pass       pass
+	isaac16x8       0/5/4/3     128 MB      pass       pass?       pass?      pass?
+	isaac16x16      4/5/5/4     2 TB        pass?      pass?       pass?      pass?
+	isaac32x4       0/5/4/2     8 MB        pass       pass        pass       pass
+	isaac32x8       0/5/5/3     256 MB      pass       pass?       pass       pass
+	isaac32x16      4/5/5/4     16 TB*      pass?      pass?       pass       pass?
 	*** 10 sec                  5 (512 MB)  0 (SC)     0 (2 Mb)    --         0
 	*** 1 minute                5 (4 GB)    --         0 (16 Mb)   --         0
 	*** 5 minutes               7 (16 GB)   --         0 (64 Mb)   --         0

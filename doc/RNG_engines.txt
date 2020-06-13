@@ -30,7 +30,9 @@ chacha
 	seeding, and easily adjustable security vs speed tradeoffs.  
 	Unfortunately while seeding and random access are fast, generating 
 	random numbers with it at any particular setting ends up being slow 
-	relative to other RNGs of comparable security and quality.  
+	relative to other RNGs of comparable security and quality, at least 
+	with the PractRand implementation (which currently lacks the SIMD 
+	optimizations necesary for high-speed implementations of ChaCha).  
 efiix64x384 / efiix32x384 / efiix16x384 / efiix8x384
 	The fastest recommended RNG that qualified for a "future-proof" five  
 	star quality rating.  Also the fastest RNG to offer any degree of 
@@ -66,7 +68,7 @@ recommended RNG meets a few common requirements:
 Engine      quality speed  theory  size        notes
 sfc64       3***    5***** 1*      32 bytes    best speed
 jsf64       3***    5***** 0       32 bytes    -
-xsm64       3***    4****  1*      32 bytes    random access
+xsm64       4****   4****  1*      32 bytes    random access
 arbee       4****   4****  1*      40 bytes    entropy pooling
 trivium     5*****  1*     2**     48 bytes    crypto
 efiix64x384 5*****  3***   1*      3104 bytes  crypto
@@ -76,7 +78,7 @@ isaac64x256 5*****  2**    2**     4128 bytes  crypto
 Engine      quality speed  theory  size        notes
 sfc32       3***    5***** 0       16 bytes    best speed
 jsf32       3***    5***** 0       16 bytes    -
-xsm32       2**     4****  1*      16 bytes    random access
+xsm32       3***    4****  1*      16 bytes    random access
 chacha(8)   5*****  1*     3***    124 bytes   crypto + random access
 efiix32x384 5*****  3***   0       1552 bytes  crypto
 isaac32x256 5*****  2**    2**     2064 bytes  crypto
@@ -100,8 +102,8 @@ performance penalty, but is otherwise fine.
 * Some RNGs allow a user to skip forwards or backwards arbitrarily far in 
 the output stream efficiently.  The following RNGs support that:
 Engine          quality speed  size        word      other
-xsm32           2**     4****  16 bytes    32 bit    -
-xsm64           3***    4****  32 bytes    64 bit    -
+xsm32           3***    4****  16 bytes    32 bit    -
+xsm64           4****   4****  32 bytes    64 bit    -
 chacha(8)       5*****  1*     124 bytes   32 bit    crypto
 chacha(12)      5*****  1*     124 bytes   32 bit    crypto
 chacha(20)      5*****  0      124 bytes   32 bit    crypto
@@ -179,8 +181,8 @@ when used in the same way in all future versions, unless bugs are discovered:
 	mt19937 (aka "The Mersenne Twister")
 	hc256 (aka "HC-256")
 	trivium
-	chacha (for even numbers of rounds only)
-	salsa (aka Salsa20)
+	chacha (aka ChaCha) (for even numbers of rounds only)
+	salsa (aka Salsa20) (for even numbers of rounds only)
 Other recommended RNGs in PractRand may vary from version to version, though 
 they should stabilize by the time PractRand approaches version 1.0.  
 
@@ -247,8 +249,8 @@ quality: (rated from 0 to 5 stars)
 		sfc16                 2          5          2        2       2
 		sfc32                 3          5          4        3       3
 		sfc64                 3          5          5        5       3
-		xsm32                 2          5          4        3       2
-		xsm64                 3          5          5        4       3
+		xsm32                 3          5          4        3       3
+		xsm64                 4          5          5        4       4
 		arbee                 4          5          5        5       4
 		isaac32x256           5          5          5        5       5
 		isaac64x256           5          5          5        5       5
@@ -654,8 +656,8 @@ small fast RNGs:
 			crypto security:  none
 			minimum cycle:    2**16 / 2**32 / 2**64
 			word size:        16 / 32 / 64 bit
-			size:             6 / 12 / 24 bytes
-			statespace:       2**48 / 2**96 / 2**192
+			size:             8 / 16 / 32 bytes
+			statespace:       2**64 / 2**128 / 2**256
 			multi-cyclic:     yes
 			reversible:       yes
 crypto / high quality RNGs:
@@ -686,7 +688,7 @@ crypto / high quality RNGs:
 			random access:    no
 			entropy pooling:  no
 			crypto security:  moderate
-			minimum cycle:    2**40 / 2**72 (probably no bad cycles)
+			minimum cycle:    2**40 / 2**72
 			word size:        32 / 64 bit
 			size:             2064 / 4128 bytes
 			statespace:       2**8296 / 2**16584
@@ -888,16 +890,15 @@ popular RNGs:
 		The output function is a relatively complex hashing function to mask 
 		the flaws of the underlieing twisted LFSR.  But for some reason the 
 		output hashing function used is also purely linear.  
-		It looks like it really ought to flunk my BCFN test, but it doesn't.  
-		Testing suggests that it's ability to pass that test would evaporate if it 
-		had a smaller statesize or slightly weaker output hashing, but is passes 
-		consistently, even when very very large quantities of output are used.  
-		On the other hand it fails some subtests of TestU01 Crush.  Which would 
-		suggest mt19937 is low quality... but the failures seem oddly brittle, 
-		with slight meaningless variations causing mt19937 to pass them, and I 
-		don't see those subtests flunking anything other than GFSRs, so 
-		I end up feeling that mt19937 isn't that bad, it's just that Crush puts 
-		a high priority on subtests that specifically target that family of RNGs.  
+		In PractRand it fails only the binary matrix rank test.  It looks like it 
+		really ought to flunk my BCFN test, but it doesn't.  Testing suggests that 
+		it's ability to pass that test would evaporate if it had a smaller 
+		statesize or slightly weaker output hashing, but is passes consistently, 
+		even when very very large quantities of output are used.  
+		It's test failures suggest that it should be considered low-quality... 
+		but the failures seem oddly brittle, with slight meaningless variations 
+		causing mt19937 to pass them, so I'm not entirely sure how to treat 
+		that.  
 		Technically random access is possible for this algorithm, but the cost 
 		(in memory & cycles) required is sufficiently painful that it's never 
 		done in practice.  

@@ -1,3 +1,40 @@
+version 0.93
+	RNGs
+		ALL RECOMMENDED RNGs!
+			added customized seeding-from-another-RNG code to every recommended RNG
+			on PRNGs with a statespace <= 2**128, it generally allows seeding to all states
+			on PRNGs with statespaces >= 2**256, it generally restricts seeding to a possible number of initial states around the square root of the statespace
+			on PRNGs with intermediate sizes, it goes somewhere in between
+			this is to allow probabilistic proofs of zero bad cycles for PRNGs where that is practical
+			also, the old generic seeding-from-an-RNG was not really desirable on recommended PRNGs, it was more of a quick-and-dirty solution
+		sfc16 / sfc32 / sfc64
+			improved shift constants (this changes the output sequences)
+			adjusted seeding
+		arbee
+			tweaked feed-in algorithms slightly yet again
+		efiix*
+			adjust seeding, yet again
+		non-recommended
+			added xoroshiro128plus
+			efiix variants were using the wrong algorithm
+	tools
+		RNG_test
+			changed thresholds slightly
+			multithreading fixes, particularly for unix platforms
+			bug fix for --ttep mode
+			increased buffer size for reading from stdin
+		RNG_output
+			increased buffer size
+			added the ability to use "inf" in place of the number of bytes requested
+			tweaked error messages, warning messages, usage messages, & documentation
+	Tests:
+		BRank
+			minor bug-fixes and adjustments to how extreme results are reported
+			32 bit executables now have smaller maximum matrix size than 64 bit executables, to minimize crashes related to exhausting address space
+		BCFN_FF
+			more conservative p-values for the ":freq" subtests (the p-values are still awful, but are now less likely to produce "suspicious" results on good PRNGs)
+		FPF
+			fix for the ":all" result on short test runs
 version 0.92
 	RNGs
 		non-recommended
@@ -14,7 +51,7 @@ version 0.92
 		BRank
 			fixed the part where it was slightly violating the abstraction layer
 		BCFN, BCFN_FF, BCFN_MT
-			improved accuracy of some calculations, which may help particularl long test runs
+			improved accuracy of some calculations, which may help particularly long test runs
 	documentation
 		added summary of NIST STS results to Test_results.txt
 version 0.91

@@ -330,7 +330,7 @@ namespace PractRand {
 
 
 				Uint8 efiix8_varqual::raw8() {
-					/*Uint8 iterated = iteration_table  [i & iteration_table_size_m1];
+					Uint8 iterated = iteration_table  [i & iteration_table_size_m1];
 					Uint8 indirect = indirection_table[c & indirection_table_size_m1];
 					indirection_table[c & indirection_table_size_m1] = iterated + a;
 					iteration_table  [i & iteration_table_size_m1  ] = indirect;
@@ -354,7 +354,7 @@ namespace PractRand {
 					
 					//"^b" - 1+1: 38, 1+2: >36
 					//"^a" - 1+1: 38
-					Uint8 iterated = iteration_table  [i & iteration_table_size_m1  ] ^ a;
+					/*Uint8 iterated = iteration_table  [i & iteration_table_size_m1  ] ^ a;
 					Uint8 indirect = indirection_table[c & indirection_table_size_m1] + i;
 					indirection_table[c & indirection_table_size_m1] = iterated;
 					iteration_table  [i & iteration_table_size_m1  ] = indirect;
@@ -406,7 +406,7 @@ namespace PractRand {
 					return (value << bits) | (value >> (4-bits));
 				}
 				Uint8 efiix4_varqual::raw4() {
-					/*Uint8 iterated = iteration_table  [i & iteration_table_size_m1];
+					Uint8 iterated = iteration_table  [i & iteration_table_size_m1];
 					Uint8 indirect = indirection_table[c & indirection_table_size_m1];
 					indirection_table[c & indirection_table_size_m1] = iterated + a;
 					iteration_table  [i & iteration_table_size_m1  ] = indirect;
@@ -449,7 +449,7 @@ namespace PractRand {
 						4		32/32	31/33	33/36	36/37
 						8		37/42?
 					*/
-					Uint8 iterated = iteration_table  [i & iteration_table_size_m1  ] ^ a;
+					/*Uint8 iterated = iteration_table  [i & iteration_table_size_m1  ] ^ a;
 					Uint8 indirect = indirection_table[c & indirection_table_size_m1] + i;
 					indirection_table[c & indirection_table_size_m1] = iterated;
 					iteration_table  [i & iteration_table_size_m1  ] = indirect;

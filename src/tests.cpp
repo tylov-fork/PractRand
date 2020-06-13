@@ -348,8 +348,7 @@ public:
 	}
 };
 PractRand::Tests::RawTestCalibrationData_117 raw_calibration_data_array[] = {
-/*
-	This is raw calibration data - I take known good RNGs and run them through tests a bunch of times.  
+/*	This is raw calibration data - I take known good RNGs and run them through tests a bunch of times.  
 	Which produced an empirically determined distribution.  
 	Anyway:
 		the format for the distribution here is {name, # of blocks per sample, # of samples tested, { empirically determined samples at reference p-values points }, mean, median, standard deviation }
@@ -3003,8 +3002,8 @@ void PractRand::Tests::BCFN_FF::get_results(std::vector<TestResult> &results) {
 				int reduced_size = simplify_prob_table(COUNTS2_SIZE, samples / 40., &probs[1], &counts2_dup[1], true, false);
 				double tr = g_test(reduced_size, &probs[1], &counts2_dup[1]);
 				double n = math_chisquared_to_normal(tr, reduced_size-1);
-				double p = math_chisquared_to_pvalue(tr, reduced_size-1);
-				double p2 = math_normaldist_to_pvalue(-n / 1.414);
+				double p = math_chisquared_to_pvalue(tr, reduced_size - 1);
+				double p2 = math_normaldist_to_pvalue(-n / 1.6);
 				std::ostringstream name;
 				name << "BCFN_FF(" << unitsL2 << "+" << level << "):freq";
 				double w;
@@ -3013,7 +3012,7 @@ void PractRand::Tests::BCFN_FF::get_results(std::vector<TestResult> &results) {
 				if (w > 0.375) w = 0.375;
 				if (!level) w += 0.125;
 				//results.push_back(TestResult(name.str(), n, n, TestResult::TYPE_RAW_NORMAL, w*0.1 ) );
-				results.push_back(TestResult(name.str(), n, p2, TestResult::TYPE_BAD_P, w*0.1 ) );
+				results.push_back(TestResult(name.str(), n, p2, TestResult::TYPE_BAD_P, w*0.05 ) );
 				//results.push_back(TestResult(name.str(), n, p, TestResult::TYPE_GOOD_P, w*0.1 ) );
 			}
 		}
@@ -3455,13 +3454,13 @@ void PractRand::Tests::FPF::get_results(std::vector<TestResult> &results) {
 			}
 		}
 	}
-	if (samples >= 2) {//on short runs this may be the only usable result from FPF
+	if (over_bins >= 2) {//on short runs this may be the only usable result from FPF
 		over_raw *= 2;
 		double over_norm = math_chisquared_to_normal(over_raw, over_bins-1);
 		double over_p = math_normaldist_to_pvalue(over_norm);
-		TestCalibrationData *calib = calibration_manager.get_calibration_data( "FPF-14+6/16:overall", samples / 512.0 + 0.5 );
-		if (stride_bits_L2 < 2 || sig_bits != 14 || exp_bits < 4 ) calib = NULL;
-		if (calib && samples >= 3000) 
+		TestCalibrationData *calib = calibration_manager.get_calibration_data("FPF-14+6/16:overall", samples / 512.0 + 0.5);
+		if (stride_bits_L2 < 2 || sig_bits != 14 || exp_bits < 4) calib = NULL;
+		if (calib && samples >= 3000)
 			results.push_back( TestResult(get_name() + ":all", over_norm, -calib->sample_to_suspicion(over_norm),  TestResult::TYPE_GOOD_S, .25));
 		else results.push_back(TestResult(get_name() + ":all", over_norm, over_norm,  TestResult::TYPE_RAW_NORMAL, .25));
 	}
@@ -4165,7 +4164,7 @@ void PractRand::Tests::Pat5::get_results(std::vector<TestResult> &results) {
 		Sint64 total_matches = 0;
 		for (int i = 0; i < TOTAL_PATTERNS; i++) total_matches += patterns[i].total_count;
 		if (total_matches < 100) return;
-		counts2[TOTAL_SIZE] = total_opportunities - total_matches;
+		if (INCLUDE_NON_MATCHES) counts2[TOTAL_SIZE] = total_opportunities - total_matches;
 		if (total_opportunities > 300) {
 			double rarity = Tests::rarity_test(TOTAL_SIZE + INCLUDE_NON_MATCHES, &probs2[0], &counts2[0]);
 			std::ostringstream ss; ss << get_name() << "(*,r)"; results.push_back(TestResult(ss.str(), rarity, 0, TestResult::TYPE_RAW_NORMAL, 0.125));
@@ -4305,13 +4304,16 @@ void PractRand::Tests::CoupGap::test_blocks(TestBlock *data, int numblocks) {
 
 PractRand::Tests::BRank::BRank( Uint32 rate_hl2_ ) : rate_hl2(rate_hl2_), in_progress(NULL) {
 	static Uint32 sizes[] = { 
-		128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6<<10, 8<<10, 12<<10, 16<<10, 24<<10, 32<<10, 40<<10, 48<<10
+		128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6<<10, 8<<10, 12<<10, 16<<10, 24<<10, 32<<10, 48<<10, 64<<10, 0
 	};
-	const int N = sizeof(sizes) / sizeof(sizes[0]);
-	ps.resize(N);
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; true; i++) {
+		int size = sizes[i];
+		if (size == 0) break;
+		if (sizeof(void*) < 8 && size >= 32768) //32 bit platforms have a hard time with large sizes, at least when extra-folding is enabled
+			break;
+		ps.resize(i+1);
 		PerSize &s = ps[i];
-		s.size = sizes[i];
+		s.size = size;
 		Uint64 t = s.size / 64;
 		if (!t) t = 1;
 		s.time_per = t*t*t * 256 + t*t * 256;// *very* rough approximation
@@ -4322,7 +4324,7 @@ PractRand::Tests::BRank::BRank( Uint32 rate_hl2_ ) : rate_hl2(rate_hl2_), in_pro
 }
 void PractRand::Tests::BRank::PerSize::reset() {
 	total = 0;
-	for (int i = 0; i < 10; i++) counts[i] = 0;
+	for (int i = 0; i < NUM_COUNTS; i++) counts[i] = 0;
 	outliers.resize(0);
 	outliers_overflow = 0;
 }
@@ -4332,8 +4334,9 @@ void PractRand::Tests::BRank::deinit( ) {
 }
 void PractRand::Tests::BRank::init( RNGs::vRNG *known_good ) {
 	for (int i = 0; i < ps.size(); i++) ps[i].reset();
-	if (in_progress) delete in_progress;
 	saved_time = 0;
+	if (in_progress) delete in_progress;
+	in_progress = NULL;
 	pick_next_size();
 }
 std::string PractRand::Tests::BRank::get_name( ) const {
@@ -4371,14 +4374,14 @@ void PractRand::Tests::BRank::get_results(std::vector<TestResult> &results) {
 		name << this->get_name() << ":";
 		if (s.size & (TestBlock::SIZE - 1)) name << s.size; else name << (s.size >> TestBlock::SIZE_L2) << "K";
 		int L2 = int(std::log((double)s.total)/std::log(2.0));
-		if (L2 < 10) name << "(" << L2 << ")";
+		/*if (L2 < 10) name << "(" << L2 << ")";
 		else {
-			char blah[2] = {'A' + L2 - 10, 0};
+			char blah[2] = {char('A' + L2 - 10), 0};
 			name << "(" << &blah[0] << ")";
-		}
-		//name << "(" << s.total << ")";
+		}*/
+		name << "(" << s.total << ")";
 		if (s.outliers_overflow) {
-			results.push_back(TestResult(name.str()+":!", s.outliers_overflow, 999999., TestResult::TYPE_GOOD_S, 0.125 / ps.size()));
+			results.push_back(TestResult(name.str() + ":!", s.outliers_overflow + PerSize::MAX_OUTLIERS, 1, TestResult::TYPE_PASSFAIL, 0.125 / ps.size()));
 			continue;
 		}
 		double score = 0;
@@ -4417,15 +4420,19 @@ void PractRand::Tests::BRank::pick_next_size() {
 	double best_score = 0;
 	int best = -1;
 	for (int i = 0; i < ps.size(); i++) {
-		double score = ps[i].size * (ps[i].size + 128.0);
+		double score = ps[i].size; score *= (score + 128);
 		score /= ps[i].time_per;
 		if (ps[i].total) {
-			if ((ps[i].size & (ps[i].size - 1)) )
-				score = 0;//not much point in numerous instances at every half-step
+			if ((ps[i].size & (ps[i].size - 1))) {
+				score /= ps[i].total;
+				score /= ps[i].total;
+				score /= 16.0;
+				//score = 0;//not much point in numerous instances at every half-step
+			}
 			else {
 				score /= ps[i].total;
 				score /= ps[i].total;
-				score *= 0.5;
+				score /= 2.0;
 			}
 		}
 		if (score > best_score) {
@@ -4433,8 +4440,16 @@ void PractRand::Tests::BRank::pick_next_size() {
 			best_score = score;
 		}
 	}
+	if (best == -1) {
+		std::printf("BRank::pick_next_size : best is -1\n");
+		std::exit(0);
+	}
 	size_index = best;
 	in_progress = new BitMatrix();
+	if (!in_progress) {
+		std::printf("BRank::pick_next_size : new BitMatrix failed\n");
+		std::exit(0);
+	}
 	in_progress->init(ps[size_index].size, ps[size_index].size);
 	blocks_in_progress = 0;
 }
@@ -4443,7 +4458,7 @@ void PractRand::Tests::BRank::finish_matrix() {
 	int result = (s.size > 1000) ? in_progress->large_normalize_and_rank() : in_progress->normalize_and_rank();
 	result = s.size - result;
 	if (result < 11) s.counts[result]++;
-	else if (s.outliers.size() < 10) s.outliers.push_back(result);
+	else if (s.outliers.size() < PerSize::MAX_OUTLIERS) s.outliers.push_back(result);
 	else s.outliers_overflow++;
 	s.total++;
 	blocks_in_progress = 0;
@@ -4475,15 +4490,16 @@ void PractRand::Tests::BRank::test_blocks(TestBlock *data, int numblocks) {
 			Uint32 offset = (blocks_in_progress * TestBlock::SIZE) >> (BitMatrix::WORD_BITS_L2 - 3);
 			if (numblocks >= blocks_needed) {//whole matrix
 				in_progress->raw_import(offset, &data[0].as32[0], (bytes - blocks_in_progress * TestBlock::SIZE) >> (BitMatrix::WORD_BITS_L2 - 3));
-				saved_time -= s.time_per;
-				finish_matrix();
-				numblocks -= blocks_needed;
+				finish_matrix();//this will reset blocks_in_progress
 				data += blocks_needed;
+				saved_time -= s.time_per;
 				saved_time += rate * blocks_needed;
+				numblocks -= blocks_needed;
 			}
 			else {//partial matrix
 				in_progress->raw_import(offset, &data[0].as32[0], numblocks << (TestBlock::SIZE_L2 - (BitMatrix::WORD_BITS_L2 - 3)));
 				blocks_in_progress += numblocks;
+				//data += numblocks; //we're now done here, so need to update the local variable
 				saved_time += rate * numblocks;
 				numblocks = 0;
 			}

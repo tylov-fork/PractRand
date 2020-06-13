@@ -172,8 +172,8 @@
     <ClCompile Include="..\..\src\RNGs\trivium.cpp" />
     <ClCompile Include="..\..\src\RNGs\xsm.cpp" />
     <ClCompile Include="..\..\src\sha2.cpp" />
-    <ClCompile Include="..\..\src\test_batteries.cpp" />
     <ClCompile Include="..\..\src\tests.cpp" />
+    <ClCompile Include="..\..\src\test_batteries.cpp" />
     <ClCompile Include="..\..\src\RNGs\efiix.cpp" />
     <ClCompile Include="..\..\src\RNGs\hc256.cpp" />
     <ClCompile Include="..\..\src\RNGs\isaac.cpp" />
