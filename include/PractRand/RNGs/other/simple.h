@@ -11,6 +11,27 @@ namespace PractRand {
 	namespace RNGs {
 		namespace Polymorphic {
 			namespace NotRecommended {
+				class xsalta16x3 : public vRNG16 {
+					Uint16 a, b, c;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class xsaltb16x3 : public vRNG16 {
+					Uint16 a, b, c;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class xsaltc16x3 : public vRNG16 {
+					Uint16 a, b, c;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 				//xorshift RNGs, a subset of LFSRs proposed by Marsaglia in 2003
 				class xorshift32 : public vRNG32 {
 					//constants those Marsaglia described as "one of my favorites" on page 4 of his 2003 paper
@@ -68,7 +89,15 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class xorwow32x5 : public vRNG32 {
+				class xorwow96_32 : public vRNG32 {
+					xorshift64 impl;
+					Uint32 a;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class xorwow32x6 : public vRNG32 {
 					//recommended at the top of Marsaglias 2003 xorshift paper
 					Uint32 x,y,z,w,v,d;
 				public:
@@ -157,7 +186,13 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-
+				class jsf16 : public vRNG16 {
+					Uint16 a, b, c, d;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 
 				//a few simple RNGs just for testing purposes
 				class simpleA : public vRNG32 {
@@ -190,8 +225,59 @@ namespace PractRand {
 				};
 				class simpleE : public vRNG32 {
 					//seems like a good combination of speed & quality
-					//but falls flat when used on 16 bit words (irreversible, statespac issues)
+					//but falls flat when used on 16 bit words (irreversible, statespace issues)
 					Uint32 a, b, c;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class simpleF : public vRNG16 {
+					Uint16 a, b, c, d;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class simpleG : public vRNG32 {
+					Uint32 a, b, c, d;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				//see http://www.drdobbs.com/tools/229625477
+				class mo_Lesr32 : public vRNG32 {
+					Uint32 state;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mo_ResrRers32 : public vRNG32 {
+					Uint32 a;
+					Uint32 b;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mo_Rers64_32 : public vRNG32 {
+					Uint64 state;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mo_Resr64_32 : public vRNG32 {
+					Uint64 state;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mo_Resdra64_32 : public vRNG32 {
+					Uint64 state;
 				public:
 					Uint32 raw32();
 					std::string get_name() const;

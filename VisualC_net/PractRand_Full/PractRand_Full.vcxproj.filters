@@ -24,18 +24,15 @@
     <Filter Include="Header Files\Tests">
       <UniqueIdentifier>{1e37b1fe-6630-4f75-b223-acba4206009e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
-    </Filter>
     <Filter Include="Documentation">
       <UniqueIdentifier>{52d2bd7b-9502-4d49-90d2-65e42f27c7d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\automatic_entropy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\math.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -96,6 +93,15 @@
     <ClCompile Include="..\..\src\RNGs\xsm.cpp">
       <Filter>Source Files\RNGs</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\platform_specifics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\RNGs\chacha.cpp">
+      <Filter>Source Files\RNGs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\RNGs\salsa.cpp">
+      <Filter>Source Files\RNGs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\PractRand\config.h">
@@ -141,9 +147,6 @@
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\PractRand\RNGs\isaac64x256.h">
-      <Filter>Header Files\RNGs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\PractRand\RNGs\jsf16.h">
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\PractRand\RNGs\jsf32.h">
@@ -227,6 +230,15 @@
     <ClInclude Include="..\..\include\PractRand\RNGs\xsm64.h">
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\PractRand\RNGs\all.h">
+      <Filter>Header Files\RNGs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\PractRand\RNGs\chacha.h">
+      <Filter>Header Files\RNGs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\PractRand\RNGs\salsa.h">
+      <Filter>Header Files\RNGs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\doc\installation.txt">
@@ -283,7 +295,10 @@
     <None Include="..\..\doc\RNG_speed.txt">
       <Filter>Documentation</Filter>
     </None>
-    <None Include="..\..\doc\examples.txt">
+    <None Include="..\..\doc\RNG_parallel.txt">
+      <Filter>Documentation</Filter>
+    </None>
+    <None Include="..\..\doc\tools.txt">
       <Filter>Documentation</Filter>
     </None>
   </ItemGroup>

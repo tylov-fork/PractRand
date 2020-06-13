@@ -54,6 +54,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <PostBuildEvent>
       <Command>
@@ -78,6 +79,7 @@
       </DebugInformationFormat>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <PostBuildEvent>
       <Command>
@@ -85,10 +87,11 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\automatic_entropy.cpp" />
     <ClCompile Include="..\src\math.cpp" />
+    <ClCompile Include="..\src\platform_specifics.cpp" />
     <ClCompile Include="..\src\rand.cpp" />
     <ClCompile Include="..\src\RNGs\arbee.cpp" />
+    <ClCompile Include="..\src\RNGs\chacha.cpp" />
     <ClCompile Include="..\src\RNGs\sfc.cpp" />
     <ClCompile Include="..\src\RNGs\sha2_based_pool.cpp" />
     <ClCompile Include="..\src\RNGs\trivium.cpp" />
@@ -104,7 +107,9 @@
     <ClInclude Include="..\include\PractRand\config.h" />
     <ClInclude Include="..\include\PractRand\endian.h" />
     <ClInclude Include="..\include\PractRand.h" />
+    <ClInclude Include="..\include\PractRand\RNGs\all.h" />
     <ClInclude Include="..\include\PractRand\RNGs\arbee.h" />
+    <ClInclude Include="..\include\PractRand\RNGs\chacha.h" />
     <ClInclude Include="..\include\PractRand\RNGs\efiix16x384.h" />
     <ClInclude Include="..\include\PractRand\RNGs\efiix32x384.h" />
     <ClInclude Include="..\include\PractRand\RNGs\efiix64x384.h" />
@@ -124,7 +129,6 @@
     <ClInclude Include="..\include\PractRand\RNGs\hc256.h" />
     <ClInclude Include="..\include\PractRand\RNGs\isaac32x256.h" />
     <ClInclude Include="..\include\PractRand\RNGs\isaac64x256.h" />
-    <ClInclude Include="..\include\PractRand\RNGs\jsf16.h" />
     <ClInclude Include="..\include\PractRand\RNGs\jsf32.h" />
     <ClInclude Include="..\include\PractRand\RNGs\jsf64.h" />
     <ClInclude Include="..\include\PractRand\RNGs\mt19937.h" />

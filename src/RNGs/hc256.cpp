@@ -10,11 +10,13 @@ using namespace PractRand;
 
 //polymorphic:
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C32(hc256)
+std::string PractRand::RNGs::Polymorphic::hc256::get_name() const {return "hc256";}
 void PractRand::RNGs::Polymorphic::hc256::flush_buffers() {implementation.flush_buffers();}
 void PractRand::RNGs::Polymorphic::hc256::seed(Uint64 s) {implementation.seed(s);}
 void PractRand::RNGs::Polymorphic::hc256::seed(Uint32 key_and_iv[16]) {implementation.seed(key_and_iv);}
 
 //raw:
+PractRand::RNGs::Raw::hc256::~hc256() {std::memset(this, 0, sizeof(this));}
 #ifndef _MSC_VER
 #define rotr(x,n) (((x)>>(n))|((x)<<(32-(n))))
 #else

@@ -37,7 +37,6 @@
 		Uint64 r = raw32();\
 		return r | (Uint64(raw32()) << 32);\
 	}\
-	std::string PractRand::RNGs::Polymorphic:: RNG ::get_name() const {return # RNG ;}\
 	Uint64 PractRand::RNGs::Polymorphic:: RNG ::get_flags() const {return implementation.FLAGS;}\
 	void PractRand::RNGs::Polymorphic:: RNG ::walk_state(StateWalkingObject *walker) {\
 		implementation.walk_state(walker);\
@@ -55,7 +54,6 @@
 		r = r | (Uint64(implementation.raw16()) << 32);\
 		return r | (Uint64(implementation.raw16()) << 48);\
 	}\
-	std::string PractRand::RNGs::Polymorphic:: RNG ::get_name() const {return # RNG ;}\
 	Uint64 PractRand::RNGs::Polymorphic:: RNG ::get_flags() const {return implementation.FLAGS;}\
 	void PractRand::RNGs::Polymorphic:: RNG ::walk_state(StateWalkingObject *walker) {\
 		implementation.walk_state(walker);\
@@ -68,7 +66,6 @@
 		Uint64 r = implementation.raw32();\
 		return (r << 32) | implementation.raw32();\
 	}\
-	std::string PractRand::RNGs::Polymorphic:: RNG ::get_name() const {return # RNG ;}\
 	Uint64 PractRand::RNGs::Polymorphic:: RNG ::get_flags() const {return implementation.FLAGS;}\
 	void PractRand::RNGs::Polymorphic:: RNG ::walk_state(StateWalkingObject *walker) {\
 		implementation.walk_state(walker);\
@@ -78,7 +75,6 @@
 	Uint16 PractRand::RNGs::Polymorphic:: RNG ::raw16() {return Uint16(implementation.raw64());}\
 	Uint32 PractRand::RNGs::Polymorphic:: RNG ::raw32() {return Uint32(implementation.raw64());}\
 	Uint64 PractRand::RNGs::Polymorphic:: RNG ::raw64() {return implementation.raw64();}\
-	std::string PractRand::RNGs::Polymorphic:: RNG ::get_name() const {return # RNG ;}\
 	Uint64 PractRand::RNGs::Polymorphic:: RNG ::get_flags() const {return implementation.FLAGS;}\
 	void PractRand::RNGs::Polymorphic:: RNG ::walk_state(StateWalkingObject *walker) {\
 		implementation.walk_state(walker);\
@@ -90,6 +86,7 @@ namespace PractRand {
 	namespace RNGs {
 		class vRNG;
 	}
+	void issue_error(const char *msg = 0);
 	namespace Internals {
 		//inline
 		static inline Uint8  rotate8 (Uint8  value, int bits) {return (value << bits) | (value >> (8 -bits));}
@@ -101,10 +98,12 @@ namespace PractRand {
 		static inline Uint32 rotate(Uint32 value, int bits) {return rotate32(value, bits);}
 		static inline Uint64 rotate(Uint64 value, int bits) {return rotate64(value, bits);}
 		//rand.cpp
-		void test_seeking64( PractRand::RNGs::vRNG *rng, Uint64 period_minus_1 );
-		void test_seeking128( PractRand::RNGs::vRNG *rng, Uint64 period_minus_1_low, Uint64 period_minus_1_high );
-		//automatic_entropy.cpp
+		/*void test_seeking64( PractRand::RNGs::vRNG *rng, Uint64 period_minus_1 );
+		void test_seeking128( PractRand::RNGs::vRNG *rng, Uint64 period_minus_1_low, Uint64 period_minus_1_high );*/
+		//platform_specific.cpp
 		bool add_entropy_automatically( PractRand::RNGs::vRNG *entropy_pool, int milliseconds=0 );
+		Uint64 issue_unique_identifier();
+		Uint64 high_resolution_time();
 		//math.cpp
 		void fast_forward_lcg128 ( Uint64 how_far_low, Uint64 how_far_high, Uint64 &value_low, Uint64 &value_high, Uint64 mul_low, Uint64 mul_high, Uint64 add_low, Uint64 add_high );
 		Uint64 fast_forward_lcg64 ( Uint64 how_far, Uint64 val, Uint64 mul, Uint64 add );

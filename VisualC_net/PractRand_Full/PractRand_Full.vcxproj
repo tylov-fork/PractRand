@@ -54,6 +54,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <PostBuildEvent>
       <Command>
@@ -76,6 +77,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <PostBuildEvent>
       <Command>
@@ -83,10 +85,12 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\automatic_entropy.cpp" />
+    <ClCompile Include="..\..\src\platform_specifics.cpp" />
     <ClCompile Include="..\..\src\math.cpp" />
     <ClCompile Include="..\..\src\rand.cpp" />
     <ClCompile Include="..\..\src\RNGs\arbee.cpp" />
+    <ClCompile Include="..\..\src\RNGs\chacha.cpp" />
+    <ClCompile Include="..\..\src\RNGs\salsa.cpp" />
     <ClCompile Include="..\..\src\RNGs\sha2_based_pool.cpp" />
     <ClCompile Include="..\..\src\RNGs\trivium.cpp" />
     <ClCompile Include="..\..\src\RNGs\xsm.cpp" />
@@ -109,11 +113,14 @@
     <ClInclude Include="..\..\include\PractRand\config.h" />
     <ClInclude Include="..\..\include\PractRand\endian.h" />
     <ClInclude Include="..\..\include\PractRand.h" />
+    <ClInclude Include="..\..\include\PractRand\RNGs\all.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\arbee.h" />
+    <ClInclude Include="..\..\include\PractRand\RNGs\chacha.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\efiix16x384.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\efiix32x384.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\efiix64x384.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\efiix8x384.h" />
+    <ClInclude Include="..\..\include\PractRand\RNGs\salsa.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\sha2_based_pool.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\trivium.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\xsm32.h" />
@@ -130,7 +137,6 @@
     <ClInclude Include="..\..\include\PractRand\RNGs\hc256.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\isaac32x256.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\isaac64x256.h" />
-    <ClInclude Include="..\..\include\PractRand\RNGs\jsf16.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\jsf32.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\jsf64.h" />
     <ClInclude Include="..\..\include\PractRand\RNGs\mt19937.h" />
@@ -151,8 +157,10 @@
     <ClInclude Include="..\..\include\PractRand\Tests\transforms.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\doc\examples.txt" />
-    <None Include="..\..\doc\index.html" />
+    <None Include="..\..\doc\tools.txt" />
+    <None Include="..\..\doc\index.html">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="..\..\doc\installation.txt" />
     <None Include="..\..\doc\license.txt" />
     <None Include="..\..\doc\portability.txt" />
@@ -161,6 +169,7 @@
     <None Include="..\..\doc\RNG_entropy_pools.txt" />
     <None Include="..\..\doc\RNG_interface_variations.txt" />
     <None Include="..\..\doc\RNG_multithreading.txt" />
+    <None Include="..\..\doc\RNG_parallel.txt" />
     <None Include="..\..\doc\RNG_speed.txt" />
     <None Include="..\..\doc\RNG_usage.txt" />
     <None Include="..\..\doc\Tests_batteries.txt" />

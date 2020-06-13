@@ -4,14 +4,14 @@
 #include <vector>
 //#include <list>
 //#include <set>
-//#include <map>
+#include <map>
 #include <cmath>
 #include <cstdlib>
 
 #include "PractRand/config.h"
 #include "PractRand/rng_basics.h"
-#include "PractRand/rng_helpers.h"
 #include "PractRand/rng_internals.h"
+#include "PractRand/test_helpers.h"
 
 namespace PractRand {
 	namespace Internals {
@@ -28,8 +28,8 @@ namespace PractRand {
 			Uint32 buffer[4];
 			Uint64 current = 0, carry = 0, tmp;
 			for (int x = 0; x < 4; x++) {
-				for (int y = 0; y < x; y++) {
-					tmp = Uint64(a[y]) * b[x-1-y];
+				for (int y = 0; y <= x; y++) {
+					tmp = Uint64(a[y]) * b[x-y];
 					carry += tmp >> 32;
 					current += Uint32(tmp);
 				}
@@ -191,8 +191,7 @@ namespace PractRand {
 		//categories = old # of entries in tables
 		//return value = new # of entries in tables
 		//combines adjacent entries
-		//N should be on the order of the sum of all counts (but, constant)
-		//low N will combine many probs, high N fewer combinations
+		//N should be the minimum number of expected elements per bucket, more or less
 		//if aggressive is true, it will treat N as a hard limit on how low probabilities can be
 		//otherwise, it will treat it as a soft limit
 		//linear combines only adjacent entries; non-linear is not yet implemented
@@ -201,8 +200,26 @@ namespace PractRand {
 			double E = 1.0 / N;
 			int reduced_size = categories;
 			if (!linear) {
-				issue_error();
-				//not yet implemented
+				std::multimap<double,Uint64> indexed;
+				for (unsigned long i = 0; i < categories; i++) indexed.insert(std::pair<double,Uint64>(prob_table[i], counts[i]));
+				while (reduced_size > 2) {
+					std::multimap<double,Uint64>::iterator a, b;
+					a = b = indexed.begin(); b++;
+					if (a->first >= E || (b->first >= E && !aggressive)) break;
+					double ps = a->first + b->first;
+					Uint64 cs = a->second + b->second;
+					indexed.erase(a);
+					indexed.erase(b);
+					indexed.insert(std::pair<double,Uint64>(ps, cs));
+					reduced_size -= 1;
+				}
+				int i = 0;
+				for (std::multimap<double,Uint64>::iterator it = indexed.begin(); it != indexed.end(); it++) {
+					prob_table[i] = it->first;
+					counts[i] = it->second;
+				}
+				if (i != reduced_size) issue_error();
+				return reduced_size;
 			}
 			else {//linear
 				double E2 = aggressive ? 0.5 : E;
@@ -330,11 +347,23 @@ namespace PractRand {
 				}
 			}
 		}
-		static double math_lower_incomplete_gamma ( double a, double x ) {
-			if (a == 1) return 1 - std::exp(-x);
-			if (a == 0.5) return std::sqrt(3.14159265358979) * math_erf(std::sqrt(x));
-			if (a > 1) return (a-1) * math_lower_incomplete_gamma( a-1, x ) - std::pow(x, a-1) * std::exp(-x);
+		static double _math_lower_incomplete_gamma ( double a, double x, double scale = 1.0, double offset = 0.0) {
+		recurse:
+			if (a == 1) return (1 - std::exp(-x)) * scale - offset;
+			if (a == 0.5) return (std::sqrt(3.14159265358979) * math_erf(std::sqrt(x))) * scale - offset;
+			if (a > 1) {
+				scale *= a-1;
+				offset *= a-1;
+				offset -= std::pow(x, a-1) * std::exp(-x);
+				a -= 1;
+				goto recurse;
+				//return _math_lower_incomplete_gamma( a-1, x, scale, offset );
+				//if (a > 1) return (a-1) * math_lower_incomplete_gamma( a-1, x ) - std::pow(x, a-1) * std::exp(-x);
+			}
 			issue_error();return -1;
+		}
+		static double math_lower_incomplete_gamma ( double a, double x) {
+			return _math_lower_incomplete_gamma(a, x, 1.0, 0.0);
 		}
 		static double math_gamma_function ( double a ) {
 			if (a == 0.5) return std::sqrt(3.14159265358979);
@@ -361,14 +390,17 @@ namespace PractRand {
 			if (a > 1) return (a-1) * math_upper_incomplete_gamma( a-1, x ) + pow(x, a-1) * ::exp(-x);
 			issue_error();return -1;
 		}
+		double math_chisquared_to_normal ( double chisquared, double DoF ) {
+			return ( chisquared - DoF ) / std::sqrt(DoF);
+		}
 		double math_chisquared_to_pvalue ( double chisquared, double DoF ) {
+			long double n = math_chisquared_to_normal(chisquared, DoF);
+			if (fabs(n) > 100) return (n > 0) ? 1 : 0;
+			if (fabs(chisquared) > 100) return math_normaldist_to_pvalue(n);
 			long double p = math_lower_incomplete_gamma(DoF/2,chisquared/2) / math_gamma_function(DoF/2);
 			if (p < 0) p = 0;
 			if (p > 1) p = 1;
 			return (double)p;
-		}
-		double math_chisquared_to_normal ( double chisquared, double DoF ) {
-			return ( chisquared - DoF ) / std::sqrt(DoF);
 		}
 		double math_pvalue_to_chisquared ( double pvalue, double DoF ) {
 			double chisquared = 1.0;
@@ -383,7 +415,84 @@ namespace PractRand {
 			}
 			return chisquared;
 		}
+		double math_normaldist_to_pvalue(double norm) {
+			/*double r;
+			r = math_erf(norm * sqrt(0.5));
+			r *= 0.5;
+			r += 0.5;
+			return r;*/
+			double upper_p, lower_p;
+			if (norm >= 0) {
+				upper_p = 1;
+				lower_p = 0.5;
+			}
+			else {
+				upper_p = 0.5;
+				lower_p = 0;
+			}
+			for (int i = 0; i < 55; i++) {
+				double midp = (upper_p + lower_p) / 2;
+				double midn = math_pvalue_to_normaldist(midp);
+				if (midn >= norm) upper_p = midp;
+				else lower_p = midp;
+			}
+			return (upper_p + lower_p) / 2;	
+		}
+		double math_pvalue_to_normaldist( double pvalue ) {
+			//public domain, originally by Peter J. Acklam
+			const double a1 = -39.69683028665376;
+			const double a2 = 220.9460984245205;
+			const double a3 = -275.9285104469687;
+			const double a4 = 138.3577518672690;
+			const double a5 = -30.66479806614716;
+			const double a6 = 2.506628277459239;
 
+			const double b1 = -54.47609879822406;
+			const double b2 = 161.5858368580409;
+			const double b3 = -155.6989798598866;
+			const double b4 = 66.80131188771972;
+			const double b5 = -13.28068155288572;
+
+			const double c1 = -0.007784894002430293;
+			const double c2 = -0.3223964580411365;
+			const double c3 = -2.400758277161838;
+			const double c4 = -2.549732539343734;
+			const double c5 = 4.374664141464968;
+			const double c6 = 2.938163982698783;
+
+			const double d1 = 0.007784695709041462;
+			const double d2 = 0.3224671290700398;
+			const double d3 = 2.445134137142996;
+			const double d4 = 3.754408661907416;
+
+			const double threshold_low = 0.02425;
+			const double threshold_high = 1.0 - threshold_low;
+			double q, x, r;
+
+			if (pvalue <= 0) return -999999999.;
+			if (pvalue >= 1) return +999999999.;
+
+			//Rational approximation for lower region.
+			if ((0 < pvalue) && (pvalue < threshold_low)) {
+				q = sqrt(-2*log(pvalue));
+				x = (((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) / ((((d1*q+d2)*q+d3)*q+d4)*q+1);
+			}
+
+			//Rational approximation for central region.
+			if ((threshold_low <= pvalue) && (pvalue <= threshold_high)) {
+				q = pvalue - 0.5;
+				r = q*q;
+				x = (((((a1*r+a2)*r+a3)*r+a4)*r+a5)*r+a6)*q / (((((b1*r+b2)*r+b3)*r+b4)*r+b5)*r+1);
+			}
+
+			//Rational approximation for upper region.
+			if ((threshold_high < pvalue) && (pvalue < 1)) {
+				q = sqrt(-2*log(1-pvalue));
+				x = -(((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) / ((((d1*q+d2)*q+d3)*q+d4)*q+1);
+			}
+
+			return x;
+		}
 		//long double gap_probs( int first, int last, long double baseprob = (255.0 / 256.0) );
 
 		static const Uint8 reverse_table[256] = {

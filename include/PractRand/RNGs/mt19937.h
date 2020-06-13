@@ -21,6 +21,7 @@ namespace PractRand {
 				//seeds < 2**32 use the standard MT19937 seeding algorithm
 				//seeds >= 2**32 use a nonstandard MT19937 seeding algorithm
 				void seed(Uint64 s);
+				void seed(Uint32 s[], int seed_length);//alternate seeding algorithm added to MT in 2002
 
 				Uint32 untempered_raw32() {
 					if ( used >= ARRAY_SIZE ) {
@@ -36,7 +37,9 @@ namespace PractRand {
 		namespace Polymorphic {
 			class mt19937 : public vRNG32 {
 				PRACTRAND__POLYMORPHIC_RNG_BASICS_H(mt19937)
+				mt19937 (Uint32 s[], int seed_length) {seed(s, seed_length);}
 				void seed(Uint64 s);
+				void seed(Uint32 s[], int seed_length);//alternate seeding algorithm added to MT in 2002
 				void flush_buffers();
 			};
 		}

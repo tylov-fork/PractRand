@@ -15,12 +15,6 @@ standards for what degree of unlikelyhood qualifies as a failure - some
 consider 1-in-20 levels a failure, while others don't call a result on a 
 test failure until it reaches the level of 1-in-ten-billion.  
 
-PractRand tests tend to produce only very crude evaluations - pass/fail or 
-very crude p-value aproximations.  PractRand prefers to only call an RNGs 
-performance on a test a failure if it is on the general order of 1-in-ten-
-billion, though the crude nature of the results means that the targeting 
-of that level ends up rather imprecise.  
-
 In empirical testing, another classic is the Diehard program by Marsaglia.  
 That program is badly outdated today and should not be used anymore, but it 
 was, so far as I know, the first real standardized battery of such tests.  
@@ -31,8 +25,30 @@ and effectively with just the name and version of the standard battery of
 tests and the length of sequence tested (though some batteries operate on 
 fixed-size sequence lengths and don't need the last).  That is much easier 
 to interpret (not to mention more concise) than a listing of every major 
-test name / version / implementation / sequence length tried.  
-
+test name / version / implementation / parameterization tried.  
 
 *****************************************************************************
 
+The various tests within PractRand vary widely in terms of the quality 
+of p-values they produce - the tests used the standard test set tend to 
+produce cleaner p-values than other tests in PractRand, because I 
+spent more effort on them.  In all cases however I have made effort to 
+avoid any chance the tests themselves contributing to a false positive - 
+when there is uncertainty what the true p-value result should be, I 
+attempt to consistently report the least extreme possibility within the 
+range of uncertainty.  
+
+Most test suites use static p-value thresholds to determine whether or 
+not a test result should be brought to a users attention and/or 
+labelled as a "failure", but PractRand tools set their thresholds 
+dynamically based upon the expected number of p-values in a given range 
+for a given test battery and sequence length, and the relative strengths 
+of tests involved (i.e. if there are a million p-values then a one-in-a-
+million event on a p-value isn't even worth mentioning... unless it's a 
+p-value that's more important than all the other p-values combined).  By 
+default PractRand tools aim to misevaluate good RNGs as bad no more than 
+once per 100 million times results are displayed, and to bring a p-value 
+from a good RNG to the users attention only about once per 10 times 
+results are displayed.  The idea is that false positives should never 
+happen, but the user should be aware of anything even slightly unlikely 
+that occurs.  

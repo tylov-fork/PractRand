@@ -14,6 +14,7 @@ using namespace PractRand;
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C64(trivium)
 void PractRand::RNGs::Polymorphic::trivium::seed(Uint64 s) {implementation.seed(s);}
 void PractRand::RNGs::Polymorphic::trivium::seed(const Uint8 *seed_and_iv, int length) {implementation.seed(seed_and_iv, length);}
+std::string PractRand::RNGs::Polymorphic::trivium::get_name() const {return "trivium";}
 
 static Uint64 shift_array64( Uint64 vec[2], unsigned long bits ) {
 	bits -= 64;
@@ -21,6 +22,7 @@ static Uint64 shift_array64( Uint64 vec[2], unsigned long bits ) {
 	return (vec[bits / 64] << (bits & 63)) | (vec[1 + bits / 64] >> (64-(bits & 63)));
 }
 //raw:
+PractRand::RNGs::Raw::trivium::~trivium() {std::memset(this, 0, sizeof(this));}
 Uint64 PractRand::RNGs::Raw::trivium::raw64() {//LOCKED, do not change
 	Uint64 tmp_a = shift_array64(c, 66) ^ shift_array64(c, 111);
 	Uint64 tmp_b = shift_array64(a, 66) ^ shift_array64(a, 93);
@@ -43,7 +45,6 @@ void PractRand::RNGs::Raw::trivium::seed(Uint64 s) {//LOCKED, do not change
 	seed(vec, 8);
 }
 void PractRand::RNGs::Raw::trivium::seed(const Uint8 *seed_and_iv, int length) {//custom seeding
-	//needs verification
 	if (length > 20) issue_error("trivium seeded with invalid length");
 
 	union SeedVec{
@@ -68,14 +69,21 @@ void PractRand::RNGs::Raw::trivium::seed(const Uint8 *seed_and_iv, int length) {
 	for (int i = 0; i < 16-length; i++) iv.as8[i] = 0;
 	for (int i = 16-length; i < 16; i++) iv.as8[i] = seed_and_iv[i-(16-length)];
 	for (int i = 0; i < 2; i++) this->b[i] = little_endian_conversion64(iv.as64[1-i]);
-	//       hlhlhlhlhlhlhlhl
+	//         hlhlhlhlhlhlhlhl
 	//b[1] = 0x0000000000000000;
 	//b[0] = 0x1000000000000000;
-	//       hlhlhlhlhlhlhlhl
+	//         hlhlhlhlhlhlhlhl
 	c[0] = 0;
 	c[1] = Uint64(7) << (128-111);
 	//for (int i = 0; i < 1152; i+=1) raw1();
 	for (int i = 0; i < 18; i++) raw64();
+	/*
+		(# of outputs discarded) vs (log2 of # of seeds needed to detect interseed correlation)
+			4 - 13
+			5 - 15
+			6 - 25
+			7 - 30
+	*/
 }
 void PractRand::RNGs::Raw::trivium::walk_state(StateWalkingObject *walker) {
 	//LOCKED, do not change

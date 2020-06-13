@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\automatic_entropy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\rand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -63,6 +60,12 @@
     <ClCompile Include="..\src\RNGs\xsm.cpp">
       <Filter>Source Files\RNGs</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\platform_specifics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RNGs\chacha.cpp">
+      <Filter>Source Files\RNGs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\PractRand\config.h">
@@ -96,9 +99,6 @@
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
     <ClInclude Include="..\include\PractRand\RNGs\isaac64x256.h">
-      <Filter>Header Files\RNGs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\PractRand\RNGs\jsf16.h">
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
     <ClInclude Include="..\include\PractRand\RNGs\jsf32.h">
@@ -144,6 +144,12 @@
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
     <ClInclude Include="..\include\PractRand\RNGs\xsm64.h">
+      <Filter>Header Files\RNGs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PractRand\RNGs\all.h">
+      <Filter>Header Files\RNGs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PractRand\RNGs\chacha.h">
       <Filter>Header Files\RNGs</Filter>
     </ClInclude>
   </ItemGroup>

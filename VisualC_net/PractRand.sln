@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand", "PractRand.vcxproj", "{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand Console Test (integrated)", "PractRand Console Test (integrated)\PractRand Console Test (integrated).vcxproj", "{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PractRand_Full", "PractRand_Full\PractRand_Full.vcxproj", "{5036F8F4-679D-4B76-9465-BE2430AB1CF3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNG benchmark", "RNG benchmark\RNG benchmark.vcxproj", "{D726E59A-5C63-47BA-AAE9-A35D7D8085A3}"
@@ -17,7 +15,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNG_output", "RNG_output\RN
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3} = {5036F8F4-679D-4B76-9465-BE2430AB1CF3}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Multithreaded Test", "Multithreaded Test\Multithreaded Test.vcxproj", "{C0ADA7BC-8E2E-46F8-AD3A-4248F6088C55}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_calibration", "Test_calibration\Test_calibration.vcxproj", "{FEAB0EE7-91E8-4071-8A40-365EB8377C23}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5036F8F4-679D-4B76-9465-BE2430AB1CF3} = {5036F8F4-679D-4B76-9465-BE2430AB1CF3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNG_test", "RNG_test\RNG_test.vcxproj", "{F9B7FCEA-B779-4F3B-B8AB-664DC5A98069}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3} = {5036F8F4-679D-4B76-9465-BE2430AB1CF3}
 	EndProjectSection
@@ -32,10 +35,6 @@ Global
 		{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}.Debug|Win32.Build.0 = Debug|Win32
 		{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}.Release|Win32.ActiveCfg = Release|Win32
 		{B31E3867-F0AA-4AFB-80B4-31C599ACFF01}.Release|Win32.Build.0 = Release|Win32
-		{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}.Debug|Win32.ActiveCfg = Debug|Win32
-		{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}.Debug|Win32.Build.0 = Debug|Win32
-		{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}.Release|Win32.ActiveCfg = Release|Win32
-		{45F3D8D5-4281-4645-9FB8-4F0D28013DC1}.Release|Win32.Build.0 = Release|Win32
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Debug|Win32.ActiveCfg = Debug|Win32
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Debug|Win32.Build.0 = Debug|Win32
 		{5036F8F4-679D-4B76-9465-BE2430AB1CF3}.Release|Win32.ActiveCfg = Release|Win32
@@ -48,10 +47,14 @@ Global
 		{58408775-C7A9-4742-8C08-F6A781549E81}.Debug|Win32.Build.0 = Debug|Win32
 		{58408775-C7A9-4742-8C08-F6A781549E81}.Release|Win32.ActiveCfg = Release|Win32
 		{58408775-C7A9-4742-8C08-F6A781549E81}.Release|Win32.Build.0 = Release|Win32
-		{C0ADA7BC-8E2E-46F8-AD3A-4248F6088C55}.Debug|Win32.ActiveCfg = Debug|Win32
-		{C0ADA7BC-8E2E-46F8-AD3A-4248F6088C55}.Debug|Win32.Build.0 = Debug|Win32
-		{C0ADA7BC-8E2E-46F8-AD3A-4248F6088C55}.Release|Win32.ActiveCfg = Release|Win32
-		{C0ADA7BC-8E2E-46F8-AD3A-4248F6088C55}.Release|Win32.Build.0 = Release|Win32
+		{FEAB0EE7-91E8-4071-8A40-365EB8377C23}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FEAB0EE7-91E8-4071-8A40-365EB8377C23}.Debug|Win32.Build.0 = Debug|Win32
+		{FEAB0EE7-91E8-4071-8A40-365EB8377C23}.Release|Win32.ActiveCfg = Release|Win32
+		{FEAB0EE7-91E8-4071-8A40-365EB8377C23}.Release|Win32.Build.0 = Release|Win32
+		{F9B7FCEA-B779-4F3B-B8AB-664DC5A98069}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F9B7FCEA-B779-4F3B-B8AB-664DC5A98069}.Debug|Win32.Build.0 = Debug|Win32
+		{F9B7FCEA-B779-4F3B-B8AB-664DC5A98069}.Release|Win32.ActiveCfg = Release|Win32
+		{F9B7FCEA-B779-4F3B-B8AB-664DC5A98069}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

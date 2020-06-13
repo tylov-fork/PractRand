@@ -9,6 +9,7 @@
 //#include "PractRand/test_helpers.h"
 
 namespace PractRand {
+	using namespace Internals;
 	namespace RNGs {
 		namespace Polymorphic {
 			namespace NotRecommended {
@@ -32,8 +33,18 @@ namespace PractRand {
 					walker->handle(state);
 				}
 
-				//similar to lcg64_32, but with fewer output bits to improve quality
-				//and the number of total bits is adjustable at runtime, up to 64
+				Uint32 lcg64_32_varqual::raw32() {
+					state = state * 1103515245 + 12345;
+					return Uint32(state >> outshift);
+				}
+				std::string lcg64_32_varqual::get_name() const {
+					std::ostringstream str;
+					str << "lcg" << (32 + outshift) << "_32";
+					return str.str();
+				}
+				void lcg64_32_varqual::walk_state(StateWalkingObject *walker) {
+					walker->handle(state);
+				}
 				Uint16 lcg64_16_varqual::raw16() {
 					state = state * 1103515245 + 12345;
 					return Uint16(state >> outshift);
@@ -178,7 +189,7 @@ namespace PractRand {
 				}
 				std::string binarymult32::get_name() const {return "binarymult32";}
 				void binarymult32::walk_state(StateWalkingObject *walker) {
-					walker->handle(a); walker->handle(b); walker->handle(c); walker->handle(c);
+					walker->handle(a); walker->handle(b); walker->handle(c); walker->handle(d);
 				}
 
 				Uint16 rxmult16::raw16() {
@@ -241,6 +252,22 @@ namespace PractRand {
 					walker->handle(a); walker->handle(b); walker->handle(c); walker->handle(d);
 				}
 
+				Uint32 xlcg64_32_varqual::raw32() {
+					enum {
+						X = 0xC74EAD55,//must end in 5 or D
+						M = 0x947E3DB3,//must end in 3 or B
+					};
+					state = (state ^ X) * M;
+					return Uint32(state >> outshift);
+				}
+				std::string xlcg64_32_varqual::get_name() const {
+					std::ostringstream str;
+					str << "xlcg" << (32 + outshift) << "_32";
+					return str.str();
+				}
+				void xlcg64_32_varqual::walk_state(StateWalkingObject *walker) {
+					walker->handle(state);
+				}
 				Uint16 xlcg64_16_varqual::raw16() {
 					enum {
 						X = 0xC74EAD55,//must end in 5 or D
@@ -354,6 +381,24 @@ namespace PractRand {
 					walker->handle(low);
 					walker->handle(high);
 					//walker->handle(num_mult);
+				}
+
+
+				Uint32 mo_Cmfr32::raw32() {
+					state = ~(2911329625u*state); state = rotate32(state,17);
+					return state;
+				}
+				std::string mo_Cmfr32::get_name() const {return "mo_Cmfr32";}
+				void mo_Cmfr32::walk_state(StateWalkingObject *walker) {
+					walker->handle(state);
+				}
+				Uint32 mo_Cmr32::raw32() {
+					state = 4031235431u * state; state = rotate32(state,15);
+					return state;
+				}
+				std::string mo_Cmr32::get_name() const {return "mo_Cmr32";}
+				void mo_Cmr32::walk_state(StateWalkingObject *walker) {
+					walker->handle(state);
 				}
 			}
 		}

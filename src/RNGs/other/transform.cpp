@@ -24,6 +24,80 @@ namespace PractRand {
 				Uint64 Transform8::get_flags() const {return base_rng->get_flags() | FLAG::USES_INDIRECTION;}
 				Transform8::~Transform8() {delete base_rng;}
 
+				void GeneralizedTableTransform::seed(Uint64 s) {base_rng->seed(s);}
+				Uint64 GeneralizedTableTransform::get_flags() const {
+					return base_rng->get_flags() | FLAG::USES_FLOW_CONTROL | FLAG::STATE_UNAVAILABLE;//not exactly, but close enough
+				}
+				GeneralizedTableTransform::~GeneralizedTableTransform() {delete base_rng;}
+				void GeneralizedTableTransform::walk_state(StateWalkingObject *walker) {
+					base_rng->walk_state(walker);
+					buf_data = 0;
+					buf_count = 0;
+					finished_bytes.clear();
+				}
+				Uint8 GeneralizedTableTransform::raw8() {
+					while (true) {
+						if (!finished_bytes.empty()) {
+							Uint8 rv = finished_bytes.front();
+							finished_bytes.pop_front();
+							return rv;
+						}
+						Uint64 in = base_rng->raw64();
+						for (int i = 0; i < 8; i++) {
+							const Entry &e = table[in & 255];
+							in >>= 8;
+							buf_data |= Uint32(e.data) << buf_count;
+							buf_count += e.count;
+							if (buf_count >= 8) {
+								finished_bytes.push_back(buf_data & 255);
+								buf_count -= 8;
+								buf_data >>= 8;
+							}
+						}
+					}
+				}
+				static const GeneralizedTableTransform::Entry self_shrinking_table11[256] = {
+					{ 0, 0 },{ 0, 0 },{ 0, 1 },{ 1, 1 },{ 0, 0 },{ 0, 0 },{ 0, 1 },{ 1, 1 },
+					{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },
+					{ 0, 0 },{ 0, 0 },{ 0, 1 },{ 1, 1 },{ 0, 0 },{ 0, 0 },{ 0, 1 },{ 1, 1 },
+					{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },
+					{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },
+					{ 0, 2 },{ 0, 2 },{ 0, 3 },{ 1, 3 },{ 1, 2 },{ 1, 2 },{ 2, 3 },{ 3, 3 },
+					{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },
+					{ 2, 2 },{ 2, 2 },{ 4, 3 },{ 5, 3 },{ 3, 2 },{ 3, 2 },{ 6, 3 },{ 7, 3 },
+					{ 0, 0 },{ 0, 0 },{ 0, 1 },{ 1, 1 },{ 0, 0 },{ 0, 0 },{ 0, 1 },{ 1, 1 },
+					{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },
+					{ 0, 0 },{ 0, 0 },{ 0, 1 },{ 1, 1 },{ 0, 0 },{ 0, 0 },{ 0, 1 },{ 1, 1 },
+					{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },
+					{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },
+					{ 0, 2 },{ 0, 2 },{ 0, 3 },{ 1, 3 },{ 1, 2 },{ 1, 2 },{ 2, 3 },{ 3, 3 },
+					{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },
+					{ 2, 2 },{ 2, 2 },{ 4, 3 },{ 5, 3 },{ 3, 2 },{ 3, 2 },{ 6, 3 },{ 7, 3 },
+					{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },
+					{ 0, 2 },{ 0, 2 },{ 0, 3 },{ 1, 3 },{ 1, 2 },{ 1, 2 },{ 2, 3 },{ 3, 3 },
+					{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },{ 0, 1 },{ 0, 1 },{ 0, 2 },{ 1, 2 },
+					{ 0, 2 },{ 0, 2 },{ 0, 3 },{ 1, 3 },{ 1, 2 },{ 1, 2 },{ 2, 3 },{ 3, 3 },
+					{ 0, 2 },{ 0, 2 },{ 0, 3 },{ 1, 3 },{ 0, 2 },{ 0, 2 },{ 0, 3 },{ 1, 3 },
+					{ 0, 3 },{ 0, 3 },{ 0, 4 },{ 1, 4 },{ 1, 3 },{ 1, 3 },{ 2, 4 },{ 3, 4 },
+					{ 1, 2 },{ 1, 2 },{ 2, 3 },{ 3, 3 },{ 1, 2 },{ 1, 2 },{ 2, 3 },{ 3, 3 },
+					{ 2, 3 },{ 2, 3 },{ 4, 4 },{ 5, 4 },{ 3, 3 },{ 3, 3 },{ 6, 4 },{ 7, 4 },
+					{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },
+					{ 2, 2 },{ 2, 2 },{ 4, 3 },{ 5, 3 },{ 3, 2 },{ 3, 2 },{ 6, 3 },{ 7, 3 },
+					{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },{ 1, 1 },{ 1, 1 },{ 2, 2 },{ 3, 2 },
+					{ 2, 2 },{ 2, 2 },{ 4, 3 },{ 5, 3 },{ 3, 2 },{ 3, 2 },{ 6, 3 },{ 7, 3 },
+					{ 2, 2 },{ 2, 2 },{ 4, 3 },{ 5, 3 },{ 2, 2 },{ 2, 2 },{ 4, 3 },{ 5, 3 },
+					{ 4, 3 },{ 4, 3 },{ 8, 4 },{ 9, 4 },{ 5, 3 },{ 5, 3 },{10, 4 },{11, 4 },
+					{ 3, 2 },{ 3, 2 },{ 6, 3 },{ 7, 3 },{ 3, 2 },{ 3, 2 },{ 6, 3 },{ 7, 3 },
+					{ 6, 3 },{ 6, 3 },{12, 4 },{13, 4 },{ 7, 3 },{ 7, 3 },{14, 4 },{15, 4 }
+				};
+				std::string GeneralizedTableTransform::get_name() const {return name;}
+				vRNG *apply_SelfShrinkTransform(vRNG *base_rng) {
+					return new GeneralizedTableTransform (base_rng, self_shrinking_table11, std::string("[SShrink]") + base_rng->get_name() );
+				}
+				//vRNG *apply_SimpleShrinkTransform(vRNG *base_rng) {
+				//	return new GeneralizedTableTransform (base_rng, NULL, std::string("[Shrink3of4]") + base_rng->get_name() );
+				//}
+
 
 
 				Uint64 BaysDurhamShuffle64::raw64() {

@@ -6,7 +6,7 @@ namespace PractRand {
 				enum {
 					OUTPUT_TYPE = OUTPUT_TYPES::NORMAL_ALL,
 					OUTPUT_BITS = 8,
-					FLAGS = FLAG::ENDIAN_SAFE | FLAG::SUPPORTS_ENTROPY_ACCUMULATION | FLAG::CRYPTOGRAPHIC_INPUT | FLAG::CRYPTOGRAPHIC_OUTPUT
+					FLAGS = FLAG::ENDIAN_SAFE | FLAG::SUPPORTS_ENTROPY_ACCUMULATION | FLAG::CRYPTOGRAPHIC_SECURITY
 				};
 				enum {STATE_SIZE = 128-24};
 				enum {INPUT_BUFFER_SIZE=128, OUTPUT_BUFFER_SIZE=64};
@@ -20,14 +20,17 @@ namespace PractRand {
 				sha2_based_pool(SEED_AUTO_TYPE ) {autoseed();}
 				sha2_based_pool(SEED_NONE_TYPE ) {reset_state();}
 				sha2_based_pool() {reset_state();}
+				~sha2_based_pool();
 
 				std::string get_name() const;
+				Uint64 get_flags() const;
 
 				Uint8  raw8 ();
 				void seed(Uint64 s);
 				void reset_state();
 				using vRNG::seed;
 				void walk_state(StateWalkingObject *walker);
+				void reset_entropy() {reset_state();}
 				void add_entropy8 (Uint8  value);
 				void add_entropy16(Uint16 value);
 				void add_entropy32(Uint32 value);

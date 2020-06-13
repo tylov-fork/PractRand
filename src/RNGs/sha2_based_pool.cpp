@@ -11,8 +11,18 @@
 
 using namespace PractRand;
 
+
+PractRand::RNGs::Polymorphic::sha2_based_pool::~sha2_based_pool() {
+	std::memset(state, 0, STATE_SIZE);
+	std::memset(input_buffer, 0, STATE_SIZE);
+	std::memset(output_buffer, 0, STATE_SIZE);
+	input_buffer_left = output_buffer_left = state_phase = 0;
+}
 std::string PractRand::RNGs::Polymorphic::sha2_based_pool::get_name() const {
 	return std::string("sha2_based_pool");
+}
+Uint64 PractRand::RNGs::Polymorphic::sha2_based_pool::get_flags() const {
+	return FLAGS;
 }
 Uint8 PractRand::RNGs::Polymorphic::sha2_based_pool::raw8() {
 	if (!output_buffer_left) refill_output_buffer();

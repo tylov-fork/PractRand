@@ -4,8 +4,9 @@ namespace PractRand {
 		public:
 			virtual void init( PractRand::RNGs::vRNG *known_good );
 			virtual std::string get_name() const;// {return std::string("Gap16");}
-			virtual double get_result();
-			virtual double result_to_pvalue ( Uint64 blocks, double r );
+			//virtual double get_result();
+			//virtual double result_to_pvalue ( Uint64 blocks, double r );
+			virtual void get_results ( std::vector<TestResult> &results );
 
 			virtual void test_blocks(TestBlock *data, int numblocks);
 		protected:
@@ -18,7 +19,7 @@ namespace PractRand {
 				SET3_SHIFT = 8
 			};
 			FixedSizeCount<Uint8, SIZE1 + SIZE2 + SIZE3> counts;
-			Sint32 autofail;
+			bool autofail;
 			Sint32 last[65536];
 		};
 	}//Tests

@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\test\RNG_benchmark.cpp">
+    <ClCompile Include="..\..\tools\RNG_benchmark.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\test\measure_RNG_performance.h">
+    <ClInclude Include="..\..\tools\Candidate_RNGs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\test\Candidate_RNGs.h">
+    <ClInclude Include="..\..\tools\measure_RNG_performance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

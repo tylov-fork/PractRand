@@ -10,7 +10,10 @@ namespace PractRand {
 			public:
 				multiplex ( const char *name_, const ListOfTests &testlist );
 				virtual void init( RNGs::vRNG *known_good );
-				virtual double get_result();
+
+				//virtual double get_result();
+				virtual void get_results ( std::vector<TestResult> &results );
+
 				virtual bool recommend_subtest_tree_descent() const;
 				virtual void deinit();
 				virtual ~multiplex ( );
@@ -52,7 +55,8 @@ namespace PractRand {
 				{}
 				virtual void init( RNGs::vRNG *known_good );
 				virtual void test_blocks(TestBlock *data, int numblocks) = 0;
-				virtual double get_result() {flush(true);return Transforms::multiplex::get_result();}
+				//virtual double get_result() {flush(true);return Transforms::multiplex::get_result();}
+				virtual void get_results ( std::vector<TestResult> &results ) {flush(true); Transforms::multiplex::get_results(results);}
 				virtual void flush(bool aggressive = true);
 			};
 			class shrink : public Transform_Baseclass {

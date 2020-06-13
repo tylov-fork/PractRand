@@ -20,6 +20,7 @@ namespace PractRand {
 				Word i, a, b, c;
 				//Uint8 raw4();
 			public:
+				~efiix8x384();
 				Uint8 raw8();
 				void seed(Uint64 s1, Uint64 s2, Uint64 s3, Uint64 s4);
 				void seed(Uint64 s) {seed(s,0,0,0);}

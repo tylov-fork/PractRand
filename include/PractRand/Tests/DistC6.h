@@ -14,8 +14,9 @@ namespace PractRand {
 			}
 			virtual void init( PractRand::RNGs::vRNG *known_good );
 			virtual std::string get_name() const;
-			virtual double get_result();
-			virtual double result_to_pvalue ( Uint64 blocks, double r );
+			//virtual double get_result();
+			//virtual double result_to_pvalue ( Uint64 blocks, double r );
+			virtual void get_results ( std::vector<TestResult> &results );
 			virtual void deinit();
 
 			virtual void test_blocks(TestBlock *data, int numblocks);

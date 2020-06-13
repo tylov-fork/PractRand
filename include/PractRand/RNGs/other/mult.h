@@ -27,6 +27,15 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
+				class lcg64_32_varqual : public vRNG32 {
+					Uint64 state;
+					int outshift;
+				public:
+					lcg64_32_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 				class lcg64_16_varqual : public vRNG16 {
 					Uint64 state;
 					int outshift;
@@ -154,6 +163,15 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
+				class xlcg64_32_varqual : public vRNG32 {
+					Uint64 state;
+					int outshift;
+				public:
+					xlcg64_32_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 				class xlcg64_16_varqual : public vRNG16 {
 					Uint64 state;
 					int outshift;
@@ -203,13 +221,27 @@ namespace PractRand {
 					void walk_state(StateWalkingObject *);
 				};
 
-
 				class cxm64_varqual : public vRNG64 {
 					Uint64 low, high;
 					int num_mult;
 				public:
 					cxm64_varqual(int num_mult_) : num_mult(num_mult_) {}
 					Uint64 raw64();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+
+				class mo_Cmfr32 : public vRNG32 {
+					Uint32 state;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class mo_Cmr32 : public vRNG32 {
+					Uint32 state;
+				public:
+					Uint32 raw32();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};

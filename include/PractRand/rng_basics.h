@@ -6,9 +6,14 @@
 #endif //__PRACTRAND_CONFIG_H__
 
 namespace PractRand {
-	void initialize_PractRand();
+	bool initialize_PractRand(); //returns true normally
+	//will return false if it failed to find a good source of entropy
+	//  in which case the autoseeding mechanism may have trouble
+	//  Usually not catastrophic, but some programs might want to abort if that happens.  
+	//NOTE: initialize_PractRand() is NOT threadsafe, it should be called before threads get spun off
+	
 	void self_test_PractRand();
-	void issue_error(const char *msg = 0);
+	void hook_error_handler(void (*callback)(const char *));
 
 	class StateWalkingObject;
 
@@ -27,6 +32,7 @@ namespace PractRand {
 			//vRNG(_dummy_SeedingTypeNone *) {}
 			virtual ~vRNG();
 			virtual void seed(Uint64 seed);
+			virtual void seed_fast(Uint64 seed);
 			void seed(vRNG *rng);
 			void autoseed();
 			long serialize( char *buffer, long buffer_size );//returns serialized size, or zero on failure
@@ -71,11 +77,15 @@ namespace PractRand {
 			void seek_backward(Uint64 how_far) {seek_backward128(how_far, 0);}
 
 		//exotic methods 2: entropy pooling
+			virtual void reset_entropy();//returns an entropy pool to its default state
 			virtual void add_entropy8 (Uint8 );
 			virtual void add_entropy16(Uint16);
 			virtual void add_entropy32(Uint32);
 			virtual void add_entropy64(Uint64);
+			//note that "add_entropy_N(&byte_buffer[0], 13)" will typically NOT produce the same state transition 
+			//  as "add_entropy_N(&byte_buffer[0], 7);add_entropy_N(&byte_buffer[0], 6);"
 			virtual void add_entropy_N(const void *, size_t length);
+
 			//add_entropy_automatically returns true if a good amount (>= 128 bits) of entropy was added
 			//the milliseconds parameter is the maximum amount of time it is allowed to block while waiting for entropy
 			virtual bool add_entropy_automatically(int milliseconds = 0);
@@ -156,20 +166,19 @@ namespace PractRand {
 		namespace FLAG { enum {
 			SUPPORTS_FASTFORWARD = 1<<0,//also includes rewind
 			SUPPORTS_ENTROPY_ACCUMULATION = 1<<1,//supports add_entropy*
-			CRYPTOGRAPHIC_OUTPUT = 1<<2,
-			CRYPTOGRAPHIC_INPUT = 1<<3,//only meaningful with SUPPORTS_ENTROPY_ACCUMULATION
-			USES_SPECIFIED = 1<<4,//true if all the other USES_* flags are properly set
-			USES_MULTIPLICATION = 1<<5,
-			USES_COMPLEX_INSTRUCTIONS = 1<<6,//division, sqrt, exp, log, etc
-			USES_VARIABLE_SHIFTS = 1<<7,
-			USES_INDIRECTION = 1<<8,
-			USES_CYCLIC_BUFFER = 1<<9,
-			USES_FLOW_CONTROL = 1<<10,//very simple flow control is not counted
-			USES_BIT_SCANS = 1<<11,//bsf & bsr opcodes on x86
-			ENDIAN_SAFE = 1<<12,//single flag for output (raw*) and input (add_entropy*)
-			OUTPUT_IS_BUFFERED = 1<<13,
-			OUTPUT_IS_HASHED = 1<<14,
-
+			CRYPTOGRAPHIC_SECURITY = 1<<2,
+			USES_SPECIFIED = 1<<3,//true if all the other USES_* flags are properly set
+			USES_MULTIPLICATION = 1<<4,
+			USES_COMPLEX_INSTRUCTIONS = 1<<5,//division, sqrt, exp, log, etc
+			USES_VARIABLE_SHIFTS = 1<<6,
+			USES_INDIRECTION = 1<<7,
+			USES_CYCLIC_BUFFER = 1<<8,
+			USES_FLOW_CONTROL = 1<<9,//very simple flow control is not counted
+			USES_BIT_SCANS = 1<<10,//bsf & bsr opcodes on x86
+			ENDIAN_SAFE = 1<<11,//single flag for output (raw*) and input (add_entropy*)
+			OUTPUT_IS_BUFFERED = 1<<12,
+			OUTPUT_IS_HASHED = 1<<13,
+			STATE_UNAVAILABLE = 1<<14,//can be seeded via state-walking, but don't trust any other state-walking operations (never true on recommended RNGs)
 			NEEDS_GENERIC_SEEDING = 1<<31,
 		};}
 		typedef vRNG PolymorphicRNG;

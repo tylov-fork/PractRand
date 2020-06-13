@@ -13,12 +13,17 @@ using namespace PractRand;
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C32(isaac32x256)
 void PractRand::RNGs::Polymorphic::isaac32x256::seed(Uint64 s) {implementation.seed(s);}
 void PractRand::RNGs::Polymorphic::isaac32x256::flush_buffers() {implementation.flush_buffers();}
+std::string PractRand::RNGs::Polymorphic::isaac32x256::get_name() const {return "isaac32x256";}
 
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C64(isaac64x256)
 void PractRand::RNGs::Polymorphic::isaac64x256::seed(Uint64 s) {implementation.seed(s);}
 void PractRand::RNGs::Polymorphic::isaac64x256::flush_buffers() {implementation.flush_buffers();}
+std::string PractRand::RNGs::Polymorphic::isaac64x256::get_name() const {return "isaac64x256";}
 
 //raw:
+PractRand::RNGs::Raw::isaac32x256::~isaac32x256() {std::memset(this, 0, sizeof(this));}
+PractRand::RNGs::Raw::isaac64x256::~isaac64x256() {std::memset(this, 0, sizeof(this));}
+
 #define ind32(mm,x)  (*(Uint32 *)((Uint8 *)(mm) + ((x) & ((SIZE-1)<<2))))
 #define rngstep32(mix,a,b,mm,m,m2,r,x) \
 { \

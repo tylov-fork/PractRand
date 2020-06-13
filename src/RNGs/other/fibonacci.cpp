@@ -15,6 +15,43 @@ namespace PractRand {
 	namespace RNGs {
 		namespace Polymorphic {
 			namespace NotRecommended {
+				Uint8 lfsr_medium::raw8() {
+					if (used < SIZE) return cbuf[used++];
+					for (int i = 0; i < LAG; i++) {
+						cbuf[i] ^= cbuf[i+(SIZE-LAG)] ^ table1[cbuf[i+1]] ^ table2[cbuf[i+2]];
+					}
+					for (int i = LAG; i < SIZE-2; i++) {
+						cbuf[i] ^= cbuf[i-LAG] ^ table1[cbuf[i+1]] ^ table2[cbuf[i+2]];
+					}
+					cbuf[SIZE-2] ^= cbuf[SIZE-2-LAG] ^ table1[cbuf[SIZE-1]] ^ table2[cbuf[0]];
+					cbuf[SIZE-1] ^= cbuf[SIZE-1-LAG] ^ table1[cbuf[0]] ^ table2[1];
+					used = 1;
+					return cbuf[0];
+				}
+				std::string lfsr_medium::get_name() const {return "lfsr_medium";}
+				void lfsr_medium::walk_state(StateWalkingObject *walker) {
+					for (int i = 0; i < SIZE; i++) walker->handle(cbuf[i]);
+					walker->handle(used);
+					if (used >= SIZE) used = 0;
+				}
+				lfsr_medium::lfsr_medium() {
+					used = 0;
+					Uint8 vartaps = 1+2;//255 - 16;
+					for (Uint32 i = 0; i < 256; i++) {
+						Uint8 low = 0;
+						Uint8 high = 0;
+						for (int b = 0; b < 8; b++) {
+							if ((vartaps >> b) & 1) {
+								low ^= i >> b;
+								if (b) high ^= i << (8-b);
+							}
+
+						}
+						table1[i] = low;
+						table2[i] = high;
+					}
+				}
+
 				//Mitchell-Moore: LFib32(Uint32, 55, 24, ADD)
 				Uint32 mm32::raw32() {
 					Uint32 tmp;

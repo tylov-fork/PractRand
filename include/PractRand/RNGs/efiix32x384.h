@@ -19,6 +19,7 @@ namespace PractRand {
 				Word indirection_table[INDIRECTION_SIZE], iteration_table[ITERATION_SIZE];
 				Word i, a, b, c;
 			public:
+				~efiix32x384();
 				Uint32 raw32();
 				void seed(Uint64 s1, Uint64 s2, Uint64 s3, Uint64 s4);
 				void seed(Uint64 s) {seed(s,0,0,0);}

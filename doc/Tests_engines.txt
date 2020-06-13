@@ -1,8 +1,6 @@
 
 Specific Tests in PractRand:
 Recommended tests:
-	Gap16 - a variation of the classic "Gap" test; no parameters 
-		required
 	BCFN - checks for long range linear correlations (bit counting);
 		in practice this often detects Fibonacci style RNGs that 
 		rely upon large lags to defeat other statistical tests; 
@@ -18,6 +16,8 @@ Recommended tests:
 		information it uses for each such integer; for recommended 
 		values see the code for get_core_tests() and 
 		get_expanded_core_tests() in test_batteries.cpp.  
+	Gap16 - a variation on the classic "Gap" test; no parameters 
+		required
 Transforms:
 	(these appear as tests but are simply wrappers for other tests)
 	multiplex - simply routes operations on this test to multiple 

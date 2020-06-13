@@ -1,3 +1,14 @@
+
+#ifdef _WIN32
+#define _CRT_RAND_S
+#include <windows.h>
+#elif defined __APPLE__ && defined __MACH__
+#include <libkern/OSAtomic.h>
+#include <cstdint>
+#endif
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 #include <string>
 #include <ctime>
 #include <cstdlib>
@@ -8,33 +19,57 @@
 #include "PractRand/rng_helpers.h"
 #include "PractRand/rng_internals.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
+
 
 /*
-TO DO: improve entropy gathering code
-ideas:
-	platform methods for non-windows non-unix OSes?
-		???
-	improve/enable blocking /dev/random suppport
-	improve generic methods for unrecognized platforms
+Two functions are performed that may need to use platform-specific functionality:
+	1. obtaining entropy for seeding
+		preferably by asking the system cryptographic random number generator for the entropy (eg /dev/urandom)
+		if that is not possible, then use the time (as measured with libc calls) instead
+			to do: add a fallback case that blocks while listening to timing noise for entropy
+	2. obtaining a unique 64 bit number that should never duplicate, and should be thread-safe.
+		preferably with an interlocked increment
+		if that is not possible then with a malloc(1) that is never freed
+			(this should get used at most once per thread creation)
 */
 
 using namespace PractRand;
 
 bool PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng, int milliseconds ) {
+	//the intention is for "millisecond" to be an amount of time that this function is permitted to spend on obtaining entropy
+	//but currently nothing that spends time in a controlled fashion is implemented, so it's meaningless
+
+	enum {DESIRED_BITS = 256};
+	enum {N32 = (DESIRED_BITS+31)/32, N64 = (DESIRED_BITS+63)/64};
+
+#if (defined _WIN32) && 0 // DISABLED
+	{//win32 crypto PRNG, simple interface
+		//disabled because MinGW won't compile it and MSVC won't put it in the standard namespace
+		int count = 0;
+		unsigned int tmp = 0;
+		for (int i = 0; i < N32 + 8; i++) {
+			count += (!rand_s( &tmp )) ? 1 : 0;
+			rng->add_entropy32(tmp);
+			if (count == N32) {
+				rng->flush_buffers();
+				return true;
+			}
+		}
+	}
+#endif
 #if (defined _WIN32) && 1
-	{//win32 crypto PRNG
+	{//win32 crypto PRNG, another interface
 		HMODULE hLib=LoadLibraryA("ADVAPI32.DLL");
 		if (hLib) {
 			BOOLEAN (APIENTRY *get_random_bytes)(void*, ULONG) =
 				(BOOLEAN (APIENTRY *)(void*,ULONG))GetProcAddress(hLib,"SystemFunction036");
 			if (get_random_bytes) {
-				enum {NUM_RANDOM_U64s = 4};
-				Uint64 buf[NUM_RANDOM_U64s];
-				if(get_random_bytes(buf,NUM_RANDOM_U64s*sizeof(buf[0]))) {
-					for (int i = 0; i < NUM_RANDOM_U64s; i++) rng->add_entropy64(buf[i]);
+				Uint64 buf[N64];
+				if(get_random_bytes(buf,N64*sizeof(buf[0]))) {
+					for (int i = 0; i < N64; i++) rng->add_entropy64(buf[i]);
+					FreeLibrary(hLib);
+					rng->flush_buffers();
+					std::memset(buf, 0, sizeof(buf));
 					return true;
 				}
 			}
@@ -44,14 +79,18 @@ bool PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 #endif
 #if 1
 	{//unix (linux/bsd/osx/etc, all flavor supposedly)
+		//mostly safe to use even on platforms where it won't work
 		std::FILE *f;
-		enum {NUM_RANDOM_U64s = 4};
-		Uint64 buf[NUM_RANDOM_U64s];
+		Uint64 buf[N64];
 		if (f = std::fopen("/dev/urandom", "rb")) {
-			if(std::fread(buf,NUM_RANDOM_U64s*sizeof(buf[0]),1,f)) {
-				for (int i = 0; i < NUM_RANDOM_U64s; i++) rng->add_entropy64(buf[i]);
+			if (std::fread(buf,N64*sizeof(buf[0]),1,f) == 1) {
+				for (int i = 0; i < N64; i++) rng->add_entropy64(buf[i]);
+				std::fclose(f);
+				rng->flush_buffers();
+				std::memset(buf, 0, sizeof(buf));
 				return true;
 			}
+			std::fclose(f);
 		}
 	}
 #endif
@@ -60,10 +99,11 @@ bool PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 	//disabled to avoid the possibility of blocking
 		if (millseconds && f = std::fopen("/dev/random", "rb")) {
 			//skip this if a good source was already found, cause this can block
-			enum {NUM_RANDOM_U64s = 4};
-			Uint64 buf[NUM_RANDOM_U64s];
-			if(std::fread(buf,NUM_RANDOM_U64s*sizeof(buf[0]),1,f)) {
-				for (int i = 0; i < NUM_RANDOM_U64s; i++) rng->add_entropy64(buf[i]);
+			Uint64 buf[N64];
+			if(std::fread(buf,N64*sizeof(buf[0]),1,f)) {
+				for (int i = 0; i < N64; i++) rng->add_entropy64(buf[i]);
+				rng->flush_buffers();
+				std::memset(buf, 0, sizeof(buf));
 				return true;
 			}
 		}
@@ -89,7 +129,7 @@ bool PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 		rng->add_entropy32(::GetCurrentProcessId());
 		rng->add_entropy64((Uint64)::GetCurrentProcess());
 		rng->add_entropy32(::GetCurrentThreadId());
-		//vrng->add_entropy32(::GetCurrentProcessorNumber());//may require Vista?
+		//rng->add_entropy32(::GetCurrentProcessorNumber());//may require Vista?
 		SYSTEMTIME st;
 		::GetSystemTime(&st);
 		rng->add_entropy_N(&st, sizeof(st));
@@ -206,4 +246,69 @@ bool PractRand::Internals::add_entropy_automatically( PractRand::RNGs::vRNG *rng
 #endif
 
 	rng->flush_buffers();
+	return false;
 }
+
+Uint64 PractRand::Internals::issue_unique_identifier ( ) {
+#if 0
+#elif defined __GNUC__
+	static volatile Uint64 count = 0;
+	return __sync_fetch_and_add( &count, Uint64(1) );
+#elif defined _WIN32
+	static volatile LONGLONG count = 0;
+	return InterlockedIncrement64( &count);
+#elif defined __APPLE__ && defined __MACH__
+	//OS X, /usr/include/libkern/OSAtomic.h, OSAtomicIncrement64
+	static volatile int64_t count = 0;
+	return OSAtomicIncrement64(&count);
+#else
+	//ugly, but without more knowledge of the target system or more dependencies there's not much more that can be done
+	return (Uint64)std::malloc(1);
+#endif
+}
+
+/*
+	//don't care about the units since it's only used as an entropy source
+	//however, rdtscp is to be avoided since not enough CPUs support it
+Uint64 PractRand::Internals::high_resolution_time() {
+#if defined _MSC_VER && ( defined _M_IX86 || defined _M_X64 )
+	//intrinsic
+	return __rdtsc();
+	//Uint32 aux;
+	//return __rdtscp(&aux);
+#elif defined __GNUC__ && ( defined(__i386__) || defined(__x86_64__) )
+	//from wikipedia
+	Uint32 low, high;
+	__asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high) :: "ecx" );
+	//__asm__ __volatile__("rdtscp" : "=a"(low), "=d"(high) :: "ecx" );
+	return (Uint64(high) << 32) | low;
+#elif defined __GNUC__ && defined(__powerpc__)
+	//from http://www.mcs.anl.gov/~kazutomo/rdtsc.html
+	Uint64 result = 0;
+	unsigned long int upper, lower,tmp;
+	__asm__ volatile(
+		"0:                  \n"
+		"\tmftbu   %0           \n"
+		"\tmftb    %1           \n"
+		"\tmftbu   %2           \n"
+		"\tcmpw    %2,%0        \n"
+		"\tbne     0b         \n"
+		: "=r"(upper),"=r"(lower),"=r"(tmp)
+	);
+	result = upper;
+	result = result<<32;
+	result = result|lower;
+
+	return(result);
+#elif defined WIN32
+	LARGE_INTEGER qt;
+	QueryPerformanceCounter(&qt);
+	return qt.QuadPart;
+#else
+	//to do: figure out the appropriate preprocessor defines to check for gettimeofday
+
+	//very poor resolution, but we don't have a lot of alternatives at this point:
+	return (Uint64)std::clock();
+#endif
+}
+*/

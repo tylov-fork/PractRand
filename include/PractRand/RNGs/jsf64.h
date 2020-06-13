@@ -14,6 +14,7 @@ namespace PractRand {
 			public:
 				Uint64 raw64();
 				void seed(Uint64 s);
+				void seed_fast(Uint64 s);
 				void walk_state(StateWalkingObject *walker);
 				//static void self_test();
 			};
@@ -23,6 +24,7 @@ namespace PractRand {
 			class jsf64 : public vRNG64 {
 				PRACTRAND__POLYMORPHIC_RNG_BASICS_H(jsf64)
 				void seed(Uint64 s);
+				void seed_fast(Uint64 s);
 			};
 		}
 		PRACTRAND__LIGHT_WEIGHT_RNG(jsf64)

@@ -41,6 +41,19 @@ namespace PractRand {
 					void walk_state(StateWalkingObject *);
 				};
 
+				class lfsr_medium : public vRNG8 {
+					enum {SIZE=55, LAG=25};//0 < LAG < SIZE-2
+					Uint8 cbuf[55];
+					Uint8 table1[256], table2[256];
+					Uint8 used;
+				public:
+					lfsr_medium();
+					Uint8 raw8();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+
+
 				//proposed by Marsaglia
 				class mwc4691 : public vRNG32 {
 					Uint32 cbuf[4691];

@@ -15,6 +15,8 @@ namespace PractRand {
 		double math_chisquared_to_pvalue ( double chisquared, double DoF );
 		double math_chisquared_to_normal ( double chisquared, double DoF );
 		double math_pvalue_to_chisquared ( double pvalue, double DoF );
+		double math_normaldist_to_pvalue ( double normal );
+		double math_pvalue_to_normaldist ( double pvalue );
 		//long double gap_probs( int first, int last, long double baseprob = (255.0 / 256.0) );
 
 		int count_bits8 (Uint8 a);
@@ -84,6 +86,32 @@ namespace PractRand {
 				}
 			}
 			const Uint64 *get_array() {flush(); return &high[0];}
+		};
+
+		struct RawTestCalibrationData_117 {
+			//for use on tests that produce (very) roughly a normal distribution
+			//should be based upon at least 512 samples
+			const char *name;  //e.g. "Gap-16:A"
+			Uint64 blocks;     //e.g. 32 for 32 KB
+			Uint64 num_samples;//e.g. 65536 for that many results of known good RNGs used to construct raw_table
+			Uint64 num_duplicates;
+
+			double table[117];
+			double median;//redundant
+			double mean;
+			double stddev;
+
+			static const double ref_p[117];
+
+			double get_median_sample() const {return table[49 + 9];}
+
+			//linear interpolation
+			double sample_to_index(double sample) const;
+			double index_to_sample(double index) const;
+			static double pvalue_to_index(double pvalue);
+			static double index_to_pvalue(double index);
+			double pvalue_to_sample(double pvalue) const {return index_to_sample(pvalue_to_index(pvalue));}
+			double sample_to_pvalue(double sample) const {return index_to_pvalue(sample_to_index(sample));}
 		};
 	}//Tests
 }//PractRand

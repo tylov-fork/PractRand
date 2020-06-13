@@ -72,6 +72,17 @@ namespace PractRand {
 					ibaa32(int table_size_L2_);
 					~ibaa32();
 				};
+				class isaac32_small : public vRNG32 {
+					int table_size_L2;
+					Uint32 *table;
+					Uint32 a, b, c, left;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+					isaac32_small(int table_size_L2_);
+					~isaac32_small();
+				};
 			}
 		}
 	}

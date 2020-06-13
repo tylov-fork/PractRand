@@ -1,6 +1,8 @@
 
-//RNGs in the mediocre directory are not intended for real world use
+#include <deque>
+//RNGs in the "other" directory are not intended for real world use
 //only for research; as such they may get pretty sloppy in some areas
+//and are usually not optimized
 namespace PractRand {
 	namespace RNGs {
 		namespace Polymorphic {
@@ -37,6 +39,35 @@ namespace PractRand {
 					Transform8(vRNG8 *rng) : base_rng(rng) {}
 					~Transform8();
 				};
+
+				class GeneralizedTableTransform : public vRNG8 {//written for self-shrinking-generators, but also useful for other transforms
+				public:
+					struct Entry {
+						Uint8 data;
+						Uint8 count;
+					};
+					//the transform table
+					const Entry *table;
+
+					//for buffering fractional bytes of output
+					Uint32 buf_data;
+					Uint32 buf_count;
+
+					//for buffering full bytes of output
+					std::deque<Uint8> finished_bytes;
+
+					std::string name;
+					vRNG *base_rng;
+					void seed(Uint64 seed);
+					Uint64 get_flags() const;
+					std::string get_name() const ;
+					GeneralizedTableTransform(vRNG *rng, const Entry *table_, std::string name_) : base_rng(rng), table(table_), buf_count(0), buf_data(0), name(name_) {}
+					~GeneralizedTableTransform();
+					void walk_state(StateWalkingObject *);
+					Uint8 raw8();
+				};
+				vRNG *apply_SelfShrinkTransform(vRNG *base_rng);
+				//vRNG *apply_SimpleShrinkTransform(vRNG *base_rng);
 
 				class BaysDurhamShuffle64 : public Transform64 {
 					Uint64 table[256];

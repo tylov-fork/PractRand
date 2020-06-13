@@ -66,7 +66,7 @@ namespace PractRand {
 	Uint32 randi_fast_implementation(Uint32 random_value, Uint32 max);
 	StateWalkingObject *int_to_rng_seeder(Uint64);//must be deleted after use
 	StateWalkingObject *vrng_to_rng_seeder(RNGs::vRNG *);//must be deleted after use
-	StateWalkingObject *get_autoseeder(void *);//must be deleted after use
+	StateWalkingObject *get_autoseeder(const void *);//must be deleted after use
 }
 #define PRACTRAND__POLYMORPHIC_RNG_BASICS_H(RNG) public:\
 		enum {OUTPUT_TYPE = OUTPUT_TYPES::NORMAL_ALL,OUTPUT_BITS = Raw:: RNG ::OUTPUT_BITS,FLAGS = Raw:: RNG ::FLAGS};\

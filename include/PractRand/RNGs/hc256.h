@@ -6,10 +6,10 @@ namespace PractRand {
 				enum {
 					OUTPUT_TYPE = OUTPUT_TYPES::NORMAL_1,
 					OUTPUT_BITS = 32,
-					FLAGS = FLAG::CRYPTOGRAPHIC_OUTPUT | FLAG::OUTPUT_IS_HASHED | FLAG::OUTPUT_IS_BUFFERED | FLAG::ENDIAN_SAFE
+					FLAGS = FLAG::CRYPTOGRAPHIC_SECURITY | FLAG::OUTPUT_IS_HASHED | FLAG::OUTPUT_IS_BUFFERED | FLAG::ENDIAN_SAFE
 				};
 			protected:
-				enum { OUTPUT_BUFFER_SIZE=64 };
+				enum { OUTPUT_BUFFER_SIZE=64 };//should be a multiple of 16
 				Uint32 outbuf[OUTPUT_BUFFER_SIZE];
 				Uint32 used;
 				Uint32 X[16], Y[16];
@@ -17,6 +17,7 @@ namespace PractRand {
 				Uint16 counter;
 				void _do_batch();
 			public:
+				~hc256();
 				void flush_buffers() {used = OUTPUT_BUFFER_SIZE;}
 				Uint32 raw32() {//LOCKED, do not change
 					if (used < OUTPUT_BUFFER_SIZE) return outbuf[used++];

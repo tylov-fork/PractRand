@@ -10,27 +10,21 @@
 using namespace PractRand;
 using namespace PractRand::Internals;
 
-//Xor-Shift and Multiply
-//  This RNG supports random access aka seeking.  Also, it uses multiplication 
-//    internally, so it will be very slow on hardware that lacks fast 
-//    multiplication.  
-//
-//Engine      quality speed   theory  output    word    size        statespace
-//xsm32       3***    3***    2**     32 bit    32 bit  16 bytes    2**95 (cycle length 2**64)
-//xsm64       4****   3***    2**     64 bit    64 bit  32 bytes    2**191 (cycle length 2**128)
-
 //polymorphic:
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C32(xsm32)
 void PractRand::RNGs::Polymorphic::xsm32::seed(Uint64 s) {implementation.seed(s);}
 void PractRand::RNGs::Polymorphic::xsm32::seek_forward128 (Uint64 how_far_low64, Uint64 how_far_high64) {implementation.seek_forward (how_far_low64);}
 void PractRand::RNGs::Polymorphic::xsm32::seek_backward128(Uint64 how_far_low64, Uint64 how_far_high64) {implementation.seek_backward(how_far_low64);}
+std::string PractRand::RNGs::Polymorphic::xsm32::get_name() const {return "xsm32";}
 
 PRACTRAND__POLYMORPHIC_RNG_BASICS_C64(xsm64)
 void PractRand::RNGs::Polymorphic::xsm64::seed(Uint64 s) {implementation.seed(s);}
 void PractRand::RNGs::Polymorphic::xsm64::seek_forward128 (Uint64 how_far_low64, Uint64 how_far_high64) {implementation.seek_forward (how_far_low64, how_far_high64);}
 void PractRand::RNGs::Polymorphic::xsm64::seek_backward128(Uint64 how_far_low64, Uint64 how_far_high64) {implementation.seek_backward(how_far_low64, how_far_high64);}
+std::string PractRand::RNGs::Polymorphic::xsm64::get_name() const {return "xsm64";}
 
 //raw:
+
 Uint32 PractRand::RNGs::Raw::xsm32::raw32() {
 	const Uint32 K = 0x6595a395;
 	Uint32 tmp = lcg_high;
@@ -50,10 +44,11 @@ void PractRand::RNGs::Raw::xsm32::step_backwards() {
 	lcg_high -= lcg_low + carry;
 }
 void PractRand::RNGs::Raw::xsm32::seed(Uint64 s) {
+	lcg_adder = Uint32(s) | 1;
 	s ^= rotate(s, 21) ^ rotate(s, 39);
-	lcg_low = Uint32(s);
+	lcg_low = Uint32(s); 
 	lcg_high = Uint32(s>>32);
-	lcg_adder = (lcg_high + lcg_low) | 1;
+	history = 0;
 	raw32();
 }
 void PractRand::RNGs::Raw::xsm32::walk_state(StateWalkingObject *walker) {
@@ -102,7 +97,9 @@ void PractRand::RNGs::Raw::xsm64::step_backwards() {
 void PractRand::RNGs::Raw::xsm64::seed(Uint64 s) {
 	lcg_low = s ^ rotate64(s, 17) ^ rotate64(s, 29);
 	lcg_high = s;
-	lcg_adder = lcg_low | 1;
+	lcg_adder = s | 1;
+	history = 0;
+	raw64();
 }
 void PractRand::RNGs::Raw::xsm64::walk_state(StateWalkingObject *walker) {
 	walker->handle(lcg_low);

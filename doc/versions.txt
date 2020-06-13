@@ -1,3 +1,92 @@
+version 0.87
+	! The big changes were improved p-value quality, changed RNG test reporting format, more useful tools, and improved autoseeding.  
+	RNG algorithms:
+		chacha
+			added new RNG: chacha
+			this is a single 32 bit RNG with a variable quality setting, despite the naming convention
+			cryptographically security, random access, and fast seeding
+		jsf16 / jsf32 / jsf64
+			very very minor tweak to jsf32 initialization
+			removed jsf16 - with improvements in sfc16 it was no longer competitive
+			added fast-seeding option
+		sfc16 / sfc32 / sfc64
+			fixed bug in seeding-from-an-RNG (sfc16 only)
+			revised algorithm - now version 4 of sfc, old version moved in with the non-recommended RNGs
+				revised version is slightly larger, slightly higher quality
+			added fast-seeding option
+		xsm32 / xsm64
+			fixed bug in seeding-from-an-integer (xsm64 only)
+			fixed bug in random access (xsm64 only)
+			revised my rating downward by half a star
+				(from 3.0 to 2.5 stars on xsm32, from 4.0 to 3.5 on xsm64)
+				all indications are that it's very very good, but I just don't completely trust it yet
+		mt19937
+			added support for seeding from arbitrary length sequences of 32 bit integers
+				(a standard mt19937 seeding method added in 2002 that I hadn't noticed)
+			changed integer seeding algorithm for seeds >= 2**32
+		arbee
+			tweaked seeding
+			changed & optimized add_entropy_N
+			fixed metadata issue
+			adjusted interfaces slightly
+		other / non-recommended RNGs
+			fixed a couple bugs
+			added a couple algorithms
+	Test interfaces:
+		significant changes to how test results are reported
+		fixed a few issues, some of which could produce false positives in rare circumstances
+	Tests:
+		BCFN
+			dramatically improved quality of p-values
+			now reports multiple p-values instead of combining them in to a single p-value
+		Gap16
+			dramatically improved quality of p-values
+			now reports two p-values instead of combining them in to a single p-value
+		DC6
+			dramatically improved quality of p-values
+		FPF
+			dramatically improved quality of p-values
+		CoupGap
+			dramatically improved quality of p-values
+	adjusted error handling
+		user-defined callback called if present, otherwise it prints to stderr and does an exit(1)
+	fixed several minor issues in initialization
+		you can now tell whether PractRand found enough entropy by the return value of initialize_PractRand()
+	improved PractRands self-test funcationality
+		now verifies that mt19937, chacha, hc256, trivium, and isaac32x256 match test vectors
+		and verifies that xsm32, xsm64, and chacha appear to fast-forward and rewind correctly
+	revised autoseeding substantially
+		fixed issues that could occur when threads were created immediately after threads were destroyed
+		now uses the following scheme:
+			if TLS is supported and the platform is recognized
+				TLS + atomic increments manage thread-safe auto-seeding
+			if TLS is supported but the platform is NOT recognized
+				TLS + a leaked std::malloc(1) per thread manage thread-safe auto-seeding
+			if TLS is NOT supported
+				a slow method involving calls to std::clock() is used to manage thread-safe auto-seeding
+	revised documentation slightly
+		added documentation for parallel random number generation
+			seperate from the pre-existing documentation on multithreaded random number generation
+		revised thresholds for quality & speed in RNG engine ratings
+		other minor documentation changes
+	test programs
+		renamed to tools
+	tools
+		RNG_test
+			major revisions to interface - now command line driven, use --help for info
+			added support for alternate mode for checking seeding quality
+			added support for alternate mode for checking entropy pooling quality
+			changed MSVC project name
+		multithreaded RNG test
+			unified code with RNG_test, there is no longer a separate project for MT testing
+		RNG_output
+			fixed a bug that caused some RNGs to be used unseeded
+			revised naming scheme for nested RNGs: "[SShrink]jsf32"->"SShrink(jsf32)" or "[BDS256]jsf32"->"BDS(jsf32,8)"
+				well, partially, still needs work
+		Test_calibration
+			new test program, added to document some of the calibration process
+			I do NOT recommend the use of this for end users at this time.  
+
 version 0.86
 	RNGs algorithms:
 		changes to specific RNGs:
@@ -19,6 +108,7 @@ version 0.86
 				it has a bad habit of recreating its threads frequently instead of keeping a pool of workers
 
 version 0.85
+	! The big changes were in RNG interfaces, portability, and random access RNG algorithms.  
 	fixed various issues preventing compilation on recent versions of gcc
 		tested on gcc 4.6.1
 	improved portability

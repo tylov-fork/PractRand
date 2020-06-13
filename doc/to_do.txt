@@ -1,36 +1,25 @@
-post-0.86:
+post-0.87:
 	high priority items
-		adaptor to produce a polymorphic RNG from a raw RNG automatically
-			(to simplify users sticking their own RNG in to the test program at full performance)
-		revise basic testing interface
 		review serialization & seeding interface
-	add benchmarks for seeding
-		and optimize any slow-but-easily-improved seeding functions
-		maybe add alternate fast-seeding interfaces too
 	add more self-tests, regression tests, etc
-		test vectors for ISAAC64, SHA2-512, & jsf32
-		checks that fast-forward / rewind works correctly
-		checks that entropy pooling works correctly
+		checks that serialization works correctly
 	review / reorganize header files
 		some headers protect against multiple inclusion, some don't
 		some headers protect against inclusion prior to dependencies, some don't
 		test_helpers should probably be split in two
 	RNG testing
-		revise basic interface
-			allow RNG tests to report multiple results
-			ie have internal subtests, like a multiplex transform but not addressable
 		consider splitting in to a separate library
 			yes, it's already a semi-separate .lib file, but...
 			maybe it should also have separate:
-				names, SourceForge project pages, VC project files, downloads
+				names, SourceForge project pages, VC solution files, downloads?
 		revise specific RNG testing algorithms
 			Gap16
-				possible minor bug in get_result, fix and recalibrate
 				possibly count sequential identical gaps
 			DC6
 				investigate Bob Jenkins suggestion of applying to x^(x>>1)
 			BCFN
-				many variations to investigate; currently focused on BCACN
+				many variations to investigate
+				in particular check the assymetric probability variation
 			CoupGap
 				try to get more testable factors per run
 			FPF
@@ -48,10 +37,11 @@ post-0.86:
 			investigate idea: design a test for running on GPUs
 		possible modifications to test interfaces
 			allow a single test to be multithread?
-		increase automation & quality of calibration process
-	test program(s)
-		improve clarity & quality of example code (TestManager)
-			possibly move TestManager class in to library or a shared header
+				a bit nasty to code, and the interface might be nasty too, but it is quite doable
+	tools
+		add an adaptor to produce a polymorphic RNG from a raw RNG automatically
+			(to simplify users sticking their own RNG in to the test program at full performance)
+		possibly move TestManager class in to library?
 	choices in library to be reconsidered:
 		names of randlf, randli
 			perhaps: rand_sint32, rand_sint64, rand_uint32, rand_uint64, rand_float, rand_double, fast_uint32
@@ -70,6 +60,7 @@ post-0.86:
 		RNG distributions
 		RNG seed management and entropy collection
 		RNGs and multithreading
+		RNGs and parallel computing
 		RNGs and exotic platforms
 		RNGs and cryptography
 		RNG testing / RNG tests

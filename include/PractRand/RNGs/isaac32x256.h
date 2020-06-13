@@ -6,7 +6,7 @@ namespace PractRand {
 				enum {
 					OUTPUT_TYPE = OUTPUT_TYPES::NORMAL_1,
 					OUTPUT_BITS = 32,
-					FLAGS = FLAG::CRYPTOGRAPHIC_OUTPUT | FLAG::OUTPUT_IS_BUFFERED | FLAG::ENDIAN_SAFE
+					FLAGS = FLAG::CRYPTOGRAPHIC_SECURITY | FLAG::OUTPUT_IS_BUFFERED | FLAG::ENDIAN_SAFE
 				};
 			protected:
 				enum {
@@ -20,6 +20,7 @@ namespace PractRand {
 				void _advance_state();
 				void _seed(bool flag = true);
 			public:
+				~isaac32x256();
 				void flush_buffers() {used = SIZE;}
 				Uint32 raw32() {//LOCKED, do not change
 					//note: this walks the buffer in the same direction as the buffer is filled

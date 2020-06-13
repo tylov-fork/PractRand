@@ -1,3 +1,6 @@
+namespace Candidates {
+
+
 /*
 Canidates currently under consideration:
 
@@ -11,7 +14,8 @@ Canidates currently under consideration:
 	speed: occasionally faster than any recommended RNG, usually only middling though
 	statistical quality: decent at word sizes past 16 bit, poor @ 8 & 16 bit
 		no short term correlation, and the long term correlation seems to be under control
-		but the medium term correlation, while not detected, is definitely there
+		but the medium term correlation, while not detected @ 32 or 64 bit, is definitely 
+		there
 	portability: uses only simple operations
 	word sizes: viable at 8, 16, 32, & 64 bit ; quality suffers @ 8 & 16 bit though
 	full word output: yes
@@ -24,15 +28,17 @@ Canidates currently under consideration:
 	statespace: full on 47 words, 45 states on the last word
 		(45 * 2**376 @ 8 bit, 45 * 2**752 @ 16 bit, 45 * 2**1504 @ 32 bit, 45 * 2**3008 @ 64 bit)
 
-3. a small fast RNG (VeryFast64/32/16)
-	OVERALL EVALUTION: insufficiently different from jsf64/32/16
+2. very fast RNG (VeryFast64/32/16)
+	OVERALL EVALUTION: insufficiently different from sfc64/32/16
 	niche: 
 		fastest inline RNG of reasonable quality
-		with only 3 words of state, 1 temp var, and six so ops, it's cheap to inline
+		with only 2-3 words of state, 1 temp var, and six or so ops, it's cheap to inline
+		lack of a counter variable is bad at small sizes though - too easy to wind up in a bad cycle
+		and adding a counter variable makes it little different from sfc or the older versions of sfc
 	speed: often faster than any recommended RNG, generally at least competitive with the fastest
-	statistical quality: decent @ 32 bit & 64 bit, poor @ 16 bit
+	statistical quality: decent or better @ 32 bit & 64 bit, poor @ 16 bit
 	portability: uses only simple operations
-	word sizes: viable at 16, 32, & 64 bit
+	word sizes: viable at 16, 32, & 64 bit (some variants are marginal at 16 bit)
 	full word output: yes
 	buffered: no
 	random access: no
@@ -43,7 +49,7 @@ Canidates currently under consideration:
 	statespace: full on all 3 words, except for the all-zeroes case
 		(2**48-1 @ 16 bit, 2**96-1 @ 32 bit, 2**192-1 @ 64 bit)
 
-4. a possible new revision to the current sfc RNG (sfc_alternative64/32/16)
+3. possible revisions to the current sfc RNG (sfc_alternative64/32/16)
 	OVERALL EVALUTION: hard to justify
 	niche: similar to sfc - 
 		small size, fast speed, guaranteed cycle length at some word sizes
@@ -70,8 +76,8 @@ The current sfc occupies three distinct niches:
 	1. general small fast RNG
 	2. RNGs that are good for inlining due to small state, few ops, few temp vars, and high speed
 	3. RNGs that combine the general strengths of small fast RNGs with a guaranteed minimum cycle length
-For #1, jsf is better and already a recommended RNG
-For #2, VeryFast looks better than the current sfc, at least at 32 & 64 bit.  
+For #1, sfc_alternative is probably better than sfc, plus jsf is comparable and already a recommended RNG.  
+For #2, VeryFast might be better than the current sfc, at least at 32 & 64 bit.  
 For #3, sfc_alternative looks better than the current sfc.  
 
 */
@@ -97,33 +103,36 @@ public:
 		OUTPUT_BITS = 8 * sizeof(Word),
 		FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING
 	};
-	Word buffer[LAG1], position, counter1, counter2;
+	Word buffer[LAG1], position, counter1, counter2, extra;
 	static Word rotate(Word value, int bits) {return (value << bits) | (value >> (8*sizeof(value)-bits));}
-	Word step( Word prior, Word current, Word other ) {
-		return (rotate(current, SHIFT1) ^ rotate(other, SHIFT2)) + rotate(prior, SHIFT3);
-		//return (rotate(current, SHIFT1) ^ rotate(other, SHIFT2)) + (rotate(prior, SHIFT3) ^ prior);
-		//prior += prior << 2; prior ^= prior >> 3; return (current ^ other) + prior;
+	Word step( Word newest, Word oldest, Word middle ) {
+		/*newest ^= middle + (middle << 3);
+		extra ^= (rotate(newest, SHIFT3) + extra);
+		return extra + oldest;*/
+		return (rotate(oldest, SHIFT1) ^ rotate(middle, SHIFT2)) + rotate(newest, SHIFT3);
+		//return (rotate(oldest, SHIFT1) ^ rotate(middle, SHIFT2)) + (rotate(newest, SHIFT3) ^ prior);
+		//newest += newest << 2; newest ^= newest >> 3; return current + other + newest;
 	}
-	void refill() {
+	Word refill() {
 		Word prior = buffer[LAG1-1] ^ counter1++;
 		for (int i = 0; i < LAG2; ) {
 			prior = buffer[i] = step(prior, buffer[i], buffer[i+LAG1-LAG2]); i++;
 			prior = buffer[i] = step(prior, buffer[i], buffer[i+LAG1-LAG2]); i++;
 			prior = buffer[i] = step(prior, buffer[i], buffer[i+LAG1-LAG2]); i++;
 		}
-		prior ^= counter2;
-		counter2 += counter1 ? 0 : 1;
+		counter2 += counter1 ? 0 : 1; prior ^= counter2;
 		for (int i = LAG2; i < LAG1; ) {
-			prior = buffer[i] = prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
-			prior = buffer[i] = prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
-			prior = buffer[i] = prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
+			prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
+			prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
+			prior = buffer[i] = step(prior, buffer[i], buffer[i     -LAG2]); i++;
 		}
 		position = LAG1 - 1;
+		return buffer[position];
 	}
 	Word _raw_native() {
 		if (position) return buffer[--position];
-		refill();
-		return buffer[position];
+		//refill();
+		return refill();
 	}
 	void walk_state(StateWalkingObject *walker) {
 		for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
@@ -133,10 +142,10 @@ public:
 		if (position > LAG1) position = 0;
 	}
 };
-class raw_ranrot_variant64 : public _RanrotVariant<Uint64,45,14,0,0,29> {public: Uint64 raw64() {return _raw_native();}};
-class raw_ranrot_variant32 : public _RanrotVariant<Uint32,45,14,0,0,13> {public: Uint32 raw32() {return _raw_native();}};
-class raw_ranrot_variant16 : public _RanrotVariant<Uint16,45,14,0,0, 7> {public: Uint16 raw16() {return _raw_native();}};
-class raw_ranrot_variant8  : public _RanrotVariant<Uint8 ,45,24,0,0, 3> {public: Uint8  raw8 () {return _raw_native();}};
+class raw_ranrot_variant64 : public _RanrotVariant<Uint64,45,24,0,0,29> {public: Uint64 raw64() {return _raw_native();}};
+class raw_ranrot_variant32 : public _RanrotVariant<Uint32,45,24,0,0,13> {public: Uint32 raw32() {return _raw_native();}};
+class raw_ranrot_variant16 : public _RanrotVariant<Uint16,45,24,0,0, 5> {public: Uint16 raw16() {return _raw_native();}};
+class raw_ranrot_variant8  : public _RanrotVariant<Uint8 , 7, 3,0,0, 3> {public: Uint8  raw8 () {return _raw_native();}};
 POLYMORPHIC_CANDIDATE(ranrot_variant, 64)
 POLYMORPHIC_CANDIDATE(ranrot_variant, 32)
 POLYMORPHIC_CANDIDATE(ranrot_variant, 16)
@@ -151,33 +160,58 @@ public:
 		FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING
 	};
 	Word a, b, c;
-	Word rotate(Word value, int bits) {return ((value << bits) | (value >> (OUTPUT_BITS - bits)));}
+	Word table[256];
+	static Word rotate(Word value, int bits) {return ((value << bits) | (value >> (OUTPUT_BITS - bits)));}
+	_VeryFast() {
+		PractRand::RNGs::Polymorphic::hc256 good(PractRand::SEED_AUTO);
+		for (int i = 0; i < 256; i++) table[i] = Word(good.raw64());
+	}
 	Word _raw_native() {
 		Word old;
-		//very good speed, 32 bit version failed @ 2 TB
+		const Word K = Word(0x92ec64765925a395ull);
+		//good speed, 16 bit version fails @ 32 GB, 32 bit version passed 8 TB
 		/*old = a + b;
-		a = b ^ c;
-		b = c + old;
-		c = old + bshift(c,ROTATE);
-		return old;//*/
-		//very good speed, 16 bit version fails @ 64 GB, 32 bit version passed 8 TB
-		old = a + b;
 		a = b ^ (b >> RSHIFT);
 		b = c + (c << LSHIFT);
+		c = old + rotate(c,ROTATE);// RSHIFT,LSHIFT,ROTATE : 7,3,9 @ 32 bit
+		return old;//*/
+		//best quality: 16 bit fails @ 1 TB, but not as fast ;; switching "a += b ^ c;" for "a ^= b + c;" increases that to 2 TB
+		old = a + (a << LSHIFT);
+		a += b ^ c;
+		b = c ^ (c >> RSHIFT);
 		c = old + rotate(c,ROTATE);
 		return old;//*/
-		//not as fast, 16 bit version fails @ 256 GB
-		/*old = a + (a << LSHIFT);
-		a = b + c;
-		b = c ^ (c >> RSHIFT);
-		c = rotate(c,ROTATE) + old;
-		return old;//*/
-		//?, 16 bit version fails @ 16-32 GB, 32 bit version ?
+		//faster, simpler, lower quality - just 4-6 ops, very few dependent
+		//16 bit: 128 MB, 32 bit: 32 GB
 		/*old = a + b;
-		a = b + (b << LSHIFT);
-		b = c ^ (c >> RSHIFT);
-		c = old + rotate(c,ROTATE);
-		return old;//*/
+		a = b + rotate(c,ROTATE);
+		b = c + (c << LSHIFT);
+		c = old;
+		return c;//*/
+		//another alternative
+		//16 bit: 1 GB, 32 bit: 2 TB
+		/*old = a + b;
+		a = b;
+		b = c + (c << LSHIFT);
+		c = rotate(c, ROTATE);
+		a += c;
+		c += old;
+		return a;//*/
+		//uses multiplication, only 2 words, but pretty good asside from that:
+		//16: 1 GB, 32 bit: > 32 TB
+		/*old = a * Word(0x92ec64765925a395ull);
+		a = b ^ rotate(a, OUTPUT_BITS/2);
+		b = old;
+		return a+b;//*/
+		/*old = a * Word(0x92ec64765925a395ull);
+		a = rotate(a, OUTPUT_BITS/2) ^ b ^ c++;
+		b = old;
+		return a;*/
+		/*old = (a ^ (a >> (OUTPUT_BITS/2)));
+		//c += (c << 3) + 1;
+		a += b + (b << 3);
+		b ^= old + ++c;
+		return a;*/
 	}
 	void walk_state(StateWalkingObject *walker) {
 		walker->handle(a);
@@ -202,11 +236,25 @@ public:
 		OUTPUT_BITS = 8 * sizeof(Word),
 		FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING
 	};
-	Word a, b, c, counter;
+	Word a, b, c, d, counter, counter2;
 	static Word rotate(Word value, int bits) {return (value << bits) | (value >> (8*sizeof(value)-bits));}
 	Word _raw_native() {
-		//better speed, 16 bit version >8 TB (64 GB w/o counter)
-		Word old = a + b + counter++;//64 GB? on counter, 8 TB on b
+		//experiment with larger pseudo-counter
+		/*++counter;
+		counter2 += counter + (counter ? 0 : 1);//2-word LCG
+		Word tmp = a + b;//counter2;
+		//a = b ^ (b >> SHIFT2);
+		//a = b + (b << SHIFT3);
+		a = b + counter2;
+		b = rotate(b, SHIFT1) + tmp;
+		return a;
+		//SFC 3:
+		/*Word tmp = a + b + counter++;
+		a = b ^ (b >> SHIFT2);
+		b = rotate(b,SHIFT1) + tmp;
+		return tmp;//*/
+		//SFC 4, 16 bit version >8 TB (64 GB w/o counter)
+		Word old = a + b + counter++;//64 GB on counter, 8 TB on b
 		a = b ^ (b >> SHIFT2);//128 GB?
 		b = c + (c << SHIFT3);//1 TB
 		c = old + rotate(c,SHIFT1);//important!
@@ -216,6 +264,18 @@ public:
 		a = b + c + counter++;
 		b = c ^ (c >> SHIFT2);
 		c = rotate(c,SHIFT1) + old;
+		return old;//*/
+		//too slow, 16 bit version ??? (4 TB w/o counter)
+		/*Word old = a + b + counter++;
+		a = old ^ rotate(a, SHIFT2);
+		b = c + (c << SHIFT3);
+		c = old + rotate(c,SHIFT1);
+		return old;//*/
+		//too slow, 16 bit version ??? (2 TB w/o counter)
+		/*Word old = a + (a << SHIFT3);
+		a += b ^ c;
+		b = c ^ (c >> SHIFT2) ^ counter++;
+		c = old + rotate(c,SHIFT1);
 		return old;//*/
 		//faster, 16 bit version failed @ 64-128 GB (4 GB w/o counter), 32 bit @ ? (passed 16 TB w/o counter)
 		/*Word old = a + b;
@@ -229,31 +289,26 @@ public:
 		b = c ^ (c >> SHIFT2);
 		c = old + rotate(c,SHIFT1);
 		return old;//*/
-		//current SFC:
-		/*Word tmp = a + b + counter++;
-		a = b ^ (b >> SHIFT2);
-		b = rotate(b,SHIFT1) + tmp;
-		return tmp;//*/
-		//maximum speed?
-		//Word tmp = a;
-		//a = rotate(b,SHIFT1);
-		//b += a;
-		//Word tmp = a;
-		//a += 1;
-		//return tmp;
-		//return a += b;//*/
 	}
 	void walk_state(StateWalkingObject *walker) {
 		walker->handle(a);
 		walker->handle(b);
 		walker->handle(c);
+		walker->handle(d);
 		walker->handle(counter);
+		walker->handle(counter2);
 	}
 };
-class raw_sfc_alternative8  : public _sfc_alternative<Uint8 , 3,2,2> {public: Uint8  raw8 () {return _raw_native();}};
+/*
+	8 bit: 3,2,1 or 4,2,3
+	16 bit: 7,3,2 or 7,5,2 ?
+	32 bit: 25,8,3
+	64 bit: 25,12,3
+*/
+class raw_sfc_alternative8  : public _sfc_alternative<Uint8 , 3,2,1> {public: Uint8  raw8 () {return _raw_native();}};
 class raw_sfc_alternative16 : public _sfc_alternative<Uint16, 7,3,2> {public: Uint16 raw16() {return _raw_native();}};
-class raw_sfc_alternative32 : public _sfc_alternative<Uint32,13,7,3> {public: Uint32 raw32() {return _raw_native();}};
-class raw_sfc_alternative64 : public _sfc_alternative<Uint64,29,9,3> {public: Uint64 raw64() {return _raw_native();}};
+class raw_sfc_alternative32 : public _sfc_alternative<Uint32,25,8,3> {public: Uint32 raw32() {return _raw_native();}};
+class raw_sfc_alternative64 : public _sfc_alternative<Uint64,25,12,3> {public: Uint64 raw64() {return _raw_native();}};
 POLYMORPHIC_CANDIDATE(sfc_alternative, 64)
 POLYMORPHIC_CANDIDATE(sfc_alternative, 32)
 POLYMORPHIC_CANDIDATE(sfc_alternative, 16)
@@ -430,3 +485,85 @@ class raw_mcx32 : public _mcx<Uint32,13,0x6595a395a1ec531b> {public: Uint32 raw3
 //POLYMORPHIC_CANDIDATE(mcx, 16)
 POLYMORPHIC_CANDIDATE(mcx, 32)
 //POLYMORPHIC_CANDIDATE(mcx, 64)
+
+class raw_xsm16 {
+public:
+	enum {
+		OUTPUT_TYPE = PractRand::RNGs::OUTPUT_TYPES::NORMAL_1,
+		OUTPUT_BITS = 16,
+		FLAGS = PractRand::RNGs::FLAG::ENDIAN_SAFE | PractRand::RNGs::FLAG::USES_SPECIFIED | PractRand::RNGs::FLAG::USES_MULTIPLICATION | PractRand::RNGs::FLAG::SUPPORTS_FASTFORWARD
+		//FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING | PractRand::RNGs::FLAG::ENDIAN_SAFE | PractRand::RNGs::FLAG::USES_SPECIFIED | PractRand::RNGs::FLAG::USES_MULTIPLICATION | PractRand::RNGs::FLAG::SUPPORTS_FASTFORWARD
+	};
+public:
+	//PractRand::RNGs::Raw::xsm32 base;
+	//Uint16 raw16() {return Uint16(base.raw32()>>0);}
+	//void walk_state(StateWalkingObject *walker) {base.walk_state(walker);}
+protected:
+	Uint16 lcg_low, lcg_high, lcg_adder, history;
+	void step_backwards() {
+		if (!lcg_low && !lcg_high) lcg_adder -= 2;
+		bool carry = lcg_low < lcg_adder;
+		lcg_low -= lcg_adder;
+		lcg_high -= lcg_low + carry;
+	}
+	Uint16 rotate16(Uint16 value, int bits) {return (value << bits) | (value >> (16-bits));}
+	Uint64 rotate64(Uint64 value, int bits) {return (value << bits) | (value >> (64-bits));}
+public:
+	Uint16 raw16() {
+		const Uint16 K = 0xa395;
+		Uint16 tmp = lcg_high;
+		tmp ^= tmp >> 8;
+		tmp *= K;
+		tmp += rotate16(tmp ^ lcg_low, 6);
+		Uint16 old = lcg_low;
+		lcg_low += lcg_adder;
+		lcg_high += old + ((lcg_low < lcg_adder) ? 1 : 0);
+		old = history;
+		history = tmp;
+		if (!lcg_low) if (!lcg_high) lcg_adder += 2;
+		return tmp + rotate16(old, 8);
+	}
+	void seed(Uint64 s) {
+		s ^= rotate64(s, 21) ^ rotate64(s, 39);
+		lcg_low = Uint16(s);
+		lcg_high = Uint16(s>>16);
+		lcg_adder = Uint16(s>>32) | 1;
+		history = 0;
+		raw16();
+	}
+	void walk_state(StateWalkingObject *walker) {
+		walker->handle(lcg_low);
+		walker->handle(lcg_high);
+		walker->handle(lcg_adder);
+		walker->handle(history);
+		if (walker->is_clumsy() && !walker->is_read_only()) {
+			lcg_adder |= 1;
+			step_backwards();
+			raw16();
+		}
+	}//*/
+	//void seek_forward (Uint64 how_far);
+	//void seek_backward(Uint64 how_far);
+};
+POLYMORPHIC_CANDIDATE(xsm, 16)
+}
+#if defined RNG_from_name_h
+namespace RNG_Factories {
+	void register_candidate_RNGs() {
+		RNG_factory_index["xsm16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_xsm16>;
+		RNG_factory_index["sfc_alt64"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative64>;
+		RNG_factory_index["sfc_alt32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative32>;
+		RNG_factory_index["sfc_alt16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative16>;
+		RNG_factory_index["sfc_alt8"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative8>;
+		RNG_factory_index["vf64"] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast64>;
+		RNG_factory_index["vf32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast32>;
+		RNG_factory_index["vf16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast16>;
+		RNG_factory_index["vf8"] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast8>;
+		RNG_factory_index["ranrot_var64"] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant64>;
+		RNG_factory_index["ranrot_var32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant32>;
+		RNG_factory_index["ranrot_var16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant16>;
+		RNG_factory_index["ranrot_var8"] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant8>;
+		RNG_factory_index["ranrot_mcx32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_mcx32>;
+	}
+}
+#endif

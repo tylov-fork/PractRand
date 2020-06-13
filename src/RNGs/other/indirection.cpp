@@ -95,11 +95,12 @@ namespace PractRand {
 				void ibaa8::walk_state(StateWalkingObject *walker) {
 					walker->handle(a);walker->handle(b);
 					int table_size = 1<<table_size_L2;
-					for (int i = 0; i < table_size; i++) walker->handle(table[i]);
+					for (int i = 0; i < table_size * 2; i++) walker->handle(table[i]);
+					walker->handle(left);
 					if (left >= table_size) left = 0;
 				}
 				ibaa8::ibaa8(int table_size_L2_) : table_size_L2(table_size_L2_) {
-					table = new Uint8(1 << table_size_L2);
+					table = new Uint8[2 << table_size_L2];
 				}
 				ibaa8::~ibaa8() {delete[] table;}
 
@@ -131,11 +132,12 @@ namespace PractRand {
 				void ibaa16::walk_state(StateWalkingObject *walker) {
 					walker->handle(a);walker->handle(b);
 					int table_size = 1<<table_size_L2;
-					for (int i = 0; i < table_size; i++) walker->handle(table[i]);
+					for (int i = 0; i < table_size * 2; i++) walker->handle(table[i]);
+					walker->handle(left);
 					if (left >= table_size) left = 0;
 				}
 				ibaa16::ibaa16(int table_size_L2_) : table_size_L2(table_size_L2_) {
-					table = new Uint16(1 << table_size_L2);
+					table = new Uint16[2 << table_size_L2];
 				}
 				ibaa16::~ibaa16() {delete[] table;}
 
@@ -167,13 +169,87 @@ namespace PractRand {
 				void ibaa32::walk_state(StateWalkingObject *walker) {
 					walker->handle(a);walker->handle(b);
 					unsigned long table_size = 1<<table_size_L2;
-					for (unsigned long i = 0; i < table_size; i++) walker->handle(table[i]);
+					for (unsigned long i = 0; i < table_size * 2; i++) walker->handle(table[i]);
+					walker->handle(left);
 					if (left >= table_size) left = 0;
 				}
 				ibaa32::ibaa32(int table_size_L2_) : table_size_L2(table_size_L2_) {
-					table = new Uint32(1 << table_size_L2);
+					table = new Uint32[2 << table_size_L2];
 				}
 				ibaa32::~ibaa32() {delete[] table;}
+
+				
+				#define ind32(mm,x)  (*(Uint32 *)((Uint8 *)(mm) + ((x) & ((MASK)<<2))))
+				#define rngstep32(mix,a,b,mm,m,m2,r,x) \
+				{ \
+				  x = *m;  \
+				  a = (a^(mix)) + *(m2++); \
+				  *(m++) = y = ind32(mm,x) + a + b; \
+				  *(r++) = b = ind32(mm,y>>table_size_L2) + x; \
+				}
+				Uint32 isaac32_small::raw32() {
+					if (left) {
+						return table[--left];
+					}
+					const int HALF_SIZE = 1<<(table_size_L2-1);
+					const int MASK = (1<<table_size_L2)-1;
+					Uint32 *base = &table[MASK+1];
+					Uint32 *m, *m2, *mend, *r;
+					Uint32 x, y;
+					m = base;
+					r = table;
+					b += ++c;
+					if (table_size_L2 != 2) {
+						for (m = base, mend = m2 = m+HALF_SIZE; m<mend; )
+						{
+							rngstep32( a<<13, a, b, base, m, m2, r, x);
+							rngstep32( a>>6 , a, b, base, m, m2, r, x);
+							rngstep32( a<<2 , a, b, base, m, m2, r, x);
+							rngstep32( a>>16, a, b, base, m, m2, r, x);
+						}
+						for (m2 = base; m2<mend; )
+						{
+							rngstep32( a<<13, a, b, base, m, m2, r, x);
+							rngstep32( a>>6 , a, b, base, m, m2, r, x);
+							rngstep32( a<<2 , a, b, base, m, m2, r, x);
+							rngstep32( a>>16, a, b, base, m, m2, r, x);
+						}
+					}
+					else {
+						for (m = base, mend = m2 = m+HALF_SIZE; m<mend; )
+						{
+							rngstep32( a<<13, a, b, base, m, m2, r, x);
+							rngstep32( a>>6 , a, b, base, m, m2, r, x);
+						}
+						for (m2 = base; m2<mend; )
+						{
+							rngstep32( a<<2 , a, b, base, m, m2, r, x);
+							rngstep32( a>>16, a, b, base, m, m2, r, x);
+						}
+					}
+					left = MASK;
+					return table[left];
+				}
+				std::string isaac32_small::get_name() const {
+					std::ostringstream tmp;
+					int table_size = 1<<table_size_L2;
+					tmp << "isaac32x" << table_size;
+					return tmp.str();
+				}
+				void isaac32_small::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);walker->handle(b);walker->handle(c);
+					unsigned long table_size = 1<<table_size_L2;
+					for (unsigned long i = 0; i < table_size; i++) walker->handle(table[i]);
+					walker->handle(left);
+					if (left >= table_size) left = 0;
+				}
+				isaac32_small::isaac32_small(int table_size_L2_) : table_size_L2(table_size_L2_) {
+					if (table_size_L2 < 2) PractRand::issue_error("invalid table size for isaac32_small");
+					table = new Uint32(2 << table_size_L2);
+				}
+				isaac32_small::~isaac32_small() {delete[] table;}
+				#undef ind32
+				#undef rngstep32
 			}
 		}
 	}

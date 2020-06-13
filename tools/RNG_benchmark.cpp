@@ -24,41 +24,53 @@
 */
 
 
-#include "PractRand/RNGs/mt19937.h"
-#include "PractRand/RNGs/jsf16.h"
-#include "PractRand/RNGs/jsf32.h"
-#include "PractRand/RNGs/jsf64.h"
-#include "PractRand/RNGs/sfc16.h"
-#include "PractRand/RNGs/sfc32.h"
-#include "PractRand/RNGs/sfc64.h"
-#include "PractRand/RNGs/efiix8x384.h"
-#include "PractRand/RNGs/efiix16x384.h"
-#include "PractRand/RNGs/efiix32x384.h"
-#include "PractRand/RNGs/efiix64x384.h"
-#include "PractRand/RNGs/isaac32x256.h"
-#include "PractRand/RNGs/isaac64x256.h"
-#include "PractRand/RNGs/hc256.h"
-#include "PractRand/RNGs/arbee.h"
-#include "PractRand/RNGs/sha2_based_pool.h"
-#include "PractRand/RNGs/trivium.h"
-#include "PractRand/RNGs/xsm32.h"
-#include "PractRand/RNGs/xsm64.h"
+#include "PractRand/RNGs/all.h"
 //#include "PractRand/RNGs/rarns16.h"
 //#include "PractRand/RNGs/rarns32.h"
 //#include "PractRand/RNGs/rarns64.h"
 
 using namespace PractRand;
-
-namespace Candidates {
 #include "Candidate_RNGs.h"
-}
 #include "measure_RNG_performance.h"
 
+
+template<typename RNG> 
+double benchmark_seeding(/*PractRand::RNGs::vRNG *rng*/) {
+	//no real point to benchmarking non-polymorphic RNGs - seeding is sufficiently slow that the overhead will be insignificant
+	RNG _rng(PractRand::SEED_AUTO);
+	PractRand::RNGs::vRNG *rng = &_rng;
+	enum {NUM_CLOCKS_TO_TEST = int(CLOCKS_PER_SEC * 0.1 + 0.5)};
+	PractRand::RNGs::LightWeight::sfc64 known_fast(13);
+	int clock0 = clock();
+	int clock1, clock2;
+	while ((clock1 = clock()) == clock0) ;
+
+	Uint64 sum = 0;
+	int j = 0;
+	do {
+		rng->seed(known_fast.raw64());
+		sum += rng->raw32();
+		j++;
+	} while ((clock2=clock())-clock1 < NUM_CLOCKS_TO_TEST);
+
+	double delta = (clock2 - clock1) / double(CLOCKS_PER_SEC);//seconds
+	double amount = j * 1;//seedings
+	double rate = amount / delta;
+
+	//just to make very sure that some smart compiler won't optimize everything away:
+	if (sum == 0) std::printf("unlikely!");
+
+	return rate;
+}
+
 void benchmark_RNG_speeds() {
-#define PERF(RNG) printf("  %5.3f GB/s  :  %5.3f GB/s  :  %s\n", measure_RNG_performance< PractRand::RNGs::LightWeight:: RNG >()/1024, measure_RNG_performance<PractRand::RNGs::Polymorphic:: RNG >()/1024, #RNG );
-#define PERF_POLYMORPHIC_ONLY(RNG) printf("  ----- GB/s  :  %5.3f GB/s  :  %s\n", measure_RNG_performance<PractRand::RNGs::Polymorphic:: RNG >()/1024, #RNG );
+//#define PERF(RNG) printf("  %5.3f GB/s  :  %5.3f GB/s  :  %s\n", measure_RNG_performance< PractRand::RNGs::LightWeight:: RNG >()/1024, measure_RNG_performance<PractRand::RNGs::Polymorphic:: RNG >()/1024, #RNG );
+#define PERF(RNG) printf("  %5.3f GB/s  :  %5.3f GB/s  :%7.0f KHz  :  %s\n", measure_RNG_performance< PractRand::RNGs::LightWeight:: RNG >()/1024, measure_RNG_performance<PractRand::RNGs::Polymorphic:: RNG >()/1024, benchmark_seeding<PractRand::RNGs::Polymorphic:: RNG >()/1000, #RNG );
+//#define PERF_POLYMORPHIC_ONLY(RNG) printf("  ----- GB/s  :  %5.3f GB/s  :  %s\n", measure_RNG_performance<PractRand::RNGs::Polymorphic:: RNG >()/1024, #RNG );
+#define PERF_POLYMORPHIC_ONLY(RNG) printf("  ----- GB/s  :  %5.3f GB/s  :%7.0f KHz  :  %s\n", measure_RNG_performance<PractRand::RNGs::Polymorphic:: RNG >()/1024, benchmark_seeding<PractRand::RNGs::Polymorphic:: RNG >()/1000, #RNG );
 #define PERF_CANIDATE(rng) { typedef Candidates:: raw_ ## rng RawRNG;typedef Candidates:: polymorphic_ ## rng PolymorphicRNG; const char *name = #rng ; printf("  %5.3f GB/s  :  %5.3f GB/s  :  %s\n", measure_RNG_performance< PractRand::RNGs::Adaptors::RAW_TO_LIGHT_WEIGHT_RNG< RawRNG > >()/1024, measure_RNG_performance<PolymorphicRNG>()/1024, name ); }
-	printf("  light-weight   polymorphic    name\n");
+//	printf("  light-weight   polymorphic    name\n");
+	printf("  light-weight   polymorphic    seeding      name\n");
 	printf("small fast RNGs:\n");
 	PERF(jsf32);
 	PERF(jsf64);
@@ -77,10 +89,11 @@ void benchmark_RNG_speeds() {
 	PERF(isaac64x256);
 	PERF(efiix32x384);
 	PERF(efiix64x384);
+	PERF(chacha);
+	PERF(salsa);
 	printf("popular RNGs:\n");
 	PERF(mt19937);
 	printf("16 bit variants:\n");
-	PERF(jsf16);
 	PERF(sfc16);
 	PERF(efiix16x384);
 	printf("8 bit variants:\n");
@@ -97,6 +110,7 @@ void benchmark_RNG_speeds() {
 	PERF_CANIDATE(ranrot_variant16)
 	PERF_CANIDATE(ranrot_variant8)
 	PERF_CANIDATE(sfc_alternative16)
+	PERF_CANIDATE(xsm16);
 //	PERF_CANIDATE(mcx32)
 //	PERF_CANIDATE(mcx64)
 #undef PERF
@@ -176,9 +190,9 @@ void benchmark_entropy_pool_input() {
 	POLYPERF(sha2_based)
 }
 
-
 int main(int argc, char **argv) {
 	PractRand::initialize_PractRand();
+//	PractRand::self_test_PractRand();
 
 	printf("Random number generation speeds:\n");
 	benchmark_RNG_speeds();

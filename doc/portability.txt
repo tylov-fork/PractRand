@@ -25,38 +25,45 @@
 		gcc 3.4.5 / MinGW x86 (32-bit) - though TLS was not supported
 		VC 2010 x86 (32-bit)
 
-	When compiling on a other platform, the first thing that must be done 
-		is a few minor edits in include/PractRand/config.h
+	When compiling on a different platform, the first thing that must be 
+		done is a few minor edits in include/PractRand/config.h
 
 	In addition to that, the basic version of PractRand requires:
 		note:
 			if you don't know what any of these means, don't freak;
 			this stuff all basically just translates to a reasonably 
 			compliant C++ compiler and a normal hardware environment 
-			typical of modern PCs and most embedded chips.  
+			typical of modern PCs and many embedded chips.  
 		memory be addressed in 8-bit units (sizeof(Uint8) == 1)
 		support for 8, 16, 32, and 64 bit signed and unsigned integers
 		including unsigned right-shifts on all unsigned integer types
 			signed right-shifts are not required
 		basic C++ support including namespaces and templates
 			 all decent C++ compilers qualify
+			 template support not completely required, but very strongly recommended
+			 exceptions are not required
 		the standard C/C++ library, including STL
 			 all decent C++ compilers support this
-		endianness must be either big endian or little endian
+		endianness must be either big endian or little endian, not "middle endian"
 			all remotely modern architectures qualify
 		auto-seeding & automatic entropy work best on either Windows or *nix
-			see automatic_entropy.cpp
+			see platform_specifics.cpp
 			You can add code there for your platform
-			If you just use the generic code on an unrecognized platform there 
-				will be an increased chance that autoseeding will produce 
-				duplicate seeds
-		IEEE floating point
+		IEEE compliant floating point
 			only required for randf & randlf methods
 				and even then nothing very bad happens if it's not compliant
 				and it can be adjusted for non-IEEE formats in RNG_internals.h
 
-	In addition to that, the example programs may require:
-		C++ RTTI (part of the C++ language)
-		either pthreads or win32 (for multithreaded test programs)
+	If you are using PractRand from a multithreaded program, some additional 
+	requirements may apply:
+		compiler-level support for Thread Local Storage (TLS)
+			not actually mandatory, but autoseeding works better with TLS
+		the implementation of the C/C++ standard library used must be thread-safe
+			ie thread-safe malloc, etc
+		multithreading on unrecognized platforms may cause PractRand to leak, 
+			but only a 1 byte heap allocation per thread created
+
+	In addition to that, the tools (as opposed to the libraries) may require:
+		either pthreads or win32 (not actually required, but recommended)
 
 

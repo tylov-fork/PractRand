@@ -1,9 +1,11 @@
 PractRand (Practically Random) is a C++ library of pseudo-random number 
 generators (PRNGs, or just RNGs) and statistical tests for RNGs.  
 
-version 0.86
+version 0.87
+
 
 1. Randon Number Generation with PractRand
+
 Most development platforms come with random number generators that have 
 major statistical flaws, are a bit slow, and/or have inconvenient 
 interfaces.  PractRand can help.  
@@ -19,26 +21,28 @@ compatible with the more complex distributions offered by Boost / C++0x TR1.
 A3: Common interface available for a variety of RNG algorithms, making 
 switching underlying algorithms trivial.  
 A4: Automatic seeding, or seeding from any type(s) you want, with a simple 
-seeding interface for the common cases and powerful seeding helper objects 
-for exotic cases.  
+seeding interface for the common cases and powerful seeding helpers for 
+exotic cases.  
 
-B. A variety of very high quality RNG algorithms optimized for 
-several different scenarios.  
+B. A variety of very high quality RNG algorithms.  
 
-B1: Lists of RNG algorithms and their strengths, to make it easy to find 
-one appropriate for specific circumstances quickly.  
-B2: RNG algorithms that pass all statistical tests easily.  
-B3: RNG algorithms that are very fast.  
-B4: RNG algorithms that are cryptographically secure.  
-B5: RNG algorithms that are easy to implement in hardware.  
-B6: RNG algorithms that allow seeking / random access.  
-B7: RNG algorithms appropriate for a wide variety of CPU types.  
+B1: Lists of recommended RNG algorithms and their strengths, to make it 
+easy to find one appropriate for specific circumstances quickly.  
+B2: RNGs suitable for a wide variety of needs - cryptographically secure 
+RNGs, random access RNGs, RNGs that can be implemented with less than 1000 
+gates, etc.  
+B3: Many of the included RNGs are appropriate for use in parallel 
+computing and multithreaded applications, and there is documentation to 
+help.  
+B4: All recommended RNGs are unencumbered.  See license.txt for 
+details.  
 
 Other libraries including multiple RNG algorithms with a common interface:
 Boost / C++0x TR1 - http://www.boost.org/
 TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
 hasard - http://bytebucket.org/haypo/hasard/wiki/Home
 GSL - http://www.gnu.org/software/gsl/
+
 
 2. Statistical testing of RNGs with PractRand
 
@@ -51,29 +55,24 @@ test set that is simply one parameterization of each test regardless
 of the relative strengths and breadths of the tests involved.  
 
 B. Standard battery of tests can detect bias in a wide variety of RNGs 
-quickly.  See Tests_results.txt and/or Tests_engines.txt for more on 
-which biases it can detect how quickly relative to competing software 
-packages.  Basically, it can detect ~95% of biases that competing 
-software packages can detect, plus several categories of bias that 
-competitors have a very hard time detecting.  On biases it can detect 
-it sometimes requires more random bits as input, but is usually faster 
-despite that.  
+quickly.  In my testing it can find bias in a wider variety of RNGs 
+than any other suite of statistical tests, and on average needs less 
+time than other suites of statistical tests.  
 
 C. Tests are provided as legally unencumbered source code and static 
 libraries, so that data can be passed directly to them bypassing the 
 hard disk speed and size limitations.  To the best of my knowledge 
-PractRand is the *only* such software package (most competitors are 
+PractRand is the *only* such software package (many competitors are 
 not intended to be linked with, and even those that are have license 
 restrictions on what they can be linked with and redistributed with).  
 Some competitors are intended to have RNG output piped to them... in 
 my experience this imposes a substantial performance overhead.  
 
 D. No realistic maximum sequence length for testing.  Competing 
-software packages generally either have an interface that makes long 
-sequences impossible or crash or produce meaningless results if given 
-a very long sequence, but PractRand has been tested on sequence 
-lengths over 100 terabytes and is expected to work on sequence 
-lengths up to a few exabytes.  
+software packages generally either have either interface issues or 
+bugs that make testing very long sequences impossible or meaningless, 
+but PractRand has been tested on sequence lengths over 100 terabytes 
+and is expected to work on sequence lengths up to a few exabytes.  
 
 E. Mostly original tests.  Competing software packages tend to mainly 
 use duplicates of tests that appeared in the literature decades ago, 
@@ -89,19 +88,45 @@ end of a test.  If you are testing an RNG using dynamic test sequence
 lengths - progressively longer until the RNG fails a test - then this 
 is a very important feature.  
 
+G. Now comes as either a library (for performance and vesatility) or 
+as a command line tool (for convenience).  
+
+Those are the pros.  The main con is that it requires more random bits 
+than most comparable test suites.  
+
 Other packages for testing PRNGs:
 TestU01 - http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
-	TestU01 is pretty decent, though difficult to build on windows
+	TestU01 is pretty decent.  Not as good as PractRand in my 
+	testing, but the best alternative if PractRand is unsuitable for 
+	some reason.  
+	It's rather difficult to build on win32 though.  
+	Source code is available for non-commercial use. 
 NIST STS - http://csrc.nist.gov/groups/ST/toolkit/rng/index.html
-	Widely used, but not as good as TestU01.  
-RaBiGeTe - http://www.webalice.it/cristiano.pi/rabigete/
-	The web page for RaBiGeTe seems to have disappeared?
+	Widely used, but by reputation not as good as TestU01.  
+	I haven't tried it.  
+	Source code is available for any use.  
 Dieharder - http://www.phy.duke.edu/~rgb/General/dieharder.php
-	The command line tools for Dieharder clearly need a lot more work.  
-	I haven't tried their library yet.  
+	Intended for use on *nix - I was unable to build it on win32.  
+	The default test set is awful.  Even with a better test set it 
+	generally can't compete with PractRand or TestU01.  However 
+	it has a command line interface that is better for scripting 
+	than most competitors.  
+	Dieharder has some unfortunate problems with false positives.  
+	Source code is available, license is GPL.  
+RaBiGeTe - http://cristianopi.altervista.org/RaBiGeTe_MT/
+	Not as good as PractRand or TestU01 in my testing.  
+	It is more efficient on a per-bit basis though, and comes with a 
+	GUI that can help visualize the distribution of results from 
+	multiple samples if desired.  
+	This is the only test suite besides PractRand that can easily 
+	do multithreaded testing.  
+	Source code is available, but only for older versions.  I'm not 
+	sure what the license is like.  
+	RaBiGeTe has a tendency to crash a bit, but it's still usable.  
 Diehard - http://www.stat.fsu.edu/pub/diehard/
 	A very weak test, with an output format that is difficult to read.  
 	Avoid this, it is only of historical interest.  
+	Dieharder (see above) was named after this.  
 ENT - http://www.fourmilab.ch/random/
 	A very weak test.  
 gjrand - http://gjrand.sourceforge.net/
@@ -111,6 +136,7 @@ Documentation:
 
 PractRand.txt - this file
 installation.txt - some minimal discussion of how to install PractRand
+tools.txt - the command line tools included in PractRand
 license.txt - some minimal discussion of legal issue with PractRand
 RNG_usage.txt - basic RNG usage in PractRand
 RNG_engines.txt - overview of various RNG algorithms and their merits

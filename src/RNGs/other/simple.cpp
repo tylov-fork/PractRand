@@ -8,9 +8,52 @@
 #include "PractRand/RNGs/other/simple.h"
 
 namespace PractRand {
+	using namespace Internals;
 	namespace RNGs {
 		namespace Polymorphic {
 			namespace NotRecommended {
+				Uint16 xsalta16x3::raw16() {//slightly more complex output function
+					Uint16 tmp, old;
+					tmp = a + c + ((b >> 11) | (b << 5));
+					old = a;
+					a = b ^ (b >> 3);
+					b = c ^ (c << 7);
+					c = c ^ (c >> 8) ^ old;
+					return tmp;
+				}
+				std::string xsalta16x3::get_name() const {return "xsalta16x3";}
+				void xsalta16x3::walk_state(StateWalkingObject *walker) {
+					walker->handle(a); walker->handle(b); walker->handle(c);
+					if (!a && !b && !c) a = 1;
+				}
+				Uint16 xsaltb16x3::raw16() {//
+					Uint16 tmp, old;
+					tmp = (a & b) | (b & c) | (c & a);
+					old = a;
+					a = b ^ (b >> 3);
+					b = c ^ (c << 7);
+					c = c ^ (c >> 8) ^ old;
+					return c + ((tmp << 5) | (tmp >> 11));
+				}
+				std::string xsaltb16x3::get_name() const {return "xsaltb16x3";}
+				void xsaltb16x3::walk_state(StateWalkingObject *walker) {
+					walker->handle(a); walker->handle(b); walker->handle(c);
+					if (!a && !b && !c) a = 1;
+				}
+				Uint16 xsaltc16x3::raw16() {//deviating from the standard LFSR state function
+					Uint16 old;
+					old = a;
+					a = b ^ (b >> 5);
+					b = c + (c << 3);
+					c = c ^ (c >> 7) ^ old;
+					return a+b;
+				}
+				std::string xsaltc16x3::get_name() const {return "xsaltc16x3";}
+				void xsaltc16x3::walk_state(StateWalkingObject *walker) {
+					walker->handle(a); walker->handle(b); walker->handle(c);
+					if (!a && !b && !c) a = 1;
+				}
+
 				Uint32 xorshift32::raw32() {
 					a ^= a << 13;
 					a ^= a >> 17;
@@ -87,7 +130,17 @@ namespace PractRand {
 					walker->handle(w);
 					if (!(x || y || z || w)) x = 1;
 				}
-				Uint32 xorwow32x5::raw32() {
+
+				Uint32 xorwow96_32::raw32() {
+					a += 362437;
+					return a + impl.raw32();
+				}
+				std::string xorwow96_32::get_name() const {return "xorwow96_32";}
+				void xorwow96_32::walk_state(StateWalkingObject *walker) {
+					impl.walk_state(walker);
+					walker->handle(a);
+				}
+				Uint32 xorwow32x6::raw32() {
 					Uint32 tmp = x;
 					x = y;
 					y = z;
@@ -97,8 +150,8 @@ namespace PractRand {
 					d += 362437;
 					return v+d;
 				}
-				std::string xorwow32x5::get_name() const {return "xorwow32x5";}
-				void xorwow32x5::walk_state(StateWalkingObject *walker) {
+				std::string xorwow32x6::get_name() const {return "xorwow32x6";}
+				void xorwow32x6::walk_state(StateWalkingObject *walker) {
 					walker->handle(x);
 					walker->handle(y);
 					walker->handle(z);
@@ -225,7 +278,7 @@ namespace PractRand {
 						16 bit: 2,5
 						32 bit: 5,12
 						64 bit: 7,41
-				candidate for version 4 of sfc:
+				sfc version 4:
 					code
 						Word old = a + b + counter++;
 						a = b ^ (b >> SHIFT2);
@@ -234,18 +287,18 @@ namespace PractRand {
 						return old;
 					steps:
 						load a			load b			load c				load counter
-					*	b >> SHIFT2		b << SHIFT2		c <<< SHIFT1		counter + 1		a+b+counter***
+					*	b >> SHIFT2		b << SHIFT3		c <<< SHIFT1		counter + 1		a+b+counter***
 						^ b				+ b				+(a+b+counter)		store counter
 						store a			store b			store c				
 					overall:
 						very good behavior on statistical tests
-						uses an extra word / register
+						uses an extra word / register - not as nice for inlining
 						adequate speed
 					refence values for SHIFT1,SHIFT2,SHIFT3:
-						8 bit:  3,2,2
-						16 bit: 7,3,2
-						32 bit: 13,5,3
-						64 bit: 29,9,3
+						8 bit:  3,2,1
+						16 bit: 7,5,2
+						32 bit: 25,8,3
+						64 bit: 25,12,3
 				*/
 				Uint16 sfc_v1_16::raw16() {
 					Uint16 tmp = a ^ counter++;
@@ -300,10 +353,10 @@ namespace PractRand {
 					walker->handle(counter);
 				}
 				Uint16 sfc_v3_16::raw16() {
-					Uint16 tmp = a ^ b;
-					a = b + (b >> 2);
+					Uint16 tmp = a + b + counter++;
+					a = b ^ (b >> 2);
 					enum {BARREL_SHIFT = 5};
-					b = ((b << BARREL_SHIFT) | (b >> (16-BARREL_SHIFT))) + tmp + counter++;
+					b = ((b << BARREL_SHIFT) | (b >> (16-BARREL_SHIFT))) + tmp;
 					return tmp;
 				}
 				std::string sfc_v3_16::get_name() const {return "sfc_v3_16";}
@@ -313,10 +366,10 @@ namespace PractRand {
 					walker->handle(counter);
 				}
 				Uint32 sfc_v3_32::raw32() {
-					Uint32 tmp = a ^ b;
-					a = b + (b >> 5);
+					Uint32 tmp = a + b + counter++;
+					a = b ^ (b >> 5);
 					enum {BARREL_SHIFT = 12};
-					b = ((b << BARREL_SHIFT) | (b >> (32-BARREL_SHIFT))) + tmp + counter++;
+					b = ((b << BARREL_SHIFT) | (b >> (32-BARREL_SHIFT))) + tmp;
 					return tmp;
 				}
 				std::string sfc_v3_32::get_name() const {return "sfc_v3_32";}
@@ -324,6 +377,30 @@ namespace PractRand {
 					walker->handle(a);
 					walker->handle(b);
 					walker->handle(counter);
+				}
+				Uint16 jsf16::raw16() {
+					Uint16 e = a - ((b << 13) | (b >> 3));
+					a = b ^ ((c << 9) | (c >> 7));
+					b = c + d;
+					c = d + e;
+					d = e + a;
+					return d;
+				}
+				std::string jsf16::get_name() const {return "jsf16";}
+				/*seed:
+					a = Uint16(s);
+					b = Uint16(s >> 16);
+					c = Uint16(s >> 32);
+					d = Uint16(s >> 48);
+					if (!(a|b) && !(c|d)) d++;
+					for (int i = 0; i < 20; i++) raw16();
+				*/
+				void jsf16::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(c);
+					walker->handle(d);
+					if (!(a|b) && !(c|d)) d++;
 				}
 
 				Uint32 simpleA::raw32() {
@@ -395,6 +472,79 @@ namespace PractRand {
 					walker->handle(a);
 					walker->handle(b);
 					walker->handle(c);
+				}
+				Uint16 simpleF::raw16() {
+					Uint16 old = a ^ b;
+					a = b ^ (c & d);
+					b = c + old;
+					c = ~d;
+					d = old + ((d << 5) | (d >> 11));
+					return c;
+				}
+				std::string simpleF::get_name() const {return "simpleF";}
+				void simpleF::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(c);
+				}
+				Uint32 simpleG::raw32() {
+					Uint32 old = a ^ (b >> 7);
+					a = b + c + d;
+					b = c ^ d;
+					c = d + old;
+					d = old;
+					return a+c;
+				}
+				std::string simpleG::get_name() const {return "simpleG";}
+				void simpleG::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(c);
+					walker->handle(d);
+				}
+
+				Uint32 mo_Lesr32::raw32() {
+					state = (state << 7) - state; state = rotate32(state, 23);
+					return state;
+				}
+				std::string mo_Lesr32::get_name() const {return "mo_Lesr32";}
+				void mo_Lesr32::walk_state(StateWalkingObject *walker) {
+					walker->handle(state);
+				}
+				Uint32 mo_ResrRers32::raw32() {
+					a = rotate32(a, 21) - a; a = rotate32(a,26);
+					b = rotate32(b, 20) - rotate32(b, 9);
+					return a ^ b;
+				}
+				std::string mo_ResrRers32::get_name() const {return "mo_ResrRers32";}
+				void mo_ResrRers32::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+				}
+				Uint32 mo_Rers64_32::raw32() {
+					state = rotate64(state, 8) - rotate64(state, 29);
+					return Uint32(state);
+				}
+				std::string mo_Rers64_32::get_name() const {return "mo_Rers64_32";}
+				void mo_Rers64_32::walk_state(StateWalkingObject *walker) {
+					walker->handle(state);
+				}
+				Uint32 mo_Resr64_32::raw32() {
+					state = rotate64(state, 21) - state; state = rotate64(state, 20);
+					return Uint32(state);
+				}
+				std::string mo_Resr64_32::get_name() const {return "mo_Resr64_32";}
+				void mo_Resr64_32::walk_state(StateWalkingObject *walker) {
+					walker->handle(state);
+				}
+				Uint32 mo_Resdra64_32::raw32() {
+					state = rotate64(state, 42) - state;
+					state += rotate64(state, 14);
+					return Uint32(state);
+				}
+				std::string mo_Resdra64_32::get_name() const {return "mo_Resdra64_32";}
+				void mo_Resdra64_32::walk_state(StateWalkingObject *walker) {
+					walker->handle(state);
 				}
 			}
 		}

@@ -40,7 +40,7 @@ namespace PractRand {
 			static Tests::ListOfTests standard_foldings_generic(ListOfTests (*base_tests)()) {
 				Tests::ListOfTests l = base_tests();
 				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 0, 0));
-				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 1, 1));
+				//l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 1, 1));
 				l.tests.push_back(new Tests::Transforms::lowbits(NULL, base_tests(), 2, 2));
 				return l;
 			}
