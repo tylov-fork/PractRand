@@ -16,6 +16,7 @@
 #include "PractRand/test_batteries.h"
 #include "PractRand/Tests/Gap16.h"
 #include "PractRand/Tests/DistC6.h"
+#include "PractRand/Tests/Pat5.h"
 #include "PractRand/Tests/BCFN.h"
 #include "PractRand/Tests/BCFN_MT.h"
 #include "PractRand/Tests/FPF.h"
@@ -39,7 +40,7 @@ namespace PractRand {
 					new Tests::DistC6(9, 0, 1, 0, 0),//	2.7 s/GB (from 3.3)
 					new Tests::Gap16(),//				3.1 s/GB (from 3.4)
 					new Tests::FPF(4, 14, 6), //		3.4 s/GB (from 5.0?)
-					new Tests::BRank(12), //			?? s/GB (negligable, mostly)
+					new Tests::BRank(12), //			?? s/GB (negligable cost, mostly)
 					NULL
 				);
 			}
@@ -132,6 +133,8 @@ namespace PractRand {
 					new Tests::DistC6(5,2, 1,0,0),//	2.1->1.8 s/GB
 					//new Tests::DistC6(5,3, 1,0,1),//	2.0->1.8 s/GB
 					//new Tests::DistC6(4,3, 0,0,1),//	2.0->1.8 s/GB
+
+					new Tests::Pat5(),//                2.7 s/GB
 
 					//new Tests::FPMulti(5, 0),//		slow?
 					new Tests::FPF(5, 14, 6), //		2.2 s/GB

@@ -246,6 +246,20 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
+				class trivium_weakenedA : public vRNG32 {
+					Uint64 a, b;
+				public:
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class trivium_weakenedB : public vRNG16 {
+					Uint32 a, b, c;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
 				//see http://www.drdobbs.com/tools/229625477
 				class mo_Lesr32 : public vRNG32 {
 					Uint32 state;

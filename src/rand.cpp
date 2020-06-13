@@ -15,7 +15,7 @@
 #include "PractRand/RNGs/all.h"
 
 namespace PractRand {
-	const char *version_str = "0.91";
+	const char *version_str = "0.92";
 	void (*error_callback)(const char *) = NULL;
 	void issue_error ( const char *msg ) {
 		if (error_callback) error_callback(msg);

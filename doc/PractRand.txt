@@ -1,7 +1,7 @@
 PractRand (Practically Random) is a C++ library of pseudo-random number 
 generators (PRNGs, or just RNGs) and statistical tests for RNGs.  
 
-version 0.91
+version 0.92
 
 
 1. Randon Number Generation with PractRand

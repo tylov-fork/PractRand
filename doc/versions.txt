@@ -1,3 +1,22 @@
+version 0.92
+	RNGs
+		non-recommended
+			added two weakened variations of Trivium for testing purposes
+	tools
+		RNG_test now handles buffering when reading from stdin
+			improvement speed, particularly for multithreading runs, when using external PRNGs
+		RNG_test now uses C++11 functions to measure system time instead of CPU time
+			can be disabled by commenting out #define CPP_2011_SUPPORTED near the top of RNG_test.cpp
+				in case you don't have proper C++11 support
+	Tests:
+		new tests:
+			Pat5 - not very good, short-ish range linear test
+		BRank
+			fixed the part where it was slightly violating the abstraction layer
+		BCFN, BCFN_FF, BCFN_MT
+			improved accuracy of some calculations, which may help particularl long test runs
+	documentation
+		added summary of NIST STS results to Test_results.txt
 version 0.91
 	RNGs
 		efiix

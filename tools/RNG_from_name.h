@@ -2,84 +2,56 @@
 #define RNG_from_name_h
 
 namespace Special_RNGs {
-	class RNG_stdin : public PractRand::RNGs::vRNG {
+	template<typename Word>
+	class _stdin_reader {
 		static void read_failed() {
-			std::fprintf(stderr, "error reading input\n");
+			std::fprintf(stderr, "error reading standard input\n");
 			std::exit(0);
 		}
+		enum { BUFF_SIZE = 8192 };
+		Word *pos, *end;
+		bool ended;
+		Word buffer[BUFF_SIZE];
+		void refill() {
+			std::size_t n = std::fread(&buffer[0], sizeof(Word), BUFF_SIZE, stdin);
+			if (n < BUFF_SIZE) ended = true;
+			pos = &buffer[0];
+			end = &buffer[n];
+		}
+	public:
+		_stdin_reader() : ended(false) { refill(); }
+		Word read() { Word rv = *(pos++); if (pos == end) refill(); return rv; }
+	};
+	class RNG_stdin : public PractRand::RNGs::vRNG8 {
+		_stdin_reader<PractRand::Uint8> source;
 		virtual PractRand::Uint8 raw8() {
-			PractRand::Uint8 rv;
-			if (1 == std::fread(&rv, sizeof(rv), 1, stdin)) return rv; else read_failed();
-			return 0;
-		}
-		virtual PractRand::Uint16 raw16() {
-			PractRand::Uint16 rv;
-			if (1 == std::fread(&rv, sizeof(rv), 1, stdin)) return rv; else read_failed();
-			return 0;
-		}
-		virtual PractRand::Uint32 raw32() {
-			PractRand::Uint32 rv;
-			if (1 == std::fread(&rv, sizeof(rv), 1, stdin)) return rv; else read_failed();
-			return 0;
-		}
-		virtual PractRand::Uint64 raw64() {
-			PractRand::Uint64 rv;
-			if (1 == std::fread(&rv, sizeof(rv), 1, stdin)) return rv; else read_failed();
-			return 0;
+			return source.read();
 		}
 		virtual std::string get_name() const {return "RNG_stdin";}
 		virtual int get_native_output_size() const {return -1;}
 		virtual void walk_state(PractRand::StateWalkingObject *) {}
 	};
 	class RNG_stdin8 : public PractRand::RNGs::vRNG8 {
-		static void read_failed() {
-			std::fprintf(stderr, "error reading input\n");
-			std::exit(0);
-		}
-		virtual PractRand::Uint8 raw8() {
-			PractRand::Uint8 rv;
-			if (1 == std::fread(&rv, sizeof(rv), 1, stdin)) return rv; else read_failed();
-			return 0;
-		}
+		_stdin_reader<PractRand::Uint8> source;
+		virtual PractRand::Uint8 raw8() { return source.read(); }
 		virtual std::string get_name() const {return "RNG_stdin8";}
 		virtual void walk_state(PractRand::StateWalkingObject *) {}
 	};
 	class RNG_stdin16 : public PractRand::RNGs::vRNG16 {
-		static void read_failed() {
-			std::fprintf(stderr, "error reading input\n");
-			std::exit(0);
-		}
-		virtual PractRand::Uint16 raw16() {
-			PractRand::Uint16 rv;
-			if (1 == std::fread(&rv, sizeof(rv), 1, stdin)) return rv; else read_failed();
-			return 0;
-		}
+		_stdin_reader<PractRand::Uint16> source;
+		virtual PractRand::Uint16 raw16() { return source.read(); }
 		virtual std::string get_name() const {return "RNG_stdin16";}
 		virtual void walk_state(PractRand::StateWalkingObject *) {}
 	};
 	class RNG_stdin32 : public PractRand::RNGs::vRNG32 {
-		static void read_failed() {
-			std::fprintf(stderr, "error reading input\n");
-			std::exit(0);
-		}
-		virtual PractRand::Uint32 raw32() {
-			PractRand::Uint32 rv;
-			if (1 == std::fread(&rv, sizeof(rv), 1, stdin)) return rv; else read_failed();
-			return 0;
-		}
+		_stdin_reader<PractRand::Uint32> source;
+		virtual PractRand::Uint32 raw32() { return source.read(); }
 		virtual std::string get_name() const {return "RNG_stdin32";}
 		virtual void walk_state(PractRand::StateWalkingObject *) {}
 	};
 	class RNG_stdin64 : public PractRand::RNGs::vRNG64 {
-		static void read_failed() {
-			std::fprintf(stderr, "error reading input\n");
-			std::exit(0);
-		}
-		virtual PractRand::Uint64 raw64() {
-			PractRand::Uint64 rv;
-			if (1 == std::fread(&rv, sizeof(rv), 1, stdin)) return rv; else read_failed();
-			return 0;
-		}
+		_stdin_reader<PractRand::Uint64> source;
+		virtual PractRand::Uint64 raw64() { return source.read(); }
 		virtual std::string get_name() const {return "RNG_stdin64";}
 		virtual void walk_state(PractRand::StateWalkingObject *) {}
 	};
@@ -340,6 +312,8 @@ namespace RNG_Factories {
 		REGISTER_RNG_0(simpleE)
 		REGISTER_RNG_0(simpleF)
 		REGISTER_RNG_0(simpleG)
+		REGISTER_RNG_0(trivium_weakenedA)
+		REGISTER_RNG_0(trivium_weakenedB)
 		REGISTER_RNG_0(mo_Lesr32)
 		REGISTER_RNG_0(mo_ResrRers32)
 		REGISTER_RNG_0(mo_Rers32of64)

@@ -11,8 +11,9 @@ namespace PractRand {
 		//linear combines only adjacent entries; non-linear is not yet implemented
 		int simplify_prob_table ( unsigned long categories, double N, double *prob_table, Uint64 *counts, bool linear, bool aggressive );
 		double chi_squared_test ( unsigned long categories, const double *prob_table, const Uint64 *counts );
-		double g_test ( unsigned long categories, const double *prob_table, const Uint64 *counts );
-		double g_test_flat ( unsigned long categories, const Uint64 *counts );
+		double rarity_test(unsigned long categories, const double *prob_table, const Uint64 *counts);
+		double g_test(unsigned long categories, const double *prob_table, const Uint64 *counts);
+		double g_test_flat(unsigned long categories, const Uint64 *counts);
 		double g_test_flat_merge_normal ( unsigned long categories, const Uint64 *counts, Uint64 total=Uint64(-1) );
 		double math_chisquared_to_pvalue ( double chisquared, double DoF );
 		double math_chisquared_to_normal ( double chisquared, double DoF );
@@ -28,8 +29,8 @@ namespace PractRand {
 		double test_table_uniformity( unsigned long categories, const double *prob_table, const Uint64 *counts );
 
 		double calculate_center_bit_combination_chance(int num_bits_L2);
-		void get_hamming_weight_chances(int num_bits_L2, std::vector<double> &pdf, std::vector<double> &cdf);//vector size = 1+(1<<(num_bits_L2-1))
-		// one method at num_bits_L2 <= 9, another at 8 < num_bits_L2 <= 12, a third for num_bits_L2 > 12
+		void get_hamming_weight_chances(int num_bits, std::vector<double> &pdf, std::vector<double> &cdf);//vector size = 1+(num_bits/2))
+		// switches between a variety of mathods based upon the magnitude of num_bits
 
 		int count_bits8 (Uint8 a);
 		int count_bits16(Uint16 a);

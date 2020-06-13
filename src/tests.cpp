@@ -19,6 +19,7 @@
 #include "PractRand/test_batteries.h"
 #include "PractRand/Tests/Gap16.h"
 #include "PractRand/Tests/DistC6.h"
+#include "PractRand/Tests/Pat5.h"
 #include "PractRand/Tests/BCFN.h"
 #include "PractRand/Tests/BCFN_MT.h"
 #include "PractRand/Tests/FPF.h"
@@ -60,8 +61,26 @@ int PractRand::Tests::count_bits32(Uint32 a) {
 	return distance_table[Uint8(a)] + distance_table[Uint8(a>>8)] + distance_table[Uint8(a>>16)] + distance_table[Uint8(a>>24)];
 }
 int PractRand::Tests::count_bits64(Uint64 a) {
-	return distance_table[Uint8(a)] + distance_table[Uint8(a>>8)] + distance_table[Uint8(a>>16)] + distance_table[Uint8(a>>24)] +
-		distance_table[Uint8(a>>32)] + distance_table[Uint8(a>>40)] + distance_table[Uint8(a>>48)] + distance_table[Uint8(a>>56)];
+//	return distance_table[Uint8(a)] + distance_table[Uint8(a>>8)] + distance_table[Uint8(a>>16)] + distance_table[Uint8(a>>24)] +
+//		distance_table[Uint8(a>>32)] + distance_table[Uint8(a>>40)] + distance_table[Uint8(a>>48)] + distance_table[Uint8(a>>56)];
+
+	// at some point it makes sense to stop using the tables and start using bitwise math
+	//... I *think* that point is around 64 bits on 64 bit hardware + compilers
+	Uint64 b;
+	b = a & 0xAAAAAAAAAAAAAAAAull; a ^= b; // 1 -> 2
+	b >>= 1; a += b;//0-2
+	b = a & 0xCCCCCCCCCCCCCCCCull; a ^= b; // 2 -> 4
+	b >>= 2; a += b;//0-4
+	b = a & 0x0F0F0F0F0F0F0F0Full; a ^= b; // 4 -> 8
+	b >>= 4; a += b;//0-8
+	b = a;// & 0x00FF00FF00FF00FFull; a ^= b; // 8 -> 16
+	b >>= 8; a += b;//0-16
+	b = a;// & 0x0000FFFF0000FFFFull; a ^= b; // 16 -> 32
+	b >>= 16; a += b;//0-32
+	b = a;// & 0x00000000FFFFFFFFull; a ^= b; // 32 -> 64
+	b >>= 32; a += b;//0-64
+	return Uint8(a);
+	//*/
 }
 
 double PractRand::TestResult::pvalue_to_suspicion(double pvalue) {
@@ -1814,24 +1833,6 @@ static const char bit_count_table8[256] = {
 	4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
 };
 
-static double calculate_bit_combination(Uint64 chosen_bits, Uint64 word_bits) {
-	if (chosen_bits > word_bits/2) return calculate_bit_combination(word_bits-chosen_bits, word_bits);
-	double lr = word_bits * -std::log(2.0);
-	for (Uint64 i = 0; i < chosen_bits; i++) {
-		lr += std::log(double(word_bits-i));
-		lr -= std::log(double(i+1));
-	}
-	return std::exp(lr);
-}
-static double calculate_bit_combination_cdf(Uint64 chosen_bits, Uint64 word_bits) {
-	if (chosen_bits > word_bits/2) return calculate_bit_combination(word_bits-chosen_bits, word_bits);
-	double lr = -word_bits * std::log(2.0);
-	for (Uint64 i = 0; i < chosen_bits; i++) {
-		lr += std::log(double(word_bits-i));
-		lr -= std::log(double(i+1));
-	}
-	return std::exp(lr);
-}
 PractRand::Tests::BCFN_MT::BCFN_MT( int unitsL2_, int tbits_ ) {
 	unitsL2 = unitsL2_;
 	tbits = tbits_;
@@ -1851,7 +1852,7 @@ static std::vector<int> BCFN_MT_calculate_thresholds(int max_thresholds, Uint64 
 	rv.push_back(1);
 	if (word_bits <= 16384) {
 		std::vector<double> cdf, pdf;
-		Tests::get_hamming_weight_chances(word_bits_L2, pdf, cdf);
+		Tests::get_hamming_weight_chances(1 << word_bits_L2, pdf, cdf);
 		Uint64 n = word_bits/2;
 		double target = cdf[n-1] * target_fraction;
 		int max = n >> shift;
@@ -2972,7 +2973,7 @@ void PractRand::Tests::BCFN_FF::get_results(std::vector<TestResult> &results) {
 		if (num_bits_L2 <= 16) {
 			if (total > 64) {
 				std::vector<double> pdf, cdf;
-				get_hamming_weight_chances(num_bits_L2, pdf, cdf);
+				get_hamming_weight_chances(1 << num_bits_L2, pdf, cdf);
 				double probs[COUNTS2_SIZE+2];
 				Uint64 counts2_dup[COUNTS2_SIZE+2];
 				for (int i = 0; i < COUNTS2_SIZE; i++) {
@@ -4047,6 +4048,178 @@ void PractRand::Tests::FPMulti::test_blocks(TestBlock *data, int numblocks) {
 
 
 
+PractRand::Tests::Pat5::Pat5()
+//:
+//	lifespan(1<<16),
+{
+}
+void PractRand::Tests::Pat5::init(PractRand::RNGs::vRNG *known_good) {
+	counts.reset_counts();
+	for (int pi = 0; pi < (1 << PATTERN_INDEX_BITS); pi++) patterns[pi].total_count = -1;
+	blocks_tested = 0;
+}
+std::string PractRand::Tests::Pat5::get_name() const {
+	std::ostringstream tmp;
+	tmp << "Pat5";
+	return tmp.str();
+}
+void PractRand::Tests::Pat5::test_blocks(TestBlock *data, int numblocks) {
+	enum { CENTER = (PATTERN_WIDTH - 1) / 2 };
+	int max = numblocks * (TestBlock::SIZE / sizeof(Word)) - CENTER;
+	int min = blocks_tested ? 0 : CENTER;
+	for (long i = min; i < max; i++) {
+		Word word = data->as32[i];
+		if (!(word & ((1<<ZERO_FILTER_BITS)-1))) {
+			int pi = word >> ((8 * sizeof(word)) - PATTERN_INDEX_BITS);
+			if (patterns[pi].total_count == -1) {
+				if (count_bits32(data->as32[i] ^ data->as32[i + 1]) > 4) {
+					patterns[pi].total_count = 0;
+					for (int j = 0; j < PATTERN_WIDTH; j++) patterns[pi].base_pattern[j] = data->as32[i + j - CENTER];
+				}
+			}
+			else {
+				patterns[pi].total_count++;
+				int d1 = count_bits32(patterns[pi].base_pattern[CENTER] ^ word);
+				unsigned int d2 = 0, d3 = 0, d4 = 0;
+				enum { D1 = 1, D2 = D1 + NUM_SECONDARY_WORDS, D3 = D2 + NUM_TERTIARY_WORDS, D4 = D3 + NUM_QUATERNARY_WORDS };
+				for (int j = D1; j < D2; j++) {
+					d2 += count_bits32(patterns[pi].base_pattern[CENTER - j] ^ data->as32[i - j]);
+					d2 += count_bits32(patterns[pi].base_pattern[CENTER + j] ^ data->as32[i + j]);
+				}
+				for (int j = D2; j < D3; j++) {
+					d3 += count_bits32(patterns[pi].base_pattern[CENTER - j] ^ data->as32[i - j]);
+					d3 += count_bits32(patterns[pi].base_pattern[CENTER + j] ^ data->as32[i + j]);
+				}
+				for (int j = D3; j < D4; j++) {
+					d4 += count_bits32(patterns[pi].base_pattern[CENTER - j] ^ data->as32[i - j]);
+					d4 += count_bits32(patterns[pi].base_pattern[CENTER + j] ^ data->as32[i + j]);
+				}
+				d1 >>= PRIMARY_WORD_DISTANCE_EXTRA_BITS;
+				d2 >>= SECONDARY_WORD_DISTANCE_EXTRA_BITS;
+				d3 >>= TERTIARY_WORD_DISTANCE_EXTRA_BITS;
+				d4 >>= QUATERNARY_WORD_DISTANCE_EXTRA_BITS;
+				enum { MAX_d1 = (1 << PRIMARY_WORD_DISTANCE_BITS) - 1 };
+				enum { MAX_d2 = (1 << SECONDARY_WORD_DISTANCE_BITS) - 1 };
+				enum { MAX_d3 = (1 << TERTIARY_WORD_DISTANCE_BITS) - 1 };
+				enum { MAX_d4 = (1 << QUATERNARY_WORD_DISTANCE_BITS) - 1 };
+				if (d1 > MAX_d1) d1 = MAX_d1;
+				if (d2 > MAX_d2) d2 = MAX_d2;
+				if (d3 > MAX_d3) d3 = MAX_d3;
+				if (d4 > MAX_d4) d4 = MAX_d4;
+				enum { D1SH = 0, D2SH = D1SH + PRIMARY_WORD_DISTANCE_BITS, D3SH = D2SH + SECONDARY_WORD_DISTANCE_BITS, D4SH = D3SH + TERTIARY_WORD_DISTANCE_BITS };
+				unsigned int ci = (d1 << D1SH) +(d2 << D2SH) + (d3 << D3SH) + (d4 << D4SH);
+				ci += pi << (TABLE_SIZE_L2 - PATTERN_INDEX_BITS);
+				counts.increment(ci);
+			}
+		}
+	}
+	blocks_tested += numblocks;
+}
+static std::vector<double> get_Pat5_prob_sub_table(int base_bits, int shift, int final_bits) {
+	std::vector<double> pdf, cdf, result;
+	Tests::get_hamming_weight_chances(base_bits, pdf, cdf);
+	result.resize(1 << final_bits, 0.0);
+	int max = (1 << final_bits) - 1;
+	for (int i = 0; i <= base_bits; i++) {
+		double chance = (i <= base_bits / 2) ? pdf[i] : pdf[base_bits - i];
+		int transform = i >> shift;
+		if (transform > max) transform = max;
+		result[transform] += chance;
+	}
+	return result;
+}
+void PractRand::Tests::Pat5::get_results(std::vector<TestResult> &results) {
+	if (!blocks_tested) return;
+	const Uint64 *_counts = counts.get_array();
+	Uint64 total_opportunities = blocks_tested * TestBlock::SIZE / sizeof(Word) - PATTERN_WIDTH + 1;
+	enum { TOTAL_SIZE = 1 << TABLE_SIZE_L2, TOTAL_PATTERNS = 1 << PATTERN_INDEX_BITS };
+	enum { BASE_SIZE = TOTAL_SIZE / TOTAL_PATTERNS };
+	std::vector<double> base_probs; base_probs.resize(BASE_SIZE);
+	if (true) {
+		std::vector<double> primary_probs, secondary_probs, tertiary_probs, quaternary_probs;
+		std::vector<double> cdf;
+		enum { PRIMARY_BITS = WORD_BITS - ZERO_FILTER_BITS - PATTERN_INDEX_BITS };
+		primary_probs = get_Pat5_prob_sub_table(PRIMARY_BITS, PRIMARY_WORD_DISTANCE_EXTRA_BITS, PRIMARY_WORD_DISTANCE_BITS);
+		secondary_probs = get_Pat5_prob_sub_table(WORD_BITS * 2 * NUM_SECONDARY_WORDS, SECONDARY_WORD_DISTANCE_EXTRA_BITS, SECONDARY_WORD_DISTANCE_BITS);
+		tertiary_probs = get_Pat5_prob_sub_table(WORD_BITS * 2 * NUM_TERTIARY_WORDS, TERTIARY_WORD_DISTANCE_EXTRA_BITS, TERTIARY_WORD_DISTANCE_BITS);
+		quaternary_probs = get_Pat5_prob_sub_table(WORD_BITS * 2 * NUM_QUATERNARY_WORDS, QUATERNARY_WORD_DISTANCE_EXTRA_BITS, QUATERNARY_WORD_DISTANCE_BITS);
+		for (int i = 0; i < BASE_SIZE; i++) {
+			double chance = 1.0;
+			enum { D1SH = 0, D2SH = D1SH + PRIMARY_WORD_DISTANCE_BITS, D3SH = D2SH + SECONDARY_WORD_DISTANCE_BITS, D4SH = D3SH + TERTIARY_WORD_DISTANCE_BITS };
+			chance *= primary_probs[(i >> D1SH) & ((1 << PRIMARY_WORD_DISTANCE_BITS) - 1)];
+			chance *= secondary_probs[(i >> D2SH) & ((1 << SECONDARY_WORD_DISTANCE_BITS) - 1)];
+			chance *= tertiary_probs[(i >> D3SH) & ((1 << TERTIARY_WORD_DISTANCE_BITS) - 1)];
+			chance *= quaternary_probs[(i >> D4SH) & ((1 << QUATERNARY_WORD_DISTANCE_BITS) - 1)];
+			base_probs[i] = chance;
+		}
+	}
+	if (true) {
+		enum { INCLUDE_NON_MATCHES = 0 };// 0 or 1
+		std::vector<Uint64> counts2; counts2.resize(TOTAL_SIZE + INCLUDE_NON_MATCHES);
+		std::vector<double> probs2; probs2.resize(TOTAL_SIZE + INCLUDE_NON_MATCHES);
+		std::copy(&_counts[0], &_counts[TOTAL_SIZE], &counts2[0]);
+		double any_match_prob = std::pow(0.5, INCLUDE_NON_MATCHES ? ZERO_FILTER_BITS : 0);
+		double specific_match_prob = any_match_prob * std::pow(0.5, PATTERN_INDEX_BITS);
+		if (INCLUDE_NON_MATCHES) probs2[TOTAL_SIZE] = 1 - any_match_prob;
+		for (int i = 0; i < TOTAL_SIZE; i++) probs2[i] = base_probs[i & (BASE_SIZE - 1)] * specific_match_prob;
+		Sint64 total_matches = 0;
+		for (int i = 0; i < TOTAL_PATTERNS; i++) total_matches += patterns[i].total_count;
+		if (total_matches < 100) return;
+		counts2[TOTAL_SIZE] = total_opportunities - total_matches;
+		if (total_opportunities > 300) {
+			double rarity = Tests::rarity_test(TOTAL_SIZE + INCLUDE_NON_MATCHES, &probs2[0], &counts2[0]);
+			std::ostringstream ss; ss << get_name() << "(*,r)"; results.push_back(TestResult(ss.str(), rarity, 0, TestResult::TYPE_RAW_NORMAL, 0.125));
+		}
+		if (total_opportunities > 3000) {
+			int n = Tests::simplify_prob_table(TOTAL_SIZE + INCLUDE_NON_MATCHES, (INCLUDE_NON_MATCHES ? total_opportunities : total_matches) / 40.0, &probs2[0], &counts2[0], false, false);
+			double raw = Tests::g_test(n, &probs2[0], &counts2[0]);
+			double norm = Tests::math_chisquared_to_normal(raw, n - 1);
+			std::ostringstream ss; ss << get_name() << "(*,g)"; results.push_back(TestResult(ss.str(), norm, 0, TestResult::TYPE_RAW_NORMAL, 0.125));
+		}
+	}
+	for (int pi = 0; pi < TOTAL_PATTERNS; pi++) {
+		if (patterns[pi].total_count < 30) continue;
+		std::vector<double> local_probs = base_probs;
+		std::vector<Uint64> local_counts; local_counts.resize(BASE_SIZE);
+		std::copy(&_counts[pi * BASE_SIZE], &_counts[pi * BASE_SIZE + BASE_SIZE], &local_counts[0]);
+		if (true) {
+			double rarity = Tests::rarity_test(BASE_SIZE, &local_probs[0], &local_counts[0]);
+			std::ostringstream ss; ss << get_name() << "(" << pi << ",r)"; results.push_back(TestResult(ss.str(), rarity, 0, TestResult::TYPE_RAW_NORMAL, 0.001 / TOTAL_PATTERNS));
+		}
+		if (patterns[pi].total_count > 300) {
+			int n = Tests::simplify_prob_table(BASE_SIZE, patterns[pi].total_count / 40.0, &local_probs[0], &local_counts[0], false, false);
+			double raw = Tests::g_test(n, &local_probs[0], &local_counts[0]);
+			double norm = Tests::math_chisquared_to_normal(raw, n - 1);
+			std::ostringstream ss; ss << get_name() << "(" << pi << ",g)"; results.push_back(TestResult(ss.str(), norm, 0, TestResult::TYPE_RAW_NORMAL, 0.001 / TOTAL_PATTERNS));
+		}
+	}
+
+	//finishing
+/*	int reduced_size = simplify_prob_table(size,
+		blocks_tested * (TestBlock::SIZE >> unitsL) / 25.0,
+		&probs[0], &tmp_counts[0], true, true);
+	double r = g_test(reduced_size, &probs[0], &tmp_counts[0]);
+	r = math_chisquared_to_normal(r, reduced_size - 1);
+	double weight = std::pow(2.0, 1.0 - unitsL / 2.0);
+	if (unitsL != 0) weight *= 0.75;
+	if (size < 1024 * 128) weight *= 0.5;
+	Uint64 min_len = calibration_manager.get_minimum_length(get_name());
+	if (min_len && min_len <= blocks_tested) {
+		TestCalibrationData *calib = calibration_manager.get_calibration_data(get_name(), blocks_tested);
+		double suspicion = calib->sample_to_suspicion(r) * -1;//negation to make the normal failure type occur at 0 instead of 1
+		results.push_back(TestResult(get_name(), r, suspicion, TestResult::TYPE_GOOD_S, weight));
+	}
+	else if (blocks_tested > unitsL * 1024 * 1024 * 16) {
+		results.push_back(TestResult(get_name(), r, 0, TestResult::TYPE_RAW_NORMAL, weight / 5));
+	}
+	else {
+		results.push_back(TestResult(get_name(), r, 0, TestResult::TYPE_RAW, .01));
+	}*/
+}
+
+
+
+
 
 void PractRand::Tests::CoupGap::init( RNGs::vRNG *known_good ) {
 	autofail = 0;
@@ -4282,24 +4455,38 @@ void PractRand::Tests::BRank::finish_matrix() {
 	pick_next_size();
 }
 void PractRand::Tests::BRank::test_blocks(TestBlock *data, int numblocks) {
-	saved_time += numblocks * rate;
-	while (saved_time >= ps[size_index].time_per && numblocks) {
+	while (numblocks) {
 		PerSize &s = ps[size_index];
+		Uint64 time_needed = s.time_per;
+
 		Uint32 bytes = s.size * (s.size >> 3);//may exceed 4 gigabits, but not that many gigaBYTEs
 		Uint32 blocks_needed = (bytes + TestBlock::SIZE - 1) >> TestBlock::SIZE_L2;//rounding up, so no more than one matrix per block
-		blocks_needed -= blocks_in_progress;
-		Uint32 offset = (blocks_in_progress * TestBlock::SIZE) >> (BitMatrix::WORD_BITS_L2 - 3);
-		if (numblocks >= blocks_needed) {
-			in_progress->raw_import( offset, &data[0].as32[0], (bytes - blocks_in_progress * TestBlock::SIZE) >> (BitMatrix::WORD_BITS_L2-3) );
-			saved_time -= s.time_per;
-			finish_matrix();
-			numblocks -= blocks_needed;
-			data += blocks_needed;
+
+		if (saved_time < time_needed) {//throttle
+			time_needed -= saved_time;
+			Uint64 blocks_to_skip = (time_needed + rate - 1) / rate;
+			if (blocks_to_skip > numblocks) blocks_to_skip = numblocks;
+			data += blocks_to_skip;
+			numblocks -= blocks_to_skip;
+			saved_time += rate * blocks_to_skip;
 		}
-		else {
-			in_progress->raw_import( offset, &data[0].as32[0], numblocks << (TestBlock::SIZE_L2 - (BitMatrix::WORD_BITS_L2-3)) );
-			blocks_in_progress += numblocks;
-			numblocks = 0;
+		else {//throttling done, begin actually using blocks
+			blocks_needed -= blocks_in_progress;
+			Uint32 offset = (blocks_in_progress * TestBlock::SIZE) >> (BitMatrix::WORD_BITS_L2 - 3);
+			if (numblocks >= blocks_needed) {//whole matrix
+				in_progress->raw_import(offset, &data[0].as32[0], (bytes - blocks_in_progress * TestBlock::SIZE) >> (BitMatrix::WORD_BITS_L2 - 3));
+				saved_time -= s.time_per;
+				finish_matrix();
+				numblocks -= blocks_needed;
+				data += blocks_needed;
+				saved_time += rate * blocks_needed;
+			}
+			else {//partial matrix
+				in_progress->raw_import(offset, &data[0].as32[0], numblocks << (TestBlock::SIZE_L2 - (BitMatrix::WORD_BITS_L2 - 3)));
+				blocks_in_progress += numblocks;
+				saved_time += rate * numblocks;
+				numblocks = 0;
+			}
 		}
 	}
 }

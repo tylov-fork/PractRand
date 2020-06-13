@@ -503,6 +503,46 @@ namespace PractRand {
 					walker->handle(d);
 				}
 
+				static Uint64 shift_array64(Uint64 vec[2], unsigned long bits) {
+					bits -= 64;
+					if (!(bits % 64)) return vec[bits / 64];
+					return (vec[bits / 64] << (bits & 63)) | (vec[1 + bits / 64] >> (64 - (bits & 63)));
+				}
+				Uint32 trivium_weakenedA::raw32() {
+					Uint32 tmp_a = (b >> 2) ^ (b >> 17);
+					Uint32 tmp_b = (a >> 2) ^ (a >> 23);
+					Uint32 new_a = tmp_a ^ (a >> 16) ^ ((b >> 16) & (b >> 18));
+					Uint32 new_b = tmp_b ^ (b >> 13) ^ ((a >> 22) & (a >> 24));
+					a <<= 32; a |= new_a;
+					b <<= 32; b |= new_b;
+
+					return tmp_a ^ tmp_b;
+				}
+				std::string trivium_weakenedA::get_name() const { return "trivium_weakenedA"; }
+				void trivium_weakenedA::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+				}
+				Uint16 trivium_weakenedB::raw16() {
+					Uint16 tmp_a = (c >> 2) ^ (c >> 15);
+					Uint16 tmp_b = (a >> 2) ^ (a >> 13);
+					Uint16 tmp_c = (b >> 5) ^ (b >> 10);
+					Uint16 new_a = tmp_a ^ (a >> 9) ^ ((c >> 14) & (c >> 16));
+					Uint16 new_b = tmp_b ^ (b >> 7) ^ ((a >> 12) & (a >> 14));
+					Uint16 new_c = tmp_c ^ (c >> 11) ^ ((b >> 9) & (b >> 11));
+					a <<= 16; a |= new_a;
+					b <<= 16; b |= new_b;
+					c <<= 16; c |= new_c;
+
+					return tmp_a ^ tmp_b ^ tmp_c;
+				}
+				std::string trivium_weakenedB::get_name() const { return "trivium_weakenedB"; }
+				void trivium_weakenedB::walk_state(StateWalkingObject *walker) {
+					walker->handle(a);
+					walker->handle(b);
+					walker->handle(c);
+				}
+
 				Uint32 mo_Lesr32::raw32() {
 					state = (state << 7) - state; state = rotate32(state, 23);
 					return state;

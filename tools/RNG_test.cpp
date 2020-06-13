@@ -17,6 +17,7 @@
 #include "PractRand_full.h"
 
 #define MULTITHREADING_SUPPORTED
+#define CPP_2011_SUPPORTED
 
 //specific algorithms: all recommended RNGs
 #include "PractRand/RNGs/all.h"
@@ -48,6 +49,16 @@ PractRand::RNGs::Polymorphic::hc256 known_good(PractRand::SEED_AUTO);
 #endif
 #include "Candidate_RNGs.h"
 
+#if defined CPP_2011_SUPPORTED
+#include <chrono>
+typedef std::chrono::system_clock::rep TimeUnit;
+TimeUnit get_time() { return std::chrono::system_clock::now().time_since_epoch().count(); }
+double get_time_period() { return std::chrono::system_clock::period().num / (double)std::chrono::system_clock::period().den; }
+#else
+typedef std::clock_t TimeUnit;
+std::clock_t get_time() {return std::clock();}
+double get_time_period() { return 1.0 / CLOCKS_PER_SEC; }
+#endif
 
 /*
 A minimal RNG implementation, just enough to make it usable.  
@@ -857,7 +868,7 @@ int main(int argc, char **argv) {
 
 
 	std::time_t start_time = std::time(NULL);
-	std::clock_t start_clock = std::clock();
+	TimeUnit start_clock = get_time();
 
 	known_good.seed(seed+1);//the +1 is there just in case the RNG uses the same algorithm as the known good RNG
 
@@ -1016,12 +1027,10 @@ int main(int argc, char **argv) {
 		blocks_tested += blocks_to_test;
 		already_shown = false;
 
-		std::clock_t clocks_passed = std::clock() - start_clock;//may wrap too quickly
+		double clocks_passed = TimeUnit(get_time() - start_clock) * get_time_period();//may wrap too quickly
 		int seconds_passed = std::time(NULL) - start_time;
-		Uint64 max_clocks = ((1ull<<(8*sizeof(clocks_passed) - 1)) << 1) - 1;
-		if (seconds_passed >= 1000 || CLOCKS_PER_SEC * (seconds_passed+2.0) >= double(max_clocks))
-			time_passed = seconds_passed;
-		else time_passed = (Uint64(clocks_passed) & max_clocks) / (double)CLOCKS_PER_SEC;
+		if (seconds_passed >= 1000 || seconds_passed > clocks_passed + 2.0) time_passed = seconds_passed;
+		else time_passed = clocks_passed;
 	}
 
 	return 0;

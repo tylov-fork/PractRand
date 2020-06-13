@@ -3,7 +3,7 @@
 //#include <sstream>
 #include <vector>
 //#include <list>
-//#include <set>
+#include <set>
 #include <map>
 #include <cmath>
 #include <algorithm>
@@ -217,7 +217,7 @@ namespace PractRand {
 					reduced_size -= 1;
 				}
 				int i = 0;
-				for (std::multimap<double,Uint64>::iterator it = indexed.begin(); it != indexed.end(); it++) {
+				for (std::multimap<double,Uint64>::iterator it = indexed.begin(); it != indexed.end(); it++,i++) {
 					prob_table[i] = it->first;
 					counts[i] = it->second;
 				}
@@ -277,7 +277,50 @@ namespace PractRand {
 		//	double normal = (V-(categories-1))/sqrt((double)(categories-1));
 			return (double)v;
 		}
-		double g_test ( unsigned long categories, const double *prob_table, const Uint64 *counts ) {
+		double rarity_test(unsigned long categories, const double *prob_table, const Uint64 *counts) {
+			long double total = 0;
+			std::vector<double> logs; logs.resize(categories);
+			long double mean = 0.0;
+			for (unsigned long i = 0; i < categories; i++) {
+				total += counts[i];
+				logs[i] = std::log(prob_table[i]);
+				mean += prob_table[i] * logs[i];
+			}
+			long double dev = 0.0;
+			for (unsigned long i = 0; i < categories; i++) {
+				double L = logs[i] - mean;
+				dev += prob_table[i] * L * L;
+			}
+			dev = std::sqrt(dev);
+
+			long double sum = 0.0;
+			for (unsigned long i = 0; i < categories; i++) {
+				double observed = counts[i];
+				sum += observed * (logs[i] - mean);
+			}
+			sum /= dev;
+
+			/*
+			//correction for insufficient samples:
+			long double p_sum = 0.0;
+			long double error_factor = 0.0;
+			long double worst = 0.0;
+			std::multimap<double,int> probs2;
+			for (unsigned long i = 0; i < categories; i++) probs2.insert(std::pair<double,int>(prob_table[i],i));
+			for (std::multimap<double,int>::iterator it = probs2.begin(); it != probs2.end(); it++) {
+				error_factor += it->first * logs[it->second];
+				p_sum += it->first;
+				if (p_sum >= 0.1) break;
+				double e = error_factor / (std::log(p_sum) * p_sum);
+				if (e > worst) worst = e;
+			}
+			error_factor = worst / total;
+			//if (error_factor > )
+			*/
+
+			return sum / std::sqrt(total);
+		}
+		double g_test(unsigned long categories, const double *prob_table, const Uint64 *counts) {
 			long double total = 0;
 			long double sum = 0;
 			for (unsigned long i = 0; i < categories; i++) {
@@ -288,7 +331,7 @@ namespace PractRand {
 			sum -= total * std::log(double(total));
 			return (double)sum * 2.0;
 		}
-		double g_test_flat ( unsigned long categories, const Uint64 *counts ) {
+		double g_test_flat(unsigned long categories, const Uint64 *counts) {
 			long double total = 0;
 			long double sum = 0;
 			for (unsigned long i = 0; i < categories; i++) {
@@ -552,7 +595,7 @@ namespace PractRand {
 
 		//long double gap_probs( int first, int last, long double baseprob = (255.0 / 256.0) );
 		double calculate_center_bit_combination_chance(int bits_L2) {
-			static const double chance_skipped[15] = {
+			static const double chance_skipped[25] = {
 				0.0,              //1 bit
 				0.5,              //2 bit
 				0.375,            //4 bit
@@ -560,33 +603,44 @@ namespace PractRand {
 				0.196380615234375,//16 bit
 				0.139949934091419,//32 bit
 				0.0993467537479669,//64 bit
-				0.0703860921700151,//128 bit
-				0.0498191099361402,//256 bit
-				0.0352446354858388,//512 bit
-				0.0249278058726663,//1 Kbit
-				0.0176287723815027,//2 Kbit
-				0.0124661853439194,//4 Kbit
-				0.0088151932052590,//8 Kbit
-				0.0062333780055594//16 Kbit
+				0.07038609217001513,//128 bit
+				0.04981910993614015,//256 bit
+				0.03524463548583874,//512 bit
+				0.02492780589297954,//1 Kbit
+				0.01762877240484652,//2 Kbit
+				0.01246618536376026,//4 Kbit
+				0.008815193220481631,//8 Kbit
+				0.006233378016746476,//16 Kbit
+				0.004407697493275419,//32 Kbit
+				0.003116724676252416,//64 Kbit
+				0.002203861357197468,//128 Kbit
+				0.001558366796642998,//256 Kbit
+				0.001101932254924341,//512 Kbit
+				0.0007791839556370945,//1 Mbit
+				0.0005509663245030477,//2 Mbit
+				0.0003895920474830278,//4 Mbit
+				0.0002754831868816390,//8 Mbit
+				0.0001947960324495749,//16 Mbit
 			};
-			if (bits_L2 < 15) return chance_skipped[bits_L2];
-			else return chance_skipped[14] * std::pow(0.5, 0.5 * (bits_L2 - 14));
+			if (bits_L2 < 25) return chance_skipped[bits_L2];
+			else return chance_skipped[24] * std::pow(0.5, 0.5 * (bits_L2 - 24));
 		}
-		void get_hamming_weight_chances(int num_bits_L2, std::vector<double> &pdf, std::vector<double> &cdf) {
-			int num_bits = 1 << num_bits_L2;
+		void get_hamming_weight_chances(int num_bits, std::vector<double> &pdf, std::vector<double> &cdf) {
 			int n = num_bits/2;
 			pdf.resize(n+1);
 			cdf.resize(n+1);
 			if (num_bits <= 512) {
 				//calculate from edge normally
-				double p = std::pow(0.5, num_bits);
+				long double p = std::pow(0.5, num_bits);
+				long double prev_cdf = p;
 				pdf[0] = p;
 				cdf[0] = p;
 				for (int i = 1; i <= n; i++) {
 					p /= i;
 					p *= num_bits + 1 - i;
 					pdf[i] = p;
-					cdf[i] = cdf[i-1] + p;
+					prev_cdf += p;
+					cdf[i] = prev_cdf;
 				}
 			}
 			else if (num_bits < 16384) {
@@ -621,6 +675,7 @@ namespace PractRand {
 					pdf[i] = p;
 					cdf[i] = cdf[i+1]-pdf[i+1];
 				}//*/
+				// TO DO: test idea: calculate from center near center, from edge far from center
 			}
 		}
 

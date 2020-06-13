@@ -33,7 +33,7 @@ namespace PractRand {
 			If I went to an 8 KB table size then I could speed it up a tad without compromising quality too much, but this is fast enough for now.  
 
 			I'm aiming for 25 or so bits of good resolution plus another 25 or so bits of noise here - 
-			good enough to be practically impossible to distinguish from from true gaussian, and with significantly better than single precision floats, but not quite maxing 
+			good enough to be practically impossible to distinguish from from true gaussian, and significantly better than single precision floats, but not quite maxing 
 			out what double precision numbers can manage.  More than that and I would have have a hard time verifying things without large number types 
 			and even more exotic math.  
 		*/

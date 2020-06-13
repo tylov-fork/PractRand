@@ -24,8 +24,9 @@ number of RNGs bias was found in VS test battery VS time
 PractRand std      37       48      57       66        78        83
 TestU01 *Crush     20       --      --       46        51        --
 RaBiGeTe ext       21       27      31       41        --        --
-Dieharder (-a)     --       --      --       14        --        --
 Dieharder (custom) 12       21      26       --        --        --
+Dieharder (-a)     --       --      --       14        --        --
+NIST STS (x128)    4        5       5        5         12        --
 Times are very rough figures based upon modern desktop x86 CPUs, but using only one core (no multithreading).  
 (times were fairly similar on a variety of such CPUs)
 
@@ -34,8 +35,9 @@ Times are very rough figures based upon modern desktop x86 CPUs, but using only 
 PractRand std       22      0      6       3       2       5      6
 TestU01 *Crush      2       0      2       0       0       0      0
 RaBiGeTe ext        5       0      0       0       5       0      0
-Dieharder (-a)      0       0      0       0       0       0      0
-Dieharder (custom)  0       0      0       0       0       0      0
+Dieharder (custom)  0
+Dieharder (-a)      0
+NISTS STS (x128)    0
 RNG biases found only by one test battery when each battery is given up to 4 
 hours per RNG to search for bias.  (RaBiGeTe and Dieharder did not have any 
 productive tests lasting that long, so they used smaller amounts of time)
@@ -46,7 +48,7 @@ nor were "Transforms applied to various low quality RNGs".
 
 total RNGs per category (might be out of date?)
 category  TOTAL   recom.  simple  nonLCG  LCGish  cbuf    indirect
-number    112     19      33      10      19      17      14
+number    119     19      35      10      24      17      14
 
 broken down by category
                          recom.  simple  non-LCG LCGish  cbuff  indirect
@@ -55,22 +57,27 @@ PractRand std 512 MB     0       15      6       4       7      5
 TestU01 SmallCrush       0       8       4       6       2      0
 RaBiGeTe ext 2 Mb        0       9       5       5       2      0
 Dieharder (custom 10sec) 0       6       3       1       2      0
+NIST STS (32Kbx128)      0       2       1       0       1      0
 -- (1 minute)                                                   
 PractRand std 4 GB       0       20      6       7       10     5
 RaBiGeTe ext 16 Mb       0       10      5       8       4      0
 Dieharder (custom 1min)  0       10      5       2       4      0
+NIST STS (256Kbx128)     0       2       2       0       1      0
 -- (5 minutes)                                                  
 PractRand std 16 GB      0       23      7       8       12     7
 RaBiGeTe ext 64 Mb       0       12      5       10      4      0
 Dieharder (custom 5min)  0       12      5       2       7      0
+NIST STS (1Mbx128)       0       2       2       0       1      0
 -- (30 minutes)                                                 
 PractRand std 128 GB     0       25      8       10      15     8
 TestU01 Crush            1       20      6       12      5      2
 RaBiGeTe ext 512 Mb      0       12      6       17      5      1
 Dieharder (-a)           0       8       3       2       1      0
+NIST STS (8Mbx128)       0       2       2       0       1      0
 -- (4 hours)                                                    
 PractRand std 1 TB       1       27      10      14      16     10
 TestU01 BigCrush         1       22      7       12      6      3
+NIST STS (64Mbx128)      0       5       2       3       2      0
 -- (1 day, preliminary results)                              
 PractRand std 4 TB       1       30      10      14      16     12
 
@@ -171,6 +178,23 @@ Dieharder (custom):
 		./RNG_output ranrot32 123456789000000 | dieharder -g 200 -D 504 -D 16384 -d dab_monobit2 -t 100000000
 		./RNG_output ranrot32 123456789000000 | dieharder -g 200 -D 504 -D 16384 -d dab_dct -t 100000
 
+NIST STS (Statistical Test Suite)
+	I've made a few modifications to improve performance and allow it to 
+	work on large samples than it could normally.  
+	It's producing false positives for me on the non-overlapping template 
+	test, when using larger sample sizes and larger numbers of samples.  At 
+	128 samples the largest sample size I can safely use on that test is 8 
+	megabits.  
+	It seems to strongly encourage the use of large numbers of small 
+	samples - its summary report will actually avoid listing individual 
+	test p-values even if only one sample was run, instead showing only 
+	number of test p-values within the normal range and a meta-test p-value.  
+	Possibly it doesn't trust its basic p-value quality enough to show them, 
+	or possibly it's just a brain-damaged interface.  
+	It is extremely inefficient.  It likes to unpack binary data to 1 bit 
+	per byte, among other inefficiencies.  It is also extremely weak, with 
+	the very poor efficiency, poor sensivity, and poor or very poor breadth.  
+
 
 *****************************************************************************
 2. Full results
@@ -202,47 +226,49 @@ recommended RNGs
 (usually "pass?" means that a lower quality variant passed so I didn't fully test the higher quality variant)
 
 other RNGs - simple
-	RNG             Quality     PractRand   TestU01     RaBiGeTe    Dieharder  Dieharder
-	                subscores   standard    *Crush      Extended*1  -a         custom
-	xorshift32      0/0/0/0     64 KB       5/53/?      64 Kb       FAIL       1/1/1
-	xorshift32of64  0/4/2/0     64 KB       6/50/?      256 Kb      FAIL       1/1/3
-	xorshift64      0/4/2/0     64 KB       1/25/?      128 Kb      FAIL       1/1/1
-	xorshift32of128 1/5/3/1     512 KB      0/6/?       1 Mb        pass       pass
-	xorshift32x4    1/5/3/1     512 KB      0/8/?       1 Mb        pass       0/1/1
-	xorwow32of96    0/5/3/1     2 MB        0/3/5       64 Mb       pass       pass
-	xorwow32x6      1/5/4/1     16 MB       0/1/2       pass        pass       pass
-	xsalta16x3      2/1/1/1     1 MB        0/1/3       pass        pass       pass
-	xsaltb16x3      2/1/1/1     2 GB        pass        pass        pass       pass
-	xsaltc16x3      1/1/1/1     2 GB        0/1/1       pass        pass       pass
-	sapparot        0/2/2/1     16 MB       0/0/1       64 Mb       pass       pass
-	sap16of48       1/1/1/1     512 KB      0/3/2       1 Mb        pass       pass
-	sap32of96       4/3/3/1     2 MB        pass        4 Mb        pass       pass
-	flea32x1        5/4/3/2     4 TB        pass        pass        pass       pass
-	jsf16           4/2/2/2     16 TB*      pass        pass        pass       pass
-	sfc_v1_16       1/1/1/1     8 GB        1/7/?       pass        FAIL       0/0/1
-	sfc_v1_32       1/3/2/1     8 TB        0/2/7       pass        pass       pass
-	sfc_v2_16       0/1/1/1     2 GB        0/1/0       pass        pass       0/1/1
-	sfc_v2_32       2/3/3/2     4 TB        0/0/1       pass        pass       pass
-	sfc_v3_16       2/1/1/1     512 GB      pass        pass        pass       pass
-	sfc_v3_32       5/3/3/2     > 8 TB      pass        pass        pass       pass
-	simpleA         1/3/3/1     2 GB        pass        pass        pass       pass
-	simpleB         0/1/1/0     128 MB      1/6/2       pass        pass       0/1/1
-	simpleC         0/1/1/1     16 GB       1/6/2       pass        pass       pass
-	simpleD         2/3/3/2     128 GB      pass        pass        pass       pass
-	simpleE         3/3/3/2     1 TB        pass        pass        pass       pass
-	simpleF         2/2/2/1     16 GB       pass        pass        pass       pass
-	simpleG         1/3/3/2     128 GB      0/18/?      pass        FAIL       0/1/1
-	mo_Lesr32       0/0/0/0     64 KB       7/?/?       256K        FAIL       1/2/3
-	mo_ResrRers32   4/2/2/2     2 TB        pass        pass        pass       pass
-	mo_Rers32of64   0/2/2/0     8 MB        0/10/?      16K         FAIL       1/1/1
-	mo_Resr32of64   0/2/2/0     8 MB        1/27/?      16K         FAIL       1/1/1
-	mo_Resdra32of64 1/2/2/1     4 GB        0/2/6       pass        pass       0/0/1
-	*** 10 sec                  15 (512 MB) 8 (SC)      9 (2 Mb)    --         6
-	*** 1 minute                20 (4 GB)   --          10 (16 Mb)  --         10
-	*** 5 minutes               23 (16 GB)  --          12 (64 Mb)  --         12
-	*** 30 minutes              25 (128 GB) 20 (C)      12 (512 Mb) 8          --
-	*** 4 hours                 27 (1 TB)   22 (BC)     --          --         --
-	*** 1 day                   30 (4 TB)   --          --          --         --
+	RNG               Quality     PractRand   TestU01     RaBiGeTe    Dieharder  Dieharder
+	                  subscores   standard    *Crush      Extended*1  -a         custom
+	xorshift32        0/0/0/0     64 KB       5/53/?      64 Kb       FAIL       1/1/1
+	xorshift32of64    0/4/2/0     64 KB       6/50/?      256 Kb      FAIL       1/1/3
+	xorshift64        0/4/2/0     64 KB       1/25/?      128 Kb      FAIL       1/1/1
+	xorshift32of128   1/5/3/1     512 KB      0/6/?       1 Mb        pass       pass
+	xorshift32x4      1/5/3/1     512 KB      0/8/?       1 Mb        pass       0/1/1
+	xorwow32of96      0/5/3/1     2 MB        0/3/5       64 Mb       pass       pass
+	xorwow32x6        1/5/4/1     16 MB       0/1/2       pass        pass       pass
+	xsalta16x3        2/1/1/1     1 MB        0/1/3       pass        pass       pass
+	xsaltb16x3        2/1/1/1     2 GB        pass        pass        pass       pass
+	xsaltc16x3        1/1/1/1     2 GB        0/1/1       pass        pass       pass
+	sapparot          0/2/2/1     16 MB       0/0/1       64 Mb       pass       pass
+	sap16of48         1/1/1/1     512 KB      0/3/2       1 Mb        pass       pass
+	sap32of96         4/3/3/1     2 MB        pass        4 Mb        pass       pass
+	flea32x1          5/4/3/2     4 TB        pass        pass        pass       pass
+	jsf16             4/2/2/2     16 TB*      pass        pass        pass       pass
+	sfc_v1_16         1/1/1/1     8 GB        1/7/?       pass        FAIL       0/0/1
+	sfc_v1_32         1/3/2/1     8 TB        0/2/7       pass        pass       pass
+	sfc_v2_16         0/1/1/1     2 GB        0/1/0       pass        pass       0/1/1
+	sfc_v2_32         2/3/3/2     4 TB        0/0/1       pass        pass       pass
+	sfc_v3_16         2/1/1/1     512 GB      pass        pass        pass       pass
+	sfc_v3_32         5/3/3/2     > 8 TB      pass        pass        pass       pass
+	simpleA           1/3/3/1     2 GB        pass        pass        pass       pass
+	simpleB           0/1/1/0     128 MB      1/6/2       pass        pass       0/1/1
+	simpleC           0/1/1/1     16 GB       1/6/2       pass        pass       pass
+	simpleD           2/3/3/2     128 GB      pass        pass        pass       pass
+	simpleE           3/3/3/2     1 TB        pass        pass        pass       pass
+	simpleF           2/2/2/1     16 GB       pass        pass        pass       pass
+	simpleG           1/3/3/2     128 GB      0/18/?      pass        FAIL       0/1/1
+	trivium_weakenedA 4/4/3/3     > 4 TB      pass        pass        pass       pass
+	trivium_weakenedB 3/3/3/3     1 TB        pass        pass        pass       pass
+	mo_Lesr32         0/0/0/0     64 KB       7/?/?       256K        FAIL       1/2/3
+	mo_ResrRers32     4/2/2/2     2 TB        pass        pass        pass       pass
+	mo_Rers32of64     0/2/2/0     8 MB        0/10/?      16K         FAIL       1/1/1
+	mo_Resr32of64     0/2/2/0     8 MB        1/27/?      16K         FAIL       1/1/1
+	mo_Resdra32of64   1/2/2/1     4 GB        0/2/6       pass        pass       0/0/1
+	*** 10 sec                    15 (512 MB) 8 (SC)      9 (2 Mb)    --         6
+	*** 1 minute                  20 (4 GB)   --          10 (16 Mb)  --         10
+	*** 5 minutes                 23 (16 GB)  --          12 (64 Mb)  --         12
+	*** 30 minutes                25 (128 GB) 20 (C)      12 (512 Mb) 8          --
+	*** 4 hours                   28 (1 TB)   22 (BC)     --          --         --
+	*** 1 day                     31 (4 TB)   --          --          --         --
 
 other RNGs - non-LCG multiplication based
 	RNG             Quality     PractRand   TestU01     RaBiGeTe    Dieharder  Dieharder

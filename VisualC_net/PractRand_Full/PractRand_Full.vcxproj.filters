@@ -251,6 +251,9 @@
     <ClInclude Include="..\..\include\PractRand\Tests\FPMulti.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\PractRand\Tests\Pat5.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\doc\installation.txt">

@@ -1,6 +1,5 @@
-post-0.91:
+post-0.92:
 	high priority items
-		fix violations of abstraction layers in BRank test
 		create famework for testing tests & batteries
 		revise seeding for all recommended RNGs - reduce seedspace relative to statespace to allow probabilistic proof that all seeds are good
 		new tests, finish &| calibrate some of them - BCFN variants, FPMulti, ???
