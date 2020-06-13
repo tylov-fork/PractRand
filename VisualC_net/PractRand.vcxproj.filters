@@ -42,9 +42,6 @@
     <ClCompile Include="..\src\RNGs\mt19937.cpp">
       <Filter>Source Files\RNGs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\math.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\RNGs\sfc.cpp">
       <Filter>Source Files\RNGs</Filter>
     </ClCompile>
@@ -68,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="..\src\RNGs\salsa.cpp">
       <Filter>Source Files\RNGs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\non_uniform.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

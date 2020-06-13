@@ -17,10 +17,10 @@ namespace PractRand {
 		//  TYPE_BAD_P         a p-value, but probably a VERY low quality p-value
 		//  TYPE_BAD_S         same scale as TYPE_GOOD_S, but extremely crude & poor resolution
 		//  TYPE_GOOD_P        a relatively trustworthy p-value
-		//  TYPE_GOOD_S        a transformed p-value that has better dynamic range... 1 : 0.75, 0 : 0.5, -1 = 0.25, -2 = 0.125, -3 = 0.0625, -1.3 = 0.406126..., etc
+		//  TYPE_GOOD_S        a transformed p-value that has better dynamic range... 1 : 0.75, 0 : 0.5, -1 = 0.25, -2 = 0.125, -3 = 0.0625, -0.3 = 0.406126..., etc
 		//  TYPE_PASSFAIL      0 means pass, 1 means fail
 
-		TestResult(std::string name_, double raw_, double processed_, int type_, double weight_) : name(name_), raw(raw_), processed(processed_), type(type_), weight(weight_) {}
+		TestResult(const std::string &name_, double raw_, double processed_, int type_, double weight_) : name(name_), raw(raw_), processed(processed_), type(type_), weight(weight_) {}
 		double get_raw() const {return raw;}
 		double get_pvalue() const;
 		double get_suspicion() const;

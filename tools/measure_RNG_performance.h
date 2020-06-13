@@ -2,7 +2,7 @@
 //returns megabytes per second, of calls to raw64() on 64 bit RNGs or raw32 on other RNGs
 
 template<typename RNG> double _measure_RNG_performance_16(RNG *rng) {
-	enum {NUM_CLOCKS_TO_TEST = int(CLOCKS_PER_SEC * .25) + 1};
+	enum {NUM_CLOCKS_TO_TEST = int(CLOCKS_PER_SEC * .5) + 1};
 	//RAW_RNG rng(PractRand::SEED_AUTO);
 	Uint16 buffy[1024];
 	int clock0 = clock();
@@ -26,7 +26,7 @@ template<typename RNG> double _measure_RNG_performance_16(RNG *rng) {
 	return rate;
 }
 template<typename RNG> double _measure_RNG_performance_32(RNG *rng) {
-	enum {NUM_CLOCKS_TO_TEST = int(CLOCKS_PER_SEC * 0.2) + 1};
+	enum {NUM_CLOCKS_TO_TEST = int(CLOCKS_PER_SEC * 0.5) + 1};
 	//RAW_RNG rng(PractRand::SEED_AUTO);
 	Uint32 buffy[1024] = {0};
 	int clock0 = clock();
@@ -50,7 +50,7 @@ template<typename RNG> double _measure_RNG_performance_32(RNG *rng) {
 	return rate;
 }
 template<typename RNG> double _measure_RNG_performance_64(RNG *rng) {
-	enum {NUM_CLOCKS_TO_TEST = int(CLOCKS_PER_SEC * 0.2) + 1};
+	enum {NUM_CLOCKS_TO_TEST = int(CLOCKS_PER_SEC * 0.5) + 1};
 	//RAW_RNG rng(PractRand::SEED_AUTO);
 	Uint64 buffy[1024] = {0};
 	int clock0 = clock();

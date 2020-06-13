@@ -1,11 +1,14 @@
 #ifndef _practrand_rng_basics_h
 #define _practrand_rng_basics_h
 
+#include <string>
 #ifndef __PRACTRAND_CONFIG_H__
 #include "PractRand/config.h"
 #endif //__PRACTRAND_CONFIG_H__
 
 namespace PractRand {
+	extern const char *version_str;//like "0.91", for PractRand 0.91
+
 	bool initialize_PractRand(); //returns true normally
 	//will return false if it failed to find a good source of entropy
 	//  in which case the autoseeding mechanism may have trouble
@@ -33,7 +36,7 @@ namespace PractRand {
 			virtual ~vRNG();
 			virtual void seed(Uint64 seed);
 			virtual void seed_fast(Uint64 seed);
-			void seed(vRNG *rng);
+			virtual void seed(vRNG *rng);
 			void autoseed();
 			long serialize( char *buffer, long buffer_size );//returns serialized size, or zero on failure
 			char *serialize( size_t *size );//returns malloced block, or NULL on error, sets *size to size of block

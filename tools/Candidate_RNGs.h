@@ -145,7 +145,7 @@ public:
 class raw_ranrot_variant64 : public _RanrotVariant<Uint64,45,24,0,0,29> {public: Uint64 raw64() {return _raw_native();}};
 class raw_ranrot_variant32 : public _RanrotVariant<Uint32,45,24,0,0,13> {public: Uint32 raw32() {return _raw_native();}};
 class raw_ranrot_variant16 : public _RanrotVariant<Uint16,45,24,0,0, 5> {public: Uint16 raw16() {return _raw_native();}};
-class raw_ranrot_variant8  : public _RanrotVariant<Uint8 , 7, 3,0,0, 3> {public: Uint8  raw8 () {return _raw_native();}};
+class raw_ranrot_variant8  : public _RanrotVariant<Uint8 ,45,24,0,0, 3> {public: Uint8  raw8 () {return _raw_native();}};
 POLYMORPHIC_CANDIDATE(ranrot_variant, 64)
 POLYMORPHIC_CANDIDATE(ranrot_variant, 32)
 POLYMORPHIC_CANDIDATE(ranrot_variant, 16)
@@ -238,6 +238,12 @@ public:
 	};
 	Word a, b, c, d, counter, counter2;
 	static Word rotate(Word value, int bits) {return (value << bits) | (value >> (8*sizeof(value)-bits));}
+	static Word nluf(Word value) {
+		value *= 9;//15;
+		//value += Word(3442999295u);
+		//value ^= Word(1702153011u);
+		value = rotate(value, OUTPUT_BITS/3+1) ^ value; return value;
+	}
 	Word _raw_native() {
 		//experiment with larger pseudo-counter
 		/*++counter;
@@ -247,14 +253,14 @@ public:
 		//a = b + (b << SHIFT3);
 		a = b + counter2;
 		b = rotate(b, SHIFT1) + tmp;
-		return a;
+		return a;//*/
 		//SFC 3:
 		/*Word tmp = a + b + counter++;
 		a = b ^ (b >> SHIFT2);
 		b = rotate(b,SHIFT1) + tmp;
 		return tmp;//*/
 		//SFC 4, 16 bit version >8 TB (64 GB w/o counter)
-		Word old = a + b + counter++;//64 GB on counter, 8 TB on b
+		/*Word old = a + b + counter++;//64 GB on counter, 8 TB on b
 		a = b ^ (b >> SHIFT2);//128 GB?
 		b = c + (c << SHIFT3);//1 TB
 		c = old + rotate(c,SHIFT1);//important!
@@ -289,6 +295,26 @@ public:
 		b = c ^ (c >> SHIFT2);
 		c = old + rotate(c,SHIFT1);
 		return old;//*/
+		//???
+		/*Word old = a + counter++;
+		a = rotate(a, 3) ^ (a+b);
+		b = rotate(b, 7) ^ (b+c);
+		c = rotate(c, 11) ^ (c+old);
+		return old^b;*/
+		/*a += rotate(a,7);
+		b = rotate(b,13) + b + (b<<3);
+		c = (c + (c << 7)) ^ rotate(c,11);
+		return a^b^c;*/
+
+		a += b; b -= c;
+		c += a; a ^= counter++;
+		c = rotate(c, 43 % OUTPUT_BITS);
+		return a;
+
+		//a = (a << 6) - a;
+		//a ^= Word(0x123456789abcdef);
+		//b += a;
+		//return a ^ rotate(b, 21 % OUTPUT_BITS);
 	}
 	void walk_state(StateWalkingObject *walker) {
 		walker->handle(a);
@@ -511,17 +537,50 @@ protected:
 public:
 	Uint16 raw16() {
 		const Uint16 K = 0xa395;
-		Uint16 tmp = lcg_high;
+		
+		// 16 GB, medium avalanche, good speed
+		/*Uint16 tmp = lcg_high;
 		tmp ^= tmp >> 8;
 		tmp *= K;
 		tmp += rotate16(tmp ^ lcg_low, 6);
-		Uint16 old = lcg_low;
+		Uint16 old_lcg_low = lcg_low;
 		lcg_low += lcg_adder;
-		lcg_high += old + ((lcg_low < lcg_adder) ? 1 : 0);
+		lcg_high += old_lcg_low + ((lcg_low < lcg_adder) ? 1 : 0);
 		old = history;
 		history = tmp;
 		if (!lcg_low) if (!lcg_high) lcg_adder += 2;
-		return tmp + rotate16(old, 8);
+		return tmp + rotate16(old, 8);//*/
+
+		// 128 GB, good avalanche, acceptable speed
+		/*Uint16 old = history * K;
+		Uint16 tmp = lcg_high;
+		tmp += rotate16(tmp ^ lcg_low, 6);
+		tmp *= K;
+		old ^= old >> 8;
+		history = tmp ^=  tmp >> 8;
+
+		Uint16 old_lcg_low = lcg_low;
+		lcg_low += lcg_adder|1;
+		lcg_high += old_lcg_low + ((lcg_low < lcg_adder) ? 1 : 0);
+		if (!lcg_low) if (!lcg_high) lcg_adder += 2;
+
+		return tmp + old;//*/
+
+		//*
+		// 256 GB, good avalanche, 
+		Uint16 rv = history * K;
+		Uint16 tmp = lcg_high ^ rotate16(lcg_high + lcg_low, 6);
+		tmp *= K;
+
+		Uint16 old_lcg_low = lcg_low;
+		lcg_low += lcg_adder;
+		old_lcg_low += ((lcg_low < lcg_adder) ? 1 : 0);
+		rv = rotate16(rv + lcg_high, 0) ^ rotate16(rv, 4);
+		lcg_high += old_lcg_low;
+		if (!lcg_low) if (!lcg_high) lcg_adder += 2;
+
+		rv += history = tmp ^= tmp >> 8;
+		return rv;//*/
 	}
 	void seed(Uint64 s) {
 		s ^= rotate64(s, 21) ^ rotate64(s, 39);
@@ -551,18 +610,22 @@ POLYMORPHIC_CANDIDATE(xsm, 16)
 namespace RNG_Factories {
 	void register_candidate_RNGs() {
 		RNG_factory_index["xsm16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_xsm16>;
+		RNG_factory_index["sfc_alternative64"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative64>;
+		RNG_factory_index["sfc_alternative32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative32>;
+		RNG_factory_index["sfc_alternative16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative16>;
+		RNG_factory_index["sfc_alternative8" ] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative8>;
 		RNG_factory_index["sfc_alt64"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative64>;
 		RNG_factory_index["sfc_alt32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative32>;
 		RNG_factory_index["sfc_alt16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative16>;
-		RNG_factory_index["sfc_alt8"] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative8>;
+		RNG_factory_index["sfc_alt8" ] = _generic_recommended_RNG_factory<Candidates::polymorphic_sfc_alternative8>;
 		RNG_factory_index["vf64"] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast64>;
 		RNG_factory_index["vf32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast32>;
 		RNG_factory_index["vf16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast16>;
-		RNG_factory_index["vf8"] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast8>;
+		RNG_factory_index["vf8" ] = _generic_recommended_RNG_factory<Candidates::polymorphic_VeryFast8>;
 		RNG_factory_index["ranrot_var64"] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant64>;
 		RNG_factory_index["ranrot_var32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant32>;
 		RNG_factory_index["ranrot_var16"] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant16>;
-		RNG_factory_index["ranrot_var8"] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant8>;
+		RNG_factory_index["ranrot_var8" ] = _generic_recommended_RNG_factory<Candidates::polymorphic_ranrot_variant8>;
 		RNG_factory_index["ranrot_mcx32"] = _generic_recommended_RNG_factory<Candidates::polymorphic_mcx32>;
 	}
 }

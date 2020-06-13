@@ -24,6 +24,10 @@
 		gcc 4.5.4 / MinGW x64 (64-bit)
 		gcc 3.4.5 / MinGW x86 (32-bit) - though TLS was not supported
 		VC 2010 x86 (32-bit)
+		VC 2013 x86 (32-bit)
+
+	PractRand uses a subset of C++98 and/or C99.  
+	explicitly: C++11 support is not required.  Same for C++13.  
 
 	When compiling on a different platform, the first thing that must be 
 		done is a few minor edits in include/PractRand/config.h
@@ -37,7 +41,7 @@
 		memory be addressed in 8-bit units (sizeof(Uint8) == 1)
 		support for 8, 16, 32, and 64 bit signed and unsigned integers
 		including unsigned right-shifts on all unsigned integer types
-			signed right-shifts are not required
+			and signed right-shifts on signed integer types
 		basic C++ support including namespaces and templates
 			 all decent C++ compilers qualify
 			 template support not completely required, but very strongly recommended

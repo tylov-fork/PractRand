@@ -11,18 +11,17 @@ namespace PractRand {
 			protected:
 				typedef Uint32 Word;
 				enum {
-					ITERATION_SIZE_L2 = 7,
-					ITERATION_SIZE = 1 << ITERATION_SIZE_L2,
-					INDIRECTION_SIZE_L2 = 8,
-					INDIRECTION_SIZE = 1 << INDIRECTION_SIZE_L2
+					ITERATION_SIZE = 128,
+					INDIRECTION_SIZE = 256
 				};
-				Word indirection_table[INDIRECTION_SIZE], iteration_table[ITERATION_SIZE];
+				Word iteration_table[ITERATION_SIZE], indirection_table[INDIRECTION_SIZE];
 				Word i, a, b, c;
 			public:
 				~efiix32x384();
 				Uint32 raw32();
-				void seed(Uint64 s1, Uint64 s2, Uint64 s3, Uint64 s4);
-				void seed(Uint64 s) {seed(s,0,0,0);}
+				void seed(const Word *seeds, int num_seeds, int seeding_quality=4);
+				void seed(Uint64 s) {enum {N=sizeof(s)/sizeof(Word)}; Word sa[N]; for (int i = 0; i < N; i++) sa[i] = Word(s>>(i*8*sizeof(Word))); seed(&sa[0], N);}
+				void seed(vRNG *source_rng);
 				void walk_state(StateWalkingObject *walker);
 			};
 		}
@@ -30,8 +29,9 @@ namespace PractRand {
 		namespace Polymorphic {
 			class efiix32x384 : public vRNG32 {
 				PRACTRAND__POLYMORPHIC_RNG_BASICS_H(efiix32x384)
-				void seed(Uint64 s1, Uint64 s2, Uint64 s3, Uint64 s4);
+				void seed(const Uint32 *seeds, int num_seeds, int seeding_quality=4) {implementation.seed(seeds, num_seeds, seeding_quality);}
 				void seed(Uint64 s);
+				void seed(vRNG *source_rng);
 			};
 		}
 		PRACTRAND__LIGHT_WEIGHT_RNG(efiix32x384)

@@ -25,29 +25,32 @@ RNG_engines.txt.
 
   Parallel RNG usage scenario definitions:
 scenario name   total seedings   total nums generated   max correlation
-moderate        < 2**25          < 2**60                low
-heavy           < 2**45          < 2**80                undetectable
-extreme         < 2**85          < 2**120               undetectable
+light           < 2**5           < 2**45                low
+moderate        < 2**20          < 2**60                low
+heavy           < 2**45          < 2**75                undetectable
+extreme         < 2**80          < 2**110               undetectable
 
   Parallel RNG usage scenario recommendations:
 scenario name   minimum quality rating
+light           2 star
 moderate        3 star
 heavy           4 star
 extreme         5 star
 
 note that "total nums generated" refers to the total number of RNG 
-outputs used across all instances of the RNG.  So a billion computers 
-each using a quadrillion random numbers would be 2**80 numbers generated.  
-If each of those billion computers seeded an RNG on average a thousand 
+outputs used across all instances of the RNG.  So a million computers 
+each using a quadrillion random numbers would be 2**70 numbers generated.  
+If each of those million computers seeded an RNG on average a thousand 
 times during the course of producing those quadrillion random numbers 
-then the total seedings would be 2**40.  
+then the total seedings would be 2**30.  
 
 Also, the seed for each RNG instance should be distinct from all other 
 instances seeds.  PractRand autoseeding is normally sufficient to provide 
-that kind of uniqueness.  However, on unrecognized platforms (meaning 
-platforms that are neither windows nor *nix) or exceptional failures 
-(like fopen failing on /dev/urandom) autoseeding may provide lower quality 
-seeding.  You can distinguish such cases by checking the return value of 
+that kind of uniqueness, at least on PRNGs where that is liable to be the 
+limiting factor.  However, on unrecognized platforms (meaning platforms 
+that are neither windows nor *nix) or exceptional failures (like fopen 
+failing on /dev/urandom) autoseeding may provide lower quality seeding.  
+You can distinguish such cases by checking the return value of 
 PractRand::initialize_PractRand() - it is true if autoseeding managed 
 to obtain enough entropy for high quality seeding, or false if it 
 failed to find much entropy and will produce low quality seeds.  

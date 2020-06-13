@@ -17,8 +17,11 @@
 #include "PractRand/Tests/Gap16.h"
 #include "PractRand/Tests/DistC6.h"
 #include "PractRand/Tests/BCFN.h"
+#include "PractRand/Tests/BCFN_MT.h"
 #include "PractRand/Tests/FPF.h"
+#include "PractRand/Tests/FPMulti.h"
 #include "PractRand/Tests/CoupGap.h"
+#include "PractRand/Tests/BRank.h"
 #include "PractRand/Tests/transforms.h"
 
 
@@ -32,9 +35,12 @@ namespace PractRand {
 			}
 			ListOfTests get_core_tests() {
 				return Tests::ListOfTests(
-					new Tests::BCFN(2, 13),
-					new Tests::DistC6(9,0, 1,0,0),
-					new Tests::Gap16()
+					new Tests::BCFN(2, 13, true), //	2.8 s/GB (from 3.4)
+					new Tests::DistC6(9, 0, 1, 0, 0),//	2.7 s/GB (from 3.3)
+					new Tests::Gap16(),//				3.1 s/GB (from 3.4)
+					new Tests::FPF(4, 14, 6), //		3.4 s/GB (from 5.0?)
+					new Tests::BRank(12), //			?? s/GB (negligable, mostly)
+					NULL
 				);
 			}
 			static Tests::ListOfTests standard_foldings_generic(ListOfTests (*base_tests)()) {
@@ -104,16 +110,40 @@ namespace PractRand {
 			}
 			ListOfTests get_expanded_core_tests() {
 				return Tests::ListOfTests(
-					new Tests::BCFN(0, 14),
-					new Tests::DistC6(9,0, 1,0,0),
-					new Tests::DistC6(6,1, 1,0,0),
-					new Tests::DistC6(5,2, 1,0,0),
-					new Tests::DistC6(5,3, 1,0,1),
-					new Tests::DistC6(4,3, 0,0,1),
-					new Tests::Gap16(),
-					new Tests::FPF(5, 14, 6),
-					new Tests::FPF(2, 14, 6),
-					new Tests::CoupGap(),
+					//long range linear tests:
+					//new Tests::BCFN(2, 13, false), //	3.4 seconds/GB
+					//new Tests::BCFN(1, 13, false), //	5.8 seconds/GB
+					//new Tests::BCFN(1, 14, false), //	5.8 seconds/GB
+					//new Tests::BCFN(0, 13, false), //	9.9 seconds/GB
+					//new Tests::BCFN(2, 13, true ), //	2.8 seconds/GB
+					//new Tests::BCFN(1, 13, true ), //	4.1 seconds/GB
+					//new Tests::BCFN(0, 13, true ), //	6.8 seconds/GB
+					new Tests::BCFN_FF(2, 13),  //	4.0 seconds/GB
+					//new Tests::BCFN_FF(1, 13),  //	6.9 seconds/GB
+					//new Tests::BCFN_FF(0, 13),  //	12.0 seconds/GB
+					//new Tests::BCFNMT(1, 11),  //	19.6 seconds/GB
+
+					//medium range tests:
+					new Tests::BRank(18), //			~4.0 s/GB
+
+					//short range tests:
+					new Tests::DistC6(9,0, 1,0,0),//	3.3->2.7 s/GB
+					new Tests::DistC6(6,1, 1,0,0), //	2.5->2.2 s/GB
+					new Tests::DistC6(5,2, 1,0,0),//	2.1->1.8 s/GB
+					//new Tests::DistC6(5,3, 1,0,1),//	2.0->1.8 s/GB
+					//new Tests::DistC6(4,3, 0,0,1),//	2.0->1.8 s/GB
+
+					//new Tests::FPMulti(5, 0),//		slow?
+					new Tests::FPF(5, 14, 6), //		2.2 s/GB
+					new Tests::FPF(4, 14, 6), //		5.0->3.6 s/GB
+					//new Tests::FPF(3, 14, 6), //		8.0->5.8 s/GB
+					new Tests::FPF(2, 14, 6), //		14.1->10.5 s/GB
+					//new Tests::FPF(1, 14, 6), //		26.0 s/GB
+					//new Tests::FPF(0, 14, 6), //		51.5 s/GB
+
+					//gap tests
+					new Tests::Gap16(),//				3.4->3.1 s/GB
+					//new Tests::CoupGap(),*/
 					NULL
 				);
 			}

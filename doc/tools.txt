@@ -6,6 +6,9 @@ PractRand includes several programs that use the library to do useful things:
 	somewhere useful.  It has an optional third parameter to specify the seed 
 	to use.  The seed should be a 64 bit integer expressed in hexadecimal.  If 
 	no seed is specified it will pick one at random.  
+		example - using the RNG named "jsf32", generate about 1.1 terabytes, 
+		using a randomly generated seed
+			./RNG_output jsf32 1234567890000
 2. RNG_test
 	This command-line driven program applies PractRand statistical tests to an 
 	RNG.  Anomalous test results will be reported to the user.  The definition 
@@ -30,7 +33,7 @@ PractRand includes several programs that use the library to do useful things:
 		testing a PractRand RNG:
 			RNG_test jsf32
 		testing a file:
-			type random_data | RNG_test stdin
+			type random_data_file | RNG_test stdin
 		testing data piped in from RNG_output:
 			RNG_output jsf32 123456789000 | RNG_test stdin32
 3. RNG_benchmark

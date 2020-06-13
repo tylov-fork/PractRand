@@ -6,45 +6,59 @@ are done with a ListOfTests returned by one of those functions you
 should call PractRand::Tests::Batteries::destruct_tests on it to 
 deallocate the resources used by the tests.  
 
-The recommended batteries defined in PractRand are:
-standard - get_standard_tests() - This is the recommended battery of 
-	tests for PractRand.  It is intended to quickly find bias in a wide 
-	variety of RNGs.  Some important notes:
-	1. This battery actually internally consists of several very 
-	closely related batteries, of which one is chosen based upon the 
-	output format of the RNG to be tested (determined by checking the 
-	metadata).  Each variant puts a little extra effort in to checking 
-	the low bits of the RNGs output (because the nature of operations 
-	offered on modern computers tends to lead to flaws in the low bits 
-	of fast PRNGs).  It must know the output format of the RNG to 
-	figure out which bits are the low bits.  For this reason 
-	get_standard_tests() takes a pointer at a polymorphic RNG as a 
-	parameter - it checks the metadata on the RNG, but doesn't do 
-	anything else, and has no side effects upon the RNG.  
-	2. This battery is optimized for efficiency over sensitivity to a 
-	much greater degree than other batteries - it is poor at detecting 
-	bias on a per-bit basis but makes up for it by being very good at 
-	detecting bias on a per-second basis.  
-core - get_core_tests() - Not generally recommended.  This is the same 
-	as the "standard" battery except that it does not put extra effort 
-	in to targeting the low bits.  
+The predefined batteries of test in PractRand can be thought of as 
+organized in a 2x3 grid.  One axis corresponds to whether the testing 
+algorithms used are the normal set of algorithms or the expanded set 
+of algorithms.  The other axis corresponds to the degree of "folding" 
+by which PractRand concentrates extra effort on the lowest bits of 
+the PRNGs output.  
 
-Additional batteries are provided by PractRand for the sake of 
-completeness, but are not recommended.  Those are:
-extra foldings - get_folded_tests() - Not generally recommended.  This 
-	is the same as the "standard" battery except that it puts extra 
-	effort in to targeting a wide variety of different bits of the 
-	output.  
-expanded core - get_expanded_core_tests() - Not generally recommended.  
-	This includes the "core" battery plus a bunch of additional tests 
-	that were considered inferior to the core tests.  
-expanded standard - get_expanded_standard_tests() - Not generally 
-	recommended.  This includes the "expanded core" tests, plus it pays 
-	extra attention to certain bits of the output, like the "standard" 
-	battery.  
-expanded with extra foldings - get_expanded_folded_tests() - Not 
-	generally recommended.  This includes the "expanded standard" 
-	battery, but it puts extra effort in to targeting a wide variety of 
-	different bits of the output, like the "extra foldings" battery.  
+This chart shows the functions used to instantiate each battery of 
+tests from the grid.  Each of these functions can be found in the 
+PractRand::Tests::Batteries namespace.  
+                  Normal Test Set        Expanded Test Set
+No Foldings       get_core_tests()       get_expanded_core_tests()
+Standard Foldings get_standard_tests()   get_expanded_standard_tests()
+Extra Foldings    get_folded_tests()     get_expanded_folded_tests()
+
+The test sets are:
+	Normal Test Set: (recommended)
+	These tests are optimized for maximum effectiveness per cycle.  
+
+	Expanded Test Set:
+	These tests reduce per-cycle effectiveness in order to improve 
+	per-bit effectiveness.  
+
+The folding options are:
+	No Folding:
+	Just use the tests.  For cases where you're confident that no 
+	low-bit issues could occur.  Perhaps the algorithm is provably 
+	symetric in terms of bit positions, though even then folding 
+	sometimes helps.  
+
+	Standard Foldings: (recommended)
+	Concentrate extra testing on the lowest bit positions.  Usually a 
+	good idea.  This is done by having multiple instances of the test 
+	set - the core set just tests the data, but duplicate sets work on 
+	additional datastream created by skipping all bits of input except 
+	for the lowest bit(s) of each integer.  These extra datastreams 
+	slow down testing by about 30% and test evaluation by about 150%.  
+	- Important Note: This is actually several closely related sets 
+	of foldings, one for each PRNG output format (one for 8 bit 
+	integers, one for 16 bit integers, 32 bit, 64 bit, and one 
+	for unidentified PRNG output formats).  Which one gets used 
+	is determined by examining the PRNGs metadata.  If for some 
+	reason the metadata is erroneous or missing this may not be a 
+	good idea.  
+
+	Extra Foldings:
+	Similar to Standard Foldings, except that instead of using 
+	the metadata to identify the output format of the PRNG (and 
+	thus which bits of metadata might benefit from extra testing) 
+	this variant uses a much larger number of extra datastreams 
+	to try to find good bits to target for every common output 
+	format.  This may cause excessive amounts of memory to be 
+	used on longer data streams (excessive meaning too much for 
+	a 32 bit program; try using a 64-bit build instead).  
 
 

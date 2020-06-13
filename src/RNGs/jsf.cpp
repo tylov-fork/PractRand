@@ -40,6 +40,18 @@ void PractRand::RNGs::Raw::jsf32::seed(Uint64 s) {//LOCKED, do not change
 	c = b ^ Uint32(s >> 32);
 	d = b;
 	for (int i = 0; i < 20; i++) raw32();
+	/*
+		number of outputs skipped vs number of seeds needed to detect bias via standard battery:
+		2: 2**11
+		3: 2**14
+		4: 2**19
+		5: 2**24
+		6: > 2**33
+		conclusion:
+			The 20 outputs skipped by the standard algorithm are more than sufficient.  
+			10 should be more than enough for most purposes, 
+			16 should be enough for any purpose that could possibly be satisfied by seeding from a 64 bit integer.  
+	*/
 }
 void PractRand::RNGs::Raw::jsf32::seed_fast(Uint64 s) {
 	a = 0xf1ea5eed;

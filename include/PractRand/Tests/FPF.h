@@ -7,8 +7,8 @@ namespace PractRand {
 //				DIRECTION = 0 //0 = low to high, 1 = high to low
 			};
 			//static unsigned long count_leading_zeroes32( Uint32 value );
-			unsigned int sig_bits, exp_bits;
-			unsigned int stride_bits_L2;
+			const int sig_bits, exp_bits;
+			const int stride_bits_L2;
 			VariableSizeCount<Uint8> counts;
 		public:
 			FPF(int stride_bits_L2_ = 3, int sig_bits_ = 8, int exp_bits_ = 4);

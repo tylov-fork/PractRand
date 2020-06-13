@@ -14,40 +14,29 @@
 1. Quick recommendations for which RNGs to use
 *****************************************************************************
 
-Every recommended RNG meets a few common requirements:
-	deterministic
-	endian-safe (when used correctly)
-	excellent performance on statistical tests (exception: mt19937)
-	fast enough for most purposes (exception: sha2_based_pool)
-	supports serialization
-	internally uses only integer math (not floating point)
-	natively operates on 8, 16, 32, or 64 bit integers
-	natively outputs an integer of the same size it operates on internally
-	supports seeding from a 64 bit integer
-
 The following RNGs have the broadest appeal among normal users:
-	hc256
-		HC-256 is the highest quality recommended RNG and the most 
-		cryptographically secure.  Its biggest drawback is slow seeding 
-		time.  It's also a little slow and a bit large, but not so much of 
-		either of those as to hinder usability for typical purposes.  
-	sfc64 / sfc32 / sfc16
-		The sfc* RNGs are the fastest of the recommended RNGs and one of 
-		the smallest.  The 32 and 64 bit variants have no known drawbacks, 
-		though the 16 bit variant is considered inadequate for parallel 
-		uses.  
-	chacha
-		Chacha offers cryptographic security, fast random access, fast 
-		seeding, and easily adjustable security vs speed tradeoffs.  
-		Unfortunately while seeding and random access are fast, generating 
-		random numbers with it at any particular setting ends up being slow 
-		relative to other RNGs of comparable security and quality.  
-	efiix64x384 / efiix32x384 / efiix16x384 / efiix8x384
-		The fastest recommended RNG that qualified for a "future-proof" five  
-		star quality rating.  Also the fastest RNG to offer any degree of 
-		cryptographic security.  Unfortunately its security rating suffers 
-		from insufficient analysis.  Also, it's a little slow to seed, 
-		particularly on platforms that are not 64 bit.  
+hc256
+	HC-256 is the highest quality recommended RNG and the most 
+	cryptographically secure.  Its biggest drawback is slow seeding 
+	time.  It's also a little slow and a bit large, but not so much of 
+	either of those as to hinder usability for typical purposes.  
+sfc64 / sfc32 / sfc16
+	The sfc* RNGs are the fastest of the recommended RNGs and one of 
+	the smallest.  The 32 and 64 bit variants have no known drawbacks, 
+	though the 16 bit variant is considered inadequate for parallel 
+	uses.  
+chacha
+	Chacha offers cryptographic security, fast random access, fast 
+	seeding, and easily adjustable security vs speed tradeoffs.  
+	Unfortunately while seeding and random access are fast, generating 
+	random numbers with it at any particular setting ends up being slow 
+	relative to other RNGs of comparable security and quality.  
+efiix64x384 / efiix32x384 / efiix16x384 / efiix8x384
+	The fastest recommended RNG that qualified for a "future-proof" five  
+	star quality rating.  Also the fastest RNG to offer any degree of 
+	cryptographic security.  Unfortunately its security rating suffers 
+	from insufficient analysis.  Also, it's a bit slow to seed, 
+	particularly on platforms that are not 64 bit.  
 
 
 *****************************************************************************
@@ -60,6 +49,18 @@ Each list is restricted to RNGs recommended for a particular purpose; some
 RNGs thus appear on multiple lists.  You can find descriptions of the 
 categories that they are rated on in section 3, and descriptions of the 
 individual RNGs in section 4.  
+
+In addition to the things which recommended RNGs are rated on, every 
+recommended RNG meets a few common requirements:
+	deterministic
+	endian-safe (when used correctly)
+	excellent performance on statistical tests (exception: mt19937)
+	fast enough for most purposes (exception: sha2_based_pool)
+	supports serialization
+	internally uses only integer math (not floating point)
+	natively operates on 8, 16, 32, or 64 bit integers
+	natively outputs an integer of the same size it operates on internally
+	supports seeding from a 64 bit integer
 
 * The following RNGs are recommended for normal use on 64 bit CPUs.  
 Engine      quality speed  theory  size        notes
@@ -89,7 +90,7 @@ efiix16x384 5*****  3***   0       776 bytes   -
 
 * The following RNGs are recommended for normal use on 8 bit CPUs.  
 Engine      quality speed  theory  size        notes
-efiix8x384  5*****  2**    0       388 bytes   -
+efiix8x384  5*****  3***   0       388 bytes   -
 (not much variety at 8 bit... if anyone needs more let me know... the 16 
 bit ones should work acceptably on 8 bit CPUs too though)
 
@@ -147,8 +148,8 @@ to what sort of RNG algorithms you can use in a cost-effective manner.
 	No problem; none of the current recommended RNGs use floats.  
 3. If memory is a major constraint:
 	No problem, just look at the "size" column on the above charts.  In 
-	particular sfc, jsf, arbee, trivium, and chacha are reasonably small 
-	for their quality and feature set.  
+	particular sfc, jsf, xsm, arbee, trivium, and chacha are reasonably 
+	small for their quality and feature set.  
 4. If you can not do integer math except by emulating it on floating point:
 	That's a problem.  All of the PractRand RNGs will tend to be slow on your 
 	hardware.  
@@ -158,7 +159,7 @@ to what sort of RNG algorithms you can use in a cost-effective manner.
 	avoid all use of barrel shifts anyway, some PractRand recommended RNGs that 
 	avoid barrel shifts include isaac32x256, isaac64x256, mt19937, and Trivium.  
 6. If integer sizes on your hardware not 8, 16, 32, or 64 bits:
-	That's a problem.  Some of the recommended RNG algorithms could still 
+	That's a problem.  Some of the recommended RNG algorithms could still be 
 	efficient, but they might require a customized implementation to optimize 
 	for your specific architecture.  
 7. If you need to minimize the number of transistors required to implement the 
@@ -178,8 +179,8 @@ when used in the same way in all future versions, unless bugs are discovered:
 	mt19937 (aka "The Mersenne Twister")
 	hc256 (aka "HC-256")
 	trivium
-	chacha
-	salsa
+	chacha (for even numbers of rounds only)
+	salsa (aka Salsa20)
 Other recommended RNGs in PractRand may vary from version to version, though 
 they should stabilize by the time PractRand approaches version 1.0.  
 
@@ -236,7 +237,9 @@ quality: (rated from 0 to 5 stars)
 		4 star - quite solid
 		5 star - completely solid
 		Note that this is not entirely independent of other the categories - 
-			I look at everything else when making my judgement
+			I look at everything else when making my judgement.  Including 
+			seeding, interstate correlations (primarily assessed by avalanche 
+			testing), possible linear patterns, subcycles, and other issues.  
 	quality subscores for PractRand RNGs
 		name                  overall    empirical  cycle    states  trusted
 		jsf32                 3          5          4        3       3
@@ -244,8 +247,8 @@ quality: (rated from 0 to 5 stars)
 		sfc16                 2          5          2        2       2
 		sfc32                 3          5          4        3       3
 		sfc64                 3          5          5        5       3
-		xsm32                 2.5        5          4        3       2.5
-		xsm64                 3.5        5?         5        4       3.5
+		xsm32                 2          5          4        3       2
+		xsm64                 3          5          5        4       3
 		arbee                 4          5          5        5       4
 		isaac32x256           5          5          5        5       5
 		isaac64x256           5          5          5        5       5
@@ -262,7 +265,7 @@ quality: (rated from 0 to 5 stars)
 		salsa (8)             4.5        5          5*       5       4.5
 		salsa (12)            5          5          5*       5       5
 		salsa (20)            5          5          5*       5       5
-		mt19937               2.5 **     1          5        5       2.5
+		mt19937               2 **       1          5        5       3
 		* - should be a 4, but I added an optional tweak to make it a 5
 		** - I made an exception for mt19937, strictly it should be a 1 under this scheme
 	explanations for those subscores on some PractRand RNG examples:
@@ -294,27 +297,30 @@ quality: (rated from 0 to 5 stars)
 		sfc64 (v4)            3          5          5        5       3
 			empirical: 5 - passed all tests
 			cycle: 5 - avg ~ 2**255 (min >=2**64), future-proof
-			states: 3 - 2**256, future-proof
+			states: 5 - 2**256, future-proof
 			trust: 3 - the extra bits over sfc32 didn't help very much
-		xsm32                 2.5        5          4        3       2.5
+		xsm32                 3          5          4        3       3
 			empirical: 5 - passes all tests so far
 			cycle: 4 - always 2**64, good enough for anything today but not future-proof
 			states: 3 - 2**95, marginal for some parallel uses today
-			trust: 2.5 - all signs indicates that it deals with underlying problems perfectly, 
-				yet I remain suspicious
-		xsm64                 3.5        5          5        4       3.5
+			trust: 3 - the underlying state transition is horrible, but the quality of 
+				the output hashing should be good enough to compensate
+		xsm64                 4          5          5        4       4
 			empirical: 5 - passes all tests so far
 			cycle: 5 - always 2**128, future-proof
 			states: 4 - 2**191, good enough for anything now but not completely future-proof
-			trust: 3.5 - the extra bits helped a lot, but I still hold on to hope of finding 
-				bias someday
-		mt19937               2.5 *      1          5        5       2.5
+			trust: 4 - the extra bits helped significantly
+		mt19937               2 **       1          5        5       3
 			empirical: 1 - fails TestU01 Crush...
-				but I consider that to be an idiosyncracy of Crush subtest choices
+				but I consider that to be an idiosyncracy of Crush subtest choices.  
+				Now failing PractRand standard at 256 GB... for the same reason, but I 
+				consider that more representative of how obscure the flaws revealed by 
+				large binary rank / linear complexity tests actually are.  
 			cycle: 5 - exactly 2**19937-1, way beyond future-proof
 			states: 5 - exactly 2**19937-1, way beyond future-proof
-			trust: 2.5 - the hashing & size seem to be sufficient to handle its 
-				underlieing problems well enough for almost any use
+			trust: 3 - the hashing & size seem to be sufficient to handle its 
+				underlieing problems well enough for almost any use; only the excessive 
+				linearity creates problems
 		hc256                 5          5          5        5       5
 			empirical: 5 - passes all known tests, even those normally not counted
 			cycle: 5 - average cycle is way beyond future-proof
@@ -337,7 +343,6 @@ quality: (rated from 0 to 5 stars)
 			trust: 5 - trustworthy
 	quality subscores for some candidates and rejects for PractRand recommended RNGs:
 		name                  overall    empirical  cycle    states  trusted
-		xsm16                 1          3?         1        1       1
 		vf16                  1          4          1        1       2
 		vf32                  3          5          3        3       3
 		vf64                  3          5          5        4       3
@@ -371,11 +376,11 @@ quality: (rated from 0 to 5 stars)
 			cycle: 1 - technically 2**48, but more like 2**17 in practice
 			states: 1 - technically 2**48, but more like 2**17 in practice
 			trust: 0 - it has no rightward mixing, 2**17 subcycle
-		RC4                   3          4          5        5       3.5
-			empirical: 4 - passes a lot of tests, but fails PractRand after 4 TB
+		RC4                   3          3          5        5       3.5
+			empirical: 3 - passes a lot of tests, but fails PractRand after 1 TB
 			cycle: 5 - more than anyone will ever need
 			states: 5 - more than anyone will ever need
-			trust: 3.5 - it looks mostly good... but kinda funky... hard to evaluate
+			trust: 3.5 - it looks mostly good... but slightly funky... hard to evaluate
 		ICG, m=2**31-1        0          0          0        0       3.5
 			note: too slow to be of any practical use
 			empirical: 0 - passes a good amount of tests for its size, but that's 
@@ -513,6 +518,15 @@ crypto security
 	needed to figure out the internal state, the better.  The more people 
 	who have analyzed an RNGs security, the better.  The more self-evident 
 	or provable the security, the better.  
+	VERY roughly guidelines:
+		1 star:  analyzed by myself only
+		2 stars: analyzed by a few probably competent people
+		3 stars: analyzed by lots and lots and lots of people
+		+1 star: any two of:
+			well respected by reviewers
+			no hint that its security margin might be borderline
+			studied for more than a decade
+		+1 star: security is self-evident / trivially provable
 
 multi-cyclic
 	Multicyclic RNGs have statespaces greater than their minimum cycle 
@@ -523,7 +537,12 @@ reversible
 	fractions of their state spaces.  Irreversible RNGs have average 
 	cycle lengths on the rough order of the square root of their 
 	state space.  
-	Multicyclic irreversible RNGs are rare and usually a bad idea.  
+	For multicyclic RNGs with smaller state spaces (say, less than 2**300), 
+	reversibility is a good thing.  Past there it is neither good nor bad, 
+	though some people like irreversability in crypto RNGs, on the theory 
+	that even if the RNG state somehow magically gets compromised, at least 
+	the older output might still be secure.  
+	Single-cycle irreversible RNGs are very rare and usually a bad idea.  
 
 
 *****************************************************************************
@@ -710,8 +729,8 @@ crypto / high quality RNGs:
 		actual name: EFIIX stands for Entropy From Iteration, Indirection, Xor, (and addition)
 		This algorithm is included because of its combination of reasonable 
 		speed with very good statistical quality.  It is the fastest of the 
-		cryptographic RNGs included in PractRand, and the only one that is not 
-		buffered.  
+		cryptographic RNGs included in PractRand, and along with Trivium one 
+		of two that is not buffered.  
 		It appears to be moderately cryptographically secure to me, but that's 
 		not worth much since no real cryptanalysis has been done by third 
 		parties on it.  
@@ -742,9 +761,9 @@ crypto / high quality RNGs:
 			minimum cycle:    2**8 / 2**16 / 2**32 / 2**64 (probably no bad cycles)
 			word size:        8 / 16 / 32 / 64 bit
 			size:             388 / 776 / 1552 / 3104 bytes
-			statespace:       2**2080 / 2**4160 / 2**8320 / 2**16640
+			statespace:       2**3104 / 2**6208 / 2**12416 / 2**24832
 			multi-cyclic:     yes
-			reversible:       yes?
+			reversible:       yes
 	trivium
 		This algorithm is included because of its of small size combined 
 		with cryptographic security.  It is not as secure as HC-256, 
@@ -803,7 +822,7 @@ crypto / high quality RNGs:
 		Rounds       quality   security quality  security
 		20(default)  5*****    4****    5*****   4****
 		12           5*****    3***     5*****   3***
-		8            5*****    1*       4****    1*
+		8            5*****    2**      4****    1*
 		6            4****     0        3***     0
 		4            3***      0        1*       0
 		It is recommended that only even numbers of rounds be used - 
@@ -811,7 +830,8 @@ crypto / high quality RNGs:
 		2. SIMD usage.  These algorithms are designed for SIMD.  They 
 		work fine in non-SIMD implementations, but they are 
 		significantly faster when using SIMD.  My implementation currently 
-		uses SIMD(SSE2) only when built on MSVC for x86 or x64.  
+		does not use SIMD do to inability to guarantee memory alignment
+		properly.  
 		--
 		It looks kinda like a block cypher applied to a counter - the 
 		state transition function is trivial, but the output hashing is 
@@ -881,6 +901,11 @@ popular RNGs:
 		Technically random access is possible for this algorithm, but the cost 
 		(in memory & cycles) required is sufficiently painful that it's never 
 		done in practice.  
+		update: PractRand 0.91 now includes a binary rank test in the core test 
+		set.  With this change, mt19937 now fails PractRand standard after 256 
+		gigabytes.  Oddly enough it doesn't just fail matrix sizes over 19937, 
+		it also fails low-bit tests using smaller matrices (12 thousand).  I'm 
+		not sure what that means.  
 		--
 		details:
 			quality subscores (scored from 0 to 5 stars):
@@ -999,8 +1024,8 @@ random access RNGs:
 				empirical:     5 / 5?
 				cycle length:  3 / 5
 				statespace:    3 / 4
-				trusted:       2.5 / 3.5
-				overall:       2.5 / 3.5
+				trusted:       3 / 4
+				overall:       3 / 4
 			speed:            medium-fast
 			operations used:  addition, bitwise, fixed shifts, multiplication
 			full word output: yes

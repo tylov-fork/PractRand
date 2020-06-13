@@ -39,7 +39,7 @@ RNG_interface_variants.txt for details on raw RNGs.
 produce a different sequence on each run of your program.  You give 
 the RNGs constructor a parameter of PractRand::SEED_AUTO and it takes 
 care of the rest.  This is generally easy and effective.  It should 
-work for most multithreaded programs.  It is not sufficient for 
+work for most multithreaded programs.  It is not recommended for 
 cryptographic usage though.  If your RNG has already been constructed 
 and you want to overrides its current state with an automatic seeding 
 then call the autoseed() method.  
@@ -123,7 +123,7 @@ Uint32 randi(Uint32 max);//uniform random number in [0..max)
 Uint32 randi(Uint32 min, Uint32 max);//uniform random number in [min..max)
 
 //uniform 32 bit integers, faster but biased
-//note: avoid using these two on low-end embedded CPUs - they use multiplication internally
+//note: avoid using these two on low-end embedded CPUs - these use multiplication internally
 Uint32 randi_fast(Uint32 max);//uniform random number in [0..max), with bias
 Uint32 randi_fast(Uint32 min, Uint32 max);//uniform random number in [min..max), with bias
 

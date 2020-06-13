@@ -18,7 +18,6 @@ namespace PractRand {
 				};
 				Word indirection_table[INDIRECTION_SIZE], iteration_table[ITERATION_SIZE];
 				Word i, a, b, c;
-				//Uint8 raw4();
 			public:
 				~efiix8x384();
 				Uint8 raw8();

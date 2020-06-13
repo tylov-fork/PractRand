@@ -56,9 +56,9 @@ bool interpret_seed(const std::string &seedstr, Uint64 &seed) {
 	return true;
 }
 void print_usage(const char *program_name) {
-	std::cout << "usage:\n\t" << program_name << " RNG_name bytes_to_output [64bit_hexadecimal_seed]\n";
-	std::cout << "example:\n\t" << program_name << " jsf32 16\n";
-	std::cout << "prints 16 bytes using the jsf32 RNG with a randomly chosen seed\n";
+	std::cerr << "usage:\n\t" << program_name << " RNG_name bytes_to_output [64bit_hexadecimal_seed]\n";
+	std::cerr << "example:\n\t" << program_name << " jsf32 16\n";
+	std::cerr << "prints 16 bytes using the jsf32 RNG with a randomly chosen seed\n";
 	exit(0);
 }
 
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 	RNG_Factories::register_nonrecommended_RNGs();
 	RNGs::vRNG *rng = RNG_Factories::create_rng(argv[1]);
 
-	if (!rng) {std::printf("unrecognized RNG name\n"); print_usage(argv[0]);}
+	if (!rng) {std::fprintf(stderr, "unrecognized RNG name\n"); print_usage(argv[0]);}
 
 	double _n = atof(argv[2]);//should be atol, but on 32 bit systems that's too limited
 	if (_n <= 0) {
@@ -83,13 +83,13 @@ int main(int argc, char **argv) {
 			std::printf("%s\n", rng->get_name().c_str());
 			exit(0);
 		}
-		std::printf("invalid number of output bytes\n"); print_usage(argv[0]);
+		std::fprintf(stderr, "invalid number of output bytes\n"); print_usage(argv[0]);
 	}
 
 	if (argc == 3) rng->autoseed();
 	else {
 		Uint64 seed;
-		if (!interpret_seed(argv[3],seed)) {std::printf("\"%s\" is not a valid 64 bit hexadecimal seed\n", argv[3]); std::exit(0);}
+		if (!interpret_seed(argv[3],seed)) {std::fprintf(stderr, "\"%s\" is not a valid 64 bit hexadecimal seed\n", argv[3]); std::exit(0);}
 		rng->seed(seed);
 	}
 

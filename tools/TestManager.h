@@ -10,10 +10,14 @@ protected:
 	Uint64 blocks_so_far;
 	int prep_blocks(Uint64 &blocks);
 public:
-	const PractRand::RNGs::vRNG *get_rng() const {return rng;}
-	Uint64 get_blocks_so_far() {return blocks_so_far;}
+	const PractRand::RNGs::vRNG *get_rng() const {return rng;}//RNG being tested
+	Uint64 get_blocks_so_far() {return blocks_so_far;}//number of blocks tested
 
-	TestManager(PractRand::RNGs::vRNG *rng_, PractRand::Tests::ListOfTests *tests_, PractRand::RNGs::vRNG *known_good_, int max_buffer_amount_ = 1 << (25-10));
+	TestManager(PractRand::RNGs::vRNG *rng_, PractRand::Tests::ListOfTests *tests_, PractRand::RNGs::vRNG *known_good_=NULL, int max_buffer_amount_ = 1 << (25-10));
+	//rng_ = RNG to test
+	//tests_ = list of tests use on the RNG
+	//known_good_ = sometimes the tests or test manager need good random numbers for some reason
+	//max_buffer_amount_ = size in kilobytes of the maximum amount of random data to keep buffered up at on time
 
 	virtual ~TestManager();//destructor (destroys the tests in the ListOfTests)
 
@@ -28,6 +32,7 @@ TestManager::TestManager(PractRand::RNGs::vRNG *rng_, PractRand::Tests::ListOfTe
 	rng = rng_;
 	tests = tests_;
 	known_good = known_good_;
+	if (!known_good) known_good = new PractRand::RNGs::Polymorphic::hc256(PractRand::SEED_AUTO);
 	blocks_so_far = 0;
 	max_buffer_amount = max_buffer_amount_;
 	prefix_blocks = 0;

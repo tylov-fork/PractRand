@@ -1,7 +1,22 @@
-post-0.90:
+post-0.91:
 	high priority items
-		review serialization & seeding interface
+		fix violations of abstraction layers in BRank test
+		create famework for testing tests & batteries
+		revise seeding for all recommended RNGs - reduce seedspace relative to statespace to allow probabilistic proof that all seeds are good
+		new tests, finish &| calibrate some of them - BCFN variants, FPMulti, ???
+		improve calibration for long DC6:9x1-1 tests
+			may need to make find_test_distribution multithreaded; would take a month or more otherwise
+		finish changes & validation for xsm64 & xsm32
+		finish changes & validation for efiix
 		add regression tests for more RNGs
+		move inter-test weightings in to the batteries, not the tests themselves
+		some tests have changed ; is recalibration necessary?
+		finish adjusting RNG_from_name.h to allow it to source metadata & descriptions of RNGs
+	considering
+		add some avalanche testing code
+		changes to seeding functions - less non-native integer size math, less use of other PRNGs
+		add smaller parameterizations of efiix (or just different)
+		FPF "small footprint, short stride" path is still doing the stupid bit reversal thing, fix that sometime (is this fixed now?)
 	add more self-tests, regression tests, etc
 		checks that serialization works correctly
 		add self-test to SHA2-512 implementation (why isn't there one there already?)
@@ -16,21 +31,32 @@ post-0.90:
 			maybe it should also have separate:
 				names, SourceForge project pages, VC solution files, downloads?
 		revise specific RNG testing algorithms
-			Gap16
+*			Gap16
 				possibly count sequential identical gaps
+				try to preserve lowest bit of short gap distances?
 			DC6
-				investigate Bob Jenkins suggestion of applying to x^(x>>1)
+				improve the calibration data for longer test runs
 			BCFN
-				many variations to investigate
-				in particular check the assymetric probability variation
+				assymetric probability variation - reduced mispredicted branches by ~64 per kilobyte on BCFN(2,*)
+					would make it much harder to calibrate though
+					while I'm at it, pre-subtract the expected bit counts - won't help much, but a tiny bit
+				hybridize with Rares test - the data is already readily available
+				add dab_monobit2 test - the data is already readily available
 			CoupGap
 				try to get more testable factors per run
-			FPF
-				optimize strides 2,4,8,16
+				maybe not worthwhile, eliminate?
+*			FPF
+				add FPG variant?
 			Rares
-				publish
+				publish?
 			BCN_generic
 				worth more investigation
+			BRank
+				definitely fix abstraction layer violations
+				maybe don't do multiple matrices on non-power-of-2 sizes?
+			mix of tests to switch between on a single stream
+				BRank is an obvious candidate since it doesn't scale well and take too much time per data relative to other tests
+				FPF is another possible candidate, since it doesn't need much continuity and is a bit slow relative to others
 			...others
 				most of the others don't appear to be worth the effort
 		create new tests
@@ -39,7 +65,7 @@ post-0.90:
 			consider more autowindowing / leveling
 			investigate idea: design a test for running on GPUs
 		possible modifications to test interfaces
-			allow a single test to be multithread?
+			allow a single test to be multithreaded?
 				a bit nasty to code, and the interface might be nasty too, but it is quite doable
 	tools
 		add an adaptor to produce a polymorphic RNG from a raw RNG automatically

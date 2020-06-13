@@ -102,6 +102,9 @@
     <ClCompile Include="..\..\src\RNGs\salsa.cpp">
       <Filter>Source Files\RNGs</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\non_uniform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\PractRand\config.h">
@@ -238,6 +241,15 @@
     </ClInclude>
     <ClInclude Include="..\..\include\PractRand\RNGs\salsa.h">
       <Filter>Header Files\RNGs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\PractRand\Tests\BCFN_MT.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\PractRand\Tests\BRank.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\PractRand\Tests\FPMulti.h">
+      <Filter>Header Files\Tests</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

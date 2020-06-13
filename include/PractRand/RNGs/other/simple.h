@@ -49,7 +49,7 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class xorshift128_64 : public vRNG64 {
+				class xorshift64of128 : public vRNG64 {
 					//the constants are still in need of tuning
 					Uint64 high, low;
 					void xls(int bits);
@@ -59,21 +59,21 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class xorshift128_32 : public vRNG32 {
-					xorshift128_64 impl;
+				class xorshift32of128 : public vRNG32 {
+					xorshift64of128 impl;
 				public:
 					Uint32 raw32() {return Uint32(impl.raw64());}
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class xorshift32_16 : public vRNG16 {
+				class xorshift16of32 : public vRNG16 {
 					xorshift32 impl;
 				public:
 					Uint16 raw16() {return Uint16(impl.raw32());}
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class xorshift64_32 : public vRNG32 {
+				class xorshift32of64 : public vRNG32 {
 					xorshift64 impl;
 				public:
 					Uint32 raw32() {return Uint32(impl.raw64());}
@@ -89,7 +89,7 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class xorwow96_32 : public vRNG32 {
+				class xorwow32of96 : public vRNG32 {
 					xorshift64 impl;
 					Uint32 a;
 				public:
@@ -117,14 +117,14 @@ namespace PractRand {
 				};
 
 				//variants of sapparot created for testing purposes
-				class sap48_16 : public vRNG16 {
+				class sap16of48 : public vRNG16 {
 					Uint16 a, b, c;
 				public:
 					Uint16 raw16();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class sap96_32 : public vRNG32 {
+				class sap32of96 : public vRNG32 {
 					Uint32 a, b, c;
 				public:
 					Uint32 raw32();
@@ -262,21 +262,21 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class mo_Rers64_32 : public vRNG32 {
+				class mo_Rers32of64 : public vRNG32 {
 					Uint64 state;
 				public:
 					Uint32 raw32();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class mo_Resr64_32 : public vRNG32 {
+				class mo_Resr32of64 : public vRNG32 {
 					Uint64 state;
 				public:
 					Uint32 raw32();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class mo_Resdra64_32 : public vRNG32 {
+				class mo_Resdra32of64 : public vRNG32 {
 					Uint64 state;
 				public:
 					Uint32 raw32();

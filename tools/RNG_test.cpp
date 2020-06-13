@@ -1,3 +1,4 @@
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -53,62 +54,61 @@ A minimal RNG implementation, just enough to make it usable.
 Deliberately flawed, though still better than most platforms default RNGs
 */
 
-#include "PractRand/endian.h"
-class Raw_DummyRNG {
+//#include "PractRand/endian.h"
+
+class DummyRNG : public PractRand::RNGs::vRNG32 {
 public:
-	enum {
-		OUTPUT_TYPE = PractRand::RNGs::OUTPUT_TYPES::NORMAL_1,
-		OUTPUT_BITS = 32,
-		FLAGS = PractRand::RNGs::FLAG::NEEDS_GENERIC_SEEDING
-	};
-	//RNG state goes here:
-	Uint32 a, b, c;
-	Uint32 raw32() {//RNG algorithm goes here:
-		Uint32 old = a + (b >> 25);
-		a = b ^ c;
-		b = c;
-		c = old + ((c << 3) | (c >> (32-3)));
-		return old;
+	//declare state
+	Uint32 x, y, z, index;
+	//implement algorithm
+	Uint32 raw32() {
+		x += index++;
+		y += x;
+		z += y ^ index;
+		return z;
 	}
-	void walk_state(StateWalkingObject *walker) {
-		walker->handle(a);
-		walker->handle(b);
-		walker->handle(c);
+	//allow PractRand to be aware of your internal state
+	void walk_state(PractRand::StateWalkingObject *walker) {
+		walker->handle(x);
+		walker->handle(y);
+		walker->handle(z);
+		walker->handle(index);
 	}
+	//any name you want
+	std::string get_name() const {return "DummyRNG";}
 };
-class Polymorphic_DummyRNG : public PractRand::RNGs::vRNG32 {
-public:
-	Raw_DummyRNG implementation;
-	Uint32 raw32() {return implementation.raw32();}
-	void walk_state(StateWalkingObject *walker) {implementation.walk_state(walker);}
-	std::string get_name() const {return std::string("DummyRNG");}
-};
+/*
+	The above class is enough to create a PRNG compatible with PractRand.  
+	You can pass that to any non-template function in PractRand expecting a polymorphic RNG and it should work fine.  
+	(some template functions in PractRand require additional metadata or other weirdness)
+	HOWEVER, that is not enough to allow this (or any other) command line tool to recognize the name of your RNG from the command line.  
+	For that, search for the line mentioning RNG_factory_index["dummy"] in the "main" function below here, 
+	that line allows it to recognize "dummy" on the command line as corresponding to this class.  
+*/
 
 double print_result(const PractRand::TestResult &result, bool print_header = false) {
-	if (print_header) std::printf("  Test Name                     Raw         Processed     Evaluation\n");
+	if (print_header) std::printf("  Test Name                         Raw       Processed     Evaluation\n");
 	//                                     10        20        30        40        50        60        70        80
 	std::printf("  ");
 	//NAME
-	if (true) {
+	if (true) {// 34 characters
 		std::printf("%s", result.name.c_str());
 		int len = result.name.length();
-		if (len <= 30) {
-			for (int i = len; i < 30; i++) std::printf(" ");
-		}
+		for (int i = len; i < 34; i++) std::printf(" ");
 	}
 
 	//RAW TEST RESULT
-	if (true) {
+	if (true) {// 10 characters?
 		double raw = result.get_raw();
 		if (raw < 999.95) std::printf("R=%+6.1f ", raw);
 		else std::printf("R=%+6.0f ", raw);
 		if (fabs(raw) < 99999.5) std::printf(" ");
-		if (fabs(raw) < 999999.5) std::printf(" ");
-		if (fabs(raw) < 9999999.5) std::printf(" ");
+		//if (fabs(raw) < 999999.5) std::printf(" ");
+		//if (fabs(raw) < 9999999.5) std::printf(" ");
 	}
 
 	//RESULT AS A NUMERICAL "SUSPICION LEVEL" (log of distance from pvalue to closest extrema)
-	if (false) {
+	if (false) {// 12 characters?
 		bool printed = false;
 		double susp = result.get_suspicion();
 		if (result.type == result.TYPE_PASSFAIL)
@@ -116,11 +116,11 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 		else if (result.type == result.TYPE_RAW)
 			std::printf("            ");
 		else if (result.type == result.TYPE_BAD_P || result.type == result.TYPE_BAD_S || result.type == result.TYPE_RAW_NORMAL) {
-			std::printf("S=~%+6.1f  ", susp);
+			std::printf("S=~%+6.1f   ", susp);
 			printed = true;
 		}
 		else {
-			std::printf("S =%+6.1f  ", susp);
+			std::printf("S =%+6.1f   ", susp);
 			printed = true;
 		}
 		if (printed) {
@@ -130,7 +130,7 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 	}
 
 	//RESULT AS A p-value
-	if (true) {
+	if (true) {// 14 characters?
 		if (result.type == result.TYPE_PASSFAIL)
 			std::printf("  %s      ", result.get_pvalue() ? "\"pass\"" : "\"fail\"");
 		else if (result.type == result.TYPE_RAW)
@@ -138,7 +138,7 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 		else if (result.type == result.TYPE_BAD_P || result.type == result.TYPE_GOOD_P || result.type == result.TYPE_RAW_NORMAL) {
 			double p = result.get_pvalue();
 			double a = std::fabs(p-0.5);
-			std::printf((result.type == result.TYPE_BAD_P) ? "p~= " : "p = ");
+			std::printf((result.type != result.TYPE_GOOD_P) ? "p~= " : "p = ");
 			if (a > 0.49) {
 				double s = result.get_suspicion();
 				double ns = std::fabs(s) + 1;
@@ -189,7 +189,7 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 	double rs = as - wmod;
 	//double ap = std::fabs(0.5 - result.get_pvalue());
 	//MESSAGE DESCRIBING RESULT IN ENGLISH
-	if (true) {
+	if (true) {// 17 characters?
 		/*
 			Threshold Values:
 			The idea is to assign a suspicioun level based not just upon the 
@@ -197,7 +197,7 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 			If there are a million p-values then we probably don't care about 
 			anything less extreme than a one in ten million event.  
 			But if there's one important p-value and a million unimportant ones then 
-			the important one doesn't have to be that extreme to rouse our 	suspicion.  
+			the important one doesn't have to be that extreme to rouse our suspicion.  
 
 			Output Format:
 			unambiguous failures are indented 2 spaces to make them easier to spot
@@ -205,20 +205,20 @@ double print_result(const PractRand::TestResult &result, bool print_header = fal
 			the most extreme failures get a sequence of exclamation marks to distinguish them
 		*/
 		if (false) ;
-		else if (rs >999) std::printf("  FAIL !!!!!!!!!");
-		else if (rs >325) std::printf("  FAIL !!!!!!!! ");
-		else if (rs >165) std::printf("  FAIL !!!!!!!  ");
-		else if (rs > 85) std::printf("  FAIL !!!!!!   ");
-		else if (rs > 45) std::printf("  FAIL !!!!!    ");
-		else if (rs > 25) std::printf("  FAIL !!!!     ");
-		else if (rs > 16) std::printf("  FAIL !!!      ");
-		else if (rs > 11) std::printf("  FAIL !!       ");
-		else if (rs >  8) std::printf("  FAIL !        ");
-		else if (rs >  5) std::printf(" VERY SUSPICIOUS");
-		else if (rs >  3) std::printf("very suspicious ");
-		else if (rs >  2) std::printf("suspicious      ");
-		else if (rs >  1) std::printf("unusual         ");
-		else              std::printf("normal          ");
+		else if (rs >999) std::printf("  FAIL !!!!!!!!  ");
+		else if (rs >325) std::printf("  FAIL !!!!!!!   ");
+		else if (rs >165) std::printf("  FAIL !!!!!!    ");
+		else if (rs > 85) std::printf("  FAIL !!!!!     ");
+		else if (rs > 45) std::printf("  FAIL !!!!      ");
+		else if (rs > 25) std::printf("  FAIL !!!       ");
+		else if (rs > 17) std::printf("  FAIL !!        ");
+		else if (rs > 12) std::printf("  FAIL !         ");
+		else if (rs >8.5) std::printf("  FAIL           ");
+		else if (rs >6.0) std::printf(" VERY SUSPICIOUS ");
+		else if (rs >4.0) std::printf("very suspicious  ");
+		else if (rs >2.5) std::printf("suspicious       ");
+		else if (rs >1.0) std::printf("unusual          ");
+		else              std::printf("normal           ");
 	}
 	std::printf("\n");
 	return rs;
@@ -287,7 +287,7 @@ public:
 	std::multiset<Uint64> unordered_history;//hashes only
 	std::deque<std::pair<std::multiset<Uint64>::iterator,Transform> > history;//hashes first, then transform applied - newest at front
 
-	//what it should be: (but the current version is good enough
+	//what it should be: (but the current version is good enough)
 	//std::map<Uint64,Uint64> unordered_history;// hashes -> positions;
 	//std::deque<std::pair<std::map<Uint64,Uint64>::iterator,Transform> > history;//hashes first, then transform applied - newest at front
 	//Uint64 position;//starts at 0, incremented after every entropy string
@@ -476,7 +476,7 @@ double show_checkpoint(TestManager *tman, int mode, Uint64 seed, double time, bo
 	else
 		std::printf("  ...and %d test result(s) without anomalies\n", int(results.size() - marked.size()));
 	std::printf("\n");
-	if (end_on_failure && biggest_decimal_suspicion > 8) std::exit(0);
+	if (end_on_failure && biggest_decimal_suspicion > 8.5) std::exit(0);
 }
 double interpret_length(const std::string &lengthstr, bool normal_mode) {
 	//(0-9)*[.(0-9)*][((K|M|G|T|P)[B])|(s|m|h|d)]
@@ -574,10 +574,10 @@ int main(int argc, char **argv) {
 #ifdef WIN32 // needed to allow binary stdin on windows
 	_setmode( _fileno(stdin), _O_BINARY);
 #endif
-	
 	if (argc <= 1) {
 		std::printf("usage: %s RNG_name [options]  --  runs tests on RNG_name\n", argv[0]);
 		std::printf("or: %s -help  --  displays more instructions\n", argv[0]);
+		std::printf("or: %s -version  --  displays version information\n", argv[0]);
 		std::printf("RNG_name can be the name of any PractRand recommended RNG (example: sfc16) or\n");
 		std::printf("non-recommended RNG (example: mm32) or transformed RNG (exmple: SShrink(sfc16).\n");
 		//           12345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -588,9 +588,17 @@ int main(int argc, char **argv) {
 		std::printf("For more information run: %s -help\n\n", argv[0]);
 		std::exit(0);
 	}
+	if (!strcmp(argv[1], "-version") || !strcmp(argv[1], "--version") || !strcmp(argv[1], "-v")) {
+		std::printf("RNG_test version %s\n", PractRand::version_str);
+		// arbitrarily declaring the version number of RNG_test to match the version number of PractRand
+		std::printf("A command line tool for testing RNGs with the PractRand library.\n");
+		std::exit(0);
+	}
 	if (!strcmp(argv[1], "-help") || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
 		std::printf("syntax: %s RNG_name [options]\n", argv[0]);
 		std::printf("or: %s -help (to see this message)\n", argv[0]);
+		std::printf("or: %s -version (to see version number)\n", argv[0]);
+		std::printf("A command line tool for testing RNGs with the PractRand library.\n");
 		std::printf("RNG names:\n");
 		std::printf("  To use an external RNG, use stdin as an RNG name and pipe in the random\n");
 		std::printf("  numbers.  stdin8, stdin16, stdin32, and stdin64 also work, each interpretting\n");
@@ -600,7 +608,7 @@ int main(int argc, char **argv) {
 		std::printf("  The lowest quality recommended RNGs are sfc16 and mt19937.\n");
 		std::printf("  The entropy pooling RNGs available are arbee and sha2_basd_pool.\n");
 		std::printf("  Small recommended RNGs include sfc16, sfc32, sfc64, jsf32, jsf64, .\n");
-		std::printf("theshold options:\n");
+		std::printf("threshold options:\n");
 		std::printf(" At most one threshold option should be specified.\n");
 		//std::printf(" The default threshold setting is '-e 0.1', an alternative is '-p 0.001'\n");
 		std::printf(" The default threshold setting is '-e 0.1', alternatives are '-p 0.001' or '-a'\n");
@@ -632,18 +640,19 @@ int main(int argc, char **argv) {
 		std::printf("                 is seeded with a randomly chosen 64 bit integer.  Then 8 bytes\n");
 		std::printf("                 of output are taken from the RNG and given to the tests.  Then\n");
 		std::printf("                 another seed is chosen at a low hamming distance from the\n");
-		std::printf("                 priorseed and another 8 bytes of RNG output are given to the \n");
+		std::printf("                 prior seed and another 8 bytes of RNG output are given to the\n");
 		std::printf("                 tests.\n");
 		std::printf("                 This is repeated indefinitely, with care taken to avoid\n");
 		std::printf("                 duplicate seeds.  Eventually (after about a quarter billion\n");
 		std::printf("                 seeds are used) issues start to crop up due to the limited\n");
 		std::printf("                 size of the seedspace and the inability to keep a complete\n");
-		std::printf("                 record of previous chosen seeds.\n");
+		std::printf("                 record of previously chosen seeds.\n");
 		//           12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		std::printf("  -ttep          Test target: Entropy pooling.  This should only be done on\n");
-		std::printf("                 RNGs that support entropy pooling.  It is similar to -mseed64,\n");
-		std::printf("                 but the entropy accumulation methods are used instead of\n");
-		std::printf("                 simple seeding, and the amount of entropy used is much larger.\n");
+		std::printf("                 RNGs that support entropy pooling.  It is similar to \n");
+		std::printf("                 -ttseed64, but the entropy accumulation methods are used\n");
+		std::printf("                 instead of simple seeding, and the amount of entropy used is\n");
+		std::printf("                 much larger.\n");
 		std::printf("test length options:\n");
 		std::printf("  -tlmin LENGTH  sets the minimum test length to LENGTH.  The tests will run on\n");
 		std::printf("                 that much data before it starts printing regular results.  A\n");
@@ -659,18 +668,18 @@ int main(int argc, char **argv) {
 		std::printf("                 The default maximum is 32 terabytes (-tlmin 32TB).\n");
 		std::printf("  -tlshow LENGTH sets an additional point at which to display interim results.\n");
 		std::printf("                 You can set multiple such points if desired.\n");
-		std::printf("                 These are in addition to th normal interim results points,\n");
+		std::printf("                 These are in addition to the normal interim results points,\n");
 		std::printf("                 which are at every amount of data that is a power of 2 after\n");
 		std::printf("                 the minimum and before the maximum.\n");
 		std::printf("                 See the notes on lengths for details on how to express the\n");
 		std::printf("                 lengths you want.\n");
 		std::printf("  -tlfail        Halts testing after interim results are displayed if those\n");
-		std::printf("                 results include any failures.\n");
-		std::printf("  -tlmaxonly     The opposite of -tlfail  (default)\n");
+		std::printf("                 results include any failures. (default)\n");
+		std::printf("  -tlmaxonly     The opposite of -tlfail\n");
 		std::printf("other options:\n");
 		std::printf("  -multithreaded  enables multithreaded testing.  Typically up to 5 cores can\n");
 		std::printf("                  be used at once.\n");
-		std::printf("  -singlethreaded disables multithreaded testing.  \n");
+		std::printf("  -singlethreaded disables multithreaded testing.  (default)\n");
 		std::printf("  -seed SEED      specifies a 64 bit integer to seed the tested RNG with.  If\n");
 		std::printf("                  no seed is specified then a seed will be chosen randomly.  \n");
 		std::printf("                  The value should be expressed in hexadecimal.\n");
@@ -708,8 +717,7 @@ int main(int argc, char **argv) {
 	RNG_Factories::register_nonrecommended_RNGs();
 	RNG_Factories::register_input_RNGs();
 	RNG_Factories::register_candidate_RNGs();
-	//RNG_Factories::RNG_factory_index["not_chacha"] = RNG_Factories::_generic_recommended_RNG_factory<PractRand::RNGs::Polymorphic::not_chacha>;
-	RNG_Factories::RNG_factory_index["dummy"] = RNG_Factories::_generic_notrecommended_RNG_factory<Polymorphic_DummyRNG>;
+	RNG_Factories::RNG_factory_index["dummy"] = RNG_Factories::_generic_notrecommended_RNG_factory<DummyRNG>;
 	PractRand::RNGs::vRNG *rng = RNG_Factories::create_rng(argv[1]);
 	if (!rng) {
 		std::printf("unrecognized RNG name.  aborting.\n");
@@ -718,7 +726,7 @@ int main(int argc, char **argv) {
 
 	bool do_self_test = true;
 	bool use_multithreading = false;
-	bool end_on_failure = false;
+	bool end_on_failure = true;
 	Uint64 seed = known_good.raw32();//64 bit space, as that's what the interface accepts, but 32 bit random value so that by default it's not too onerous to record/compare/whatever the value by hand
 	bool smart_thresholds = true;
 	double threshold = 0.2;
@@ -814,7 +822,7 @@ int main(int argc, char **argv) {
 	enum {TL_MIN = 1, TL_MAX = 2, TL_SHOW = 3};//, TL_FLAG_UNSPECIFIED_UNITS = 16};
 	std::map<double,int> show_times;
 	std::map<Uint64,int> show_datas;
-	double show_min = -1.5;
+	double show_min = -2.0;
 	double show_max = 1ull << 45;
 	//walking parameters a second time to force the mode to be known prior to finding the test lengths
 	for (int i = 2; i < argc; i++) {
@@ -851,11 +859,13 @@ int main(int argc, char **argv) {
 	std::time_t start_time = std::time(NULL);
 	std::clock_t start_clock = std::clock();
 
-	rng->seed(seed);
 	known_good.seed(seed+1);//the +1 is there just in case the RNG uses the same algorithm as the known good RNG
 
 	PractRand::RNGs::vRNG *testing_rng;
-	if (mode == 0) testing_rng = rng;
+	if (mode == 0) {
+		rng->seed(seed);
+		testing_rng = rng;
+	}
 	else if (mode == 1) {
 		//it would be nice to print a warning here for RNGs that use generic integer seeding
 		//but that's a little difficult atm as there's no way to query whether an RNG does so
@@ -900,9 +910,17 @@ int main(int argc, char **argv) {
 		testing_rng = new EntropyPool_MetaRNG(rng,35,35,1<<10);
 	}
 
-	std::printf("RNG = %s, seed = 0x", testing_rng->get_name().c_str());
+	std::printf("RNG = %s, PractRand version %s, seed = 0x", testing_rng->get_name().c_str(), PractRand::version_str);
 	if (seed >> 32) std::printf("%lx%08lx", long(seed>>32), long((seed<<32)>>32));
 	else std::printf("%lx", long(seed));
+	const char *test_set_names[2] = {"normal", "expanded"};
+	const char *folding_names[3] = {"none", "standard", "extra"};
+	std::printf("\ntest set = %s, folding = %s", test_set_names[expanded], folding_names[folding]);
+	if (folding == 1) {
+		int native_bits = testing_rng->get_native_output_size();
+		if (native_bits > 0) std::printf(" (%d bit)", native_bits);
+		else std::printf("(unknown format)");
+	}
 
 	std::printf("\n\n");
 
@@ -998,14 +1016,16 @@ int main(int argc, char **argv) {
 		blocks_tested += blocks_to_test;
 		already_shown = false;
 
-		int clocks_passed = std::clock() - start_clock;//may wrap too quickly
+		std::clock_t clocks_passed = std::clock() - start_clock;//may wrap too quickly
 		int seconds_passed = std::time(NULL) - start_time;
-		time_passed = seconds_passed > 10000 ? seconds_passed : clocks_passed / (double)CLOCKS_PER_SEC;
+		Uint64 max_clocks = ((1ull<<(8*sizeof(clocks_passed) - 1)) << 1) - 1;
+		if (seconds_passed >= 1000 || CLOCKS_PER_SEC * (seconds_passed+2.0) >= double(max_clocks))
+			time_passed = seconds_passed;
+		else time_passed = (Uint64(clocks_passed) & max_clocks) / (double)CLOCKS_PER_SEC;
 	}
 
 	return 0;
 }
-
 
 
 

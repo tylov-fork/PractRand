@@ -38,7 +38,7 @@ namespace PractRand {
 
 
 				//based upon the IBAA algorithm by Robert Jenkins
-				//but reduced strength via smaller table sizes and smaller integer types
+				//but reduced strength via smaller integers and smaller table sizes
 				class ibaa8 : public vRNG8 {
 					int table_size_L2;
 					Uint8 *table;
@@ -72,7 +72,9 @@ namespace PractRand {
 					ibaa32(int table_size_L2_);
 					~ibaa32();
 				};
-				class isaac32_small : public vRNG32 {
+				//based upon the ISAAC algorithm by Robert Jenkins
+				//but adapted slightly to permit smaller minimum table sizes
+				class isaac32_varqual : public vRNG32 {
 					int table_size_L2;
 					Uint32 *table;
 					Uint32 a, b, c, left;
@@ -80,8 +82,52 @@ namespace PractRand {
 					Uint32 raw32();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
-					isaac32_small(int table_size_L2_);
-					~isaac32_small();
+					isaac32_varqual(int table_size_L2_);
+					~isaac32_varqual();
+				};
+				//as isaac32_small, but adapted to use 16 bit integers instead of 32
+				class isaac16_varqual : public vRNG16 {
+					int table_size_L2;
+					Uint16 *table;
+					Uint16 a, b, c, left;
+				public:
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+					isaac16_varqual(int table_size_L2_);
+					~isaac16_varqual();
+				};
+				class efiix8_varqual : public vRNG8 {
+					enum {SHIFT_AMOUNT=2};
+					//average cycle length, in bytes: 2**(4 * W - 2), where W=(4 + iteration_table_size + indirection_table_size)
+					int iteration_table_size_m1;
+					int indirection_table_size_m1;
+					Uint8 *iteration_table;
+					Uint8 *indirection_table;
+					Uint8 a, b, c, i;
+				public:
+					Uint8 raw8();
+					void walk_state(StateWalkingObject *);
+					std::string get_name() const;
+					efiix8_varqual(int iteration_table_size_L2, int indirection_table_size_L2);
+					~efiix8_varqual();
+				};
+				//efiix algorithm, shrunk down to operate on 4 bit integers (reports itself as an 8 bit PRNG)
+				class efiix4_varqual : public vRNG8 {
+					//average cycle length, in bytes: 2**(4 * W - 2), where W=(4 + iteration_table_size + indirection_table_size)
+					int iteration_table_size_m1;
+					int indirection_table_size_m1;
+					Uint8 *iteration_table;
+					Uint8 *indirection_table;
+					Uint8 a, b, c, i;
+					Uint8 raw4();
+					static Uint8 rotate4(Uint8 value, int bits);
+				public:
+					Uint8 raw8();
+					void walk_state(StateWalkingObject *);
+					std::string get_name() const;
+					efiix4_varqual(int iteration_table_size_L2, int indirection_table_size_L2);
+					~efiix4_varqual();
 				};
 			}
 		}

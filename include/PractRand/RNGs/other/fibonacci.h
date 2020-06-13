@@ -23,7 +23,7 @@ namespace PractRand {
 					void walk_state(StateWalkingObject *);
 				};
 				//Mitchell-Moore modified: LFib16(Uint32, 55, 24, ADD) >> 16
-				class mm32_16 : public vRNG16 {
+				class mm16of32 : public vRNG16 {
 					Uint32 cbuf[55];
 					Uint8 index1, index2;
 				public:
@@ -102,7 +102,7 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class fibmul32_16 : public vRNG16 {// 31 @ 17/9
+				class fibmul16of32 : public vRNG16 {// 31 @ 17/9
 					enum {LAG1 = 17, LAG2 = 5};
 					Uint32 buffer[LAG1]; // LAG1 > LAG2 > 0
 					Uint8 position;
@@ -111,7 +111,7 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-				class fibmul64_32 : public vRNG32 {// 35 @ 3/2, 39 @ 7/5
+				class fibmul32of64 : public vRNG32 {// 35 @ 3/2, 39 @ 7/5
 					enum {LAG1 = 7, LAG2 = 5};
 					Uint64 buffer[LAG1]; // LAG1 > LAG2 > 0
 					Uint8 position;

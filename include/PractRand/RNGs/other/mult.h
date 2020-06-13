@@ -14,48 +14,8 @@ namespace PractRand {
 	namespace RNGs {
 		namespace Polymorphic {
 			namespace NotRecommended {
-				//simple classic LCGs
-				class lcg32_16 : public vRNG16 {
-					Uint32 state;
-					Uint16 raw16();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class lcg32 : public vRNG32 {
-					Uint32 state;
-					Uint32 raw32();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class lcg64_32_varqual : public vRNG32 {
-					Uint64 state;
-					int outshift;
-				public:
-					lcg64_32_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint32 raw32();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class lcg64_16_varqual : public vRNG16 {
-					Uint64 state;
-					int outshift;
-				public:
-					lcg64_16_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint16 raw16();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class lcg64_8_varqual : public vRNG8 {
-					Uint64 state;
-					int outshift;
-				public:
-					lcg64_8_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint8 raw8();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
 				//similar to the classic LCGs, but with a longer period
-				class lcg32_16_extended : public vRNG16 {
+				class lcg16of32_extended : public vRNG16 {
 					Uint32 state, add;
 					Uint16 raw16();
 					std::string get_name() const;
@@ -67,6 +27,152 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
+				//simple classic LCGs
+				class lcg32of64_varqual : public vRNG32 {
+					Uint64 state;
+					int outshift;
+				public:
+					lcg32of64_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class lcg16of64_varqual : public vRNG16 {
+					Uint64 state;
+					int outshift;
+				public:
+					lcg16of64_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class lcg8of64_varqual : public vRNG8 {
+					Uint64 state;
+					int outshift;
+				public:
+					lcg8of64_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint8 raw8();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class lcg32of128_varqual : public vRNG32 {
+					Uint64 low, high;
+					int outshift;
+				public:
+					lcg32of128_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class lcg16of128_varqual : public vRNG16 {
+					Uint64 low, high;
+					int outshift;
+				public:
+					lcg16of128_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class lcg8of128_varqual : public vRNG8 {
+					Uint64 low, high;
+					int outshift;
+				public:
+					lcg8of128_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint8 raw8();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				//two LCGs combined
+				class clcg8of96_varqual : public vRNG8 {
+					Uint64 lcg1;
+					Uint32 lcg2;
+					int outshift;
+				public:
+					clcg8of96_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint8 raw8();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class clcg16of96_varqual : public vRNG16 {
+					Uint64 lcg1;
+					Uint32 lcg2;
+					int outshift;
+				public:
+					clcg16of96_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class clcg32of96_varqual : public vRNG32 {
+					Uint64 lcg1;
+					Uint32 lcg2;
+					int outshift;
+				public:
+					clcg32of96_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				//LCGs modified by suppressing the carries
+				class xlcg32of64_varqual : public vRNG32 {
+					Uint64 state;
+					int outshift;
+				public:
+					xlcg32of64_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class xlcg16of64_varqual : public vRNG16 {
+					Uint64 state;
+					int outshift;
+				public:
+					xlcg16of64_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class xlcg8of64_varqual : public vRNG8 {
+					Uint64 state;
+					int outshift;
+				public:
+					xlcg8of64_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint8 raw8();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				//modified LCG combined with regular LCG
+				class cxlcg8of96_varqual : public vRNG8 {
+					Uint64 lcg1;
+					Uint32 lcg2;
+					int outshift;
+				public:
+					cxlcg8of96_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint8 raw8();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class cxlcg16of96_varqual : public vRNG16 {
+					Uint64 lcg1;
+					Uint32 lcg2;
+					int outshift;
+				public:
+					cxlcg16of96_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint16 raw16();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+				class cxlcg32of96_varqual : public vRNG32 {
+					Uint64 lcg1;
+					Uint32 lcg2;
+					int outshift;
+				public:
+					cxlcg32of96_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
+					Uint32 raw32();
+					std::string get_name() const;
+					void walk_state(StateWalkingObject *);
+				};
+
 
 				//
 				class garthy16 : public vRNG16 {
@@ -81,39 +187,6 @@ namespace PractRand {
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};
-
-				//two LCGs combined
-				class clcg96_8_varqual : public vRNG8 {
-					Uint64 lcg1;
-					Uint32 lcg2;
-					int outshift;
-				public:
-					clcg96_8_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint8 raw8();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class clcg96_16_varqual : public vRNG16 {
-					Uint64 lcg1;
-					Uint32 lcg2;
-					int outshift;
-				public:
-					clcg96_16_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint16 raw16();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class clcg96_32_varqual : public vRNG32 {
-					Uint64 lcg1;
-					Uint32 lcg2;
-					int outshift;
-				public:
-					clcg96_32_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint32 raw32();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-
 				//both sides of the multiply are pseudo-random values in this RNG
 				class binarymult16 : public vRNG16 {
 					Uint16 a, b, c, d;
@@ -160,63 +233,6 @@ namespace PractRand {
 				class old_mwlac16 : public vRNG16 {
 					Uint16 a, b, c, d;
 					Uint16 raw16();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class xlcg64_32_varqual : public vRNG32 {
-					Uint64 state;
-					int outshift;
-				public:
-					xlcg64_32_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint32 raw32();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class xlcg64_16_varqual : public vRNG16 {
-					Uint64 state;
-					int outshift;
-				public:
-					xlcg64_16_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint16 raw16();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class xlcg64_8_varqual : public vRNG8 {
-					Uint64 state;
-					int outshift;
-				public:
-					xlcg64_8_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint8 raw8();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class cxlcg96_8_varqual : public vRNG8 {
-					Uint64 lcg1;
-					Uint32 lcg2;
-					int outshift;
-				public:
-					cxlcg96_8_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint8 raw8();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class cxlcg96_16_varqual : public vRNG16 {
-					Uint64 lcg1;
-					Uint32 lcg2;
-					int outshift;
-				public:
-					cxlcg96_16_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint16 raw16();
-					std::string get_name() const;
-					void walk_state(StateWalkingObject *);
-				};
-				class cxlcg96_32_varqual : public vRNG32 {
-					Uint64 lcg1;
-					Uint32 lcg2;
-					int outshift;
-				public:
-					cxlcg96_32_varqual(int lcg1_discard_bits) : outshift(lcg1_discard_bits) {}
-					Uint32 raw32();
 					std::string get_name() const;
 					void walk_state(StateWalkingObject *);
 				};

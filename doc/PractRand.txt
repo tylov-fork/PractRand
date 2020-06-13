@@ -1,7 +1,7 @@
 PractRand (Practically Random) is a C++ library of pseudo-random number 
 generators (PRNGs, or just RNGs) and statistical tests for RNGs.  
 
-version 0.90
+version 0.91
 
 
 1. Randon Number Generation with PractRand
@@ -55,9 +55,9 @@ test set that is simply one parameterization of each test regardless
 of the relative merits of the tests involved.  
 
 B. Standard battery of tests can detect bias in a wide variety of RNGs 
-quickly.  In my testing it can find bias in a wider variety of RNGs 
-than any other suite of statistical tests, and on average needs less 
-time than other suites of statistical tests.  
+quickly.  In my testing it can find bias in a much wider variety of 
+RNGs than any other suite of statistical tests, and on average needs 
+less time than other suites of statistical tests.  
 
 C. Test users concerned primarily with ease of integrating their RNGs 
 can pipe data in to command line testing tools with minimal effort, 
@@ -66,9 +66,9 @@ tests as legally unencumbered source code and static libraries, so
 that data can be passed directly to them bypassing the speed 
 limitations of piping data and the tests can be invoked in customized 
 ways if desired.  Some competitors use similar schemes, but many do 
-only one or the other, or do choose a worse option - taking input 
-only from files (worse speed and versatility than piped data, plus 
-size limitations) or only supporting testing on a few predefined RNGs.  
+only one or the other, or choose a worse option - taking input only 
+from files (worse speed and versatility than piped data, plus size 
+limitations) or only supporting testing on a few predefined RNGs.  
 
 D. No realistic maximum sequence length for testing.  Competing 
 software packages generally either have either interface issues, bugs,  
@@ -119,7 +119,9 @@ RaBiGeTe - http://cristianopi.altervista.org/RaBiGeTe_MT/
 	presentation: overly complex
 	open source: recent versions closed source, older versions viral (GPL)
 	The third best testing package after PractRand and TestU01.  
-	RaBiGeTe has a tendency to crash a bit, but it's still usable.  
+	RaBiGeTe has a tendency to crash a bit, and the range of biases 
+	it can detect is much more limited than PractRand, but it's still 
+	useful.  
 	It is more efficient on a per-bit basis, and comes with a GUI that can 
 	help visualize the distribution of results from multiple samples if 
 	desired.  

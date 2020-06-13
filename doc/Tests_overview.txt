@@ -1,13 +1,28 @@
 ***********************************************************************
 1. Testing with PractRand
+
 1.A - Connecting your RNG to PractRand
+1.A.1 - Testing a programs output
+1.A.2 - Testing a file:
+1.A.3 - Testing your RNG at full speed:
+1.A.4 - Options NOT supported by PractRand
+
 1.B - Interpretting PractRand Test Results
+1.B.1 - RNG_test results for people in a hurry
+1.B.2 - RNG_test results in more detail
+1.B.3 - Notes on RNG_test p-values
+1.B.4 - TestResult objects from calling PractRand directly
+1.B.5 - Misc PractRand test result quality notes:
 
 2. General Discussion of RNG Testing
 
-3. General Information Interpretting Test Results
+3. General Information on Interpretting Test Results
+3.A - Forms of test results
+3.B - False positives
+3.C - Knowing the false-positive rates is IMPORTANT
+3.D - Metatests
 
-4. Testing with Non-PractRand Test Suites
+4. Brief Reviews of Non-PractRand Test Suites
 ***********************************************************************
 
 
@@ -34,10 +49,10 @@ My_RNG | RNG_test stdin
 If your program stops sending out random data before the PractRand RNG 
 testing tool is done testing then it may print "error reading input".  
 In that case you might want to try adding command line options like 
-"-tlmin 1KB", which will RNG_test that you want it to start printing 
-output ASAP.  It will still print "error reading input" when the input 
-stops, but at least you'll get some test results as long as the input 
-is at least 1 kilobyte long.  
+"-tlmin 1KB", which will tell RNG_test that you want it to start 
+printing output ASAP.  It will still print "error reading input" when 
+the input stops, but at least you'll get some test results as long as 
+the input is at least 1024 bytes long.  
 
 If you know that your program produces data in 8 bit chunks then you 
 should change "stdin" to "stdin8".  Similar variants exist for 16, 32, 
@@ -87,7 +102,7 @@ will appear on the right-hand side and be obvious, like this:
   [Low1/16]BCFN(2+0,13-1)       R= +27.1    p =  2.1e-13    FAIL !!
   ...and 50 test result(s) without anomalies
 
-1.B.2 - RNG_test results in more detail
+1.B.3 - RNG_test results in more detail
 RNG_test produces a series of interim result summaries as it goes 
 along.  Each result summary has a header showing the RNG name, the 
 number of bytes tested, the time taken, and the RNG seed used (so 
@@ -95,12 +110,13 @@ you can reproduce the results later if desired).  The body of the
 result summary is a table showing all anomolous results followed 
 by a statement of how many results were omitted from the table 
 because they were not anomolous.  If the table would have zero 
-entries then the table is skipped.  The threshold for what kinds 
-of results are considered anomolous is very adjustable via command 
-line parameters.  Adding "-p 1" will force all results to be shown 
-in the table regardless of how suspicious they were or weren't, 
-while adding "-e 0.001" will make it show only highly suspicious 
-results.  The default is "-e 0.1".  
+entries then the table is skipped.  If no results were omitted then 
+the number of omitted results is skipped.  The threshold for what 
+kinds of results are considered anomolous is very adjustable via 
+command line parameters.  Adding "-p 1" will force all results to 
+be shown in the table regardless of how suspicious they were or 
+weren't, while adding "-e 0.001" will make it show only highly 
+suspicious results.  The default is "-e 0.1".  
 The table has four columns:
 "Test Name" - a name for the subtest the line corresponds to
 "Raw" - not of much use to end users, but I use this a lot
@@ -120,7 +136,7 @@ both zero and one are considered equally bad, despite the fact
 that PractRand tests are designed to produce zero for most 
 expected failure circumstances.  
 
-1.B.3 - Notes on RNG_test p-values
+1.B.4 - Notes on RNG_test p-values
 When RNG_test prints a p-value it can be in any of the 
 following forms:
 * normal p-value (e.g. "p = 0.188") - exactly what you'd expect
@@ -160,7 +176,7 @@ An example results chart showing one of each category of result:
   Gap-16:A                      R=  +0.5    p = 0.511     normal
   Gap-16:B                      R=  +3.3    p =  9.9e-3   normal
 
-1.B.4 - TestResult objects from calling PractRand directly
+1.B.5 - TestResult objects from calling PractRand directly
 PractRand tests natively produce sets of results of type 
 PractRand::TestResult.  Each of these object corresponds to a 
 subtest result.  The simplest thing to do with them is call their 
@@ -170,7 +186,7 @@ you can do with them.
 
 1.B.6 - Misc PractRand test result quality notes:
 The various tests within PractRand vary widely in terms of the 
-quality of p-values they produce - the tests used in the standard test 
+quality of p-values they produce - the tests used in the normal test 
 set tend to produce cleaner p-values than other tests in PractRand, 
 because I spent more effort on them.  In all cases however I have made 
 effort to minimize any chance of the tests themselves contributing to 
@@ -183,7 +199,7 @@ of non-power-of-2 lengths (usually 6 KB) or on very long sequences
 (hundreds of gigabytes or more).  
 
 Do NOT assume that p-values from the same results summary have zero 
-correlation.  While the standard test set is *mostly* orthogonal it's 
+correlation.  While the normal test set is *mostly* orthogonal it's 
 not *completely* orthogonal.  The significant intra-correlations in 
 the recommended test set are:
 * Gap-16:A is correlated with Gap-16:B.  The strength of correlation 
@@ -278,7 +294,7 @@ test name / version / implementation / parameterization tried.
 
 
 ***********************************************************************
-3. Interpretting Test Results
+3. General Information on Interpretting Test Results
 ***********************************************************************
 
 3.A - Forms of test results
@@ -321,7 +337,7 @@ one threshold at 0.0001 (anything below that is considered a failure)
 and another threshold at 0.9999 (anything above that is considered a 
 failure).  
 
-2.B - False positives
+3.B - False positives
 
 The theoretical false positive rate is the chance that a perfect RNG 
 would fail a test.  All meaningful evaluations of RNG quality have a 
@@ -338,7 +354,7 @@ Unfortunately, that does not take in to account inaccuracies in the
 calculations of the p-value, which can have large effects on false- 
 positive rates.  
 
-2.C - Knowing the false-positive rates is IMPORTANT
+3.C - Knowing the false-positive rates is important
 
 The important point of test evaluation is that you need to be aware of 
 false-positive rates.  Any meaningful scheme for evaluating test 
@@ -364,21 +380,20 @@ while running them a constant number of times can slow things down more
 than you might expect if your desired effective false positive rate is 
 extremely low.  This sort of thing is a type of metatest.  
 
-
-2.C - Metatests
+3.D - Metatests
 
 Sometimes instead of considering a tests p-values as a final product 
 someone will use it as random data to be put in to another set of 
 statistical tests.  Such a test using other tests p-values as input 
 is referred to as a metatest.  
 
-This is possible because an ideal p-value is supposed to be a number 
-uniformly distributed between 0 and 1.  Test results on data produced 
-by different seeds should show no correlation.  In all ways p-values 
-from a good test run on a good RNG should behave like the output of a 
-good RNG.  Care must be taken to avoid using correlated (or at least 
-strongly correlated) test results in such a way, but this is 
-generally a managable problem for an canny user.  
+P-values for data from good RNGs are supposed to be uniformly 
+distributed between 0 and 1.  Test results on data produced by 
+different seeds should show no correlation.  Thus p-values from a good 
+test run on different seedings of a good RNG should behave like the 
+output of a good RNG.  Care must be taken to avoid using correlated (or 
+at least strongly correlated) test results in such a way, but this is 
+generally a managable problem for a canny user.  
 
 Some test suites have a habit of completely hiding p-values produced 
 directly by their basic statistical tests on the random numbers and 
@@ -410,17 +425,17 @@ indistinguishable from zero).
 
 
 ***********************************************************************
-4. Testing with Non-PractRand Test Suites
+4. Brief Reviews of Non-PractRand Test Suites
 ***********************************************************************
 
 TestU01:
-	Has many merits.  
+	Very good.  
 	Difficult to build on windows.  
 	Slightly worse on chaotic PRNGs than non-chaotic PRNGs.  
 	I recommend its SmallCrush, Crush, and BigCrush batteries of tests.  
 
-	I link my PRNGs with it, but I think you might be able to give it 
-	files or pipe in data too.  
+	I link my PRNGs with it, but I think you can give it files or pipe 
+	in data too.  
 
 RaBiGeTe:
 	If the new version is out yet it's pretty decent (I've been using a pre-release copy).  

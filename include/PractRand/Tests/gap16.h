@@ -13,14 +13,17 @@ namespace PractRand {
 			enum { 
 				SIZE1 = 1<<18, //handles the common case, tracks sets of (1 << SET1_SHIFT) gaps
 				SIZE2 = 1<<17, //handles the uncommon cases, tracks each set of (1 << SET2_SHIFT) gaps
-				SIZE3 = 1<<10, //handles the rare cases, tracks a number of sets which double in size after the second one - the smallest is SET3_BASE in size
+				SIZE3 = 1<<17, //handles rare cases, tracks each set of (1 << SET3_SHIFT) gaps (VERY rare cases go to extreme_lags instead)
 				SET1_SHIFT = 1,
-				SET2_SHIFT = 4,
-				SET3_SHIFT = 8
+				SET2_SHIFT = 2,
+				SET3_SHIFT = 3
 			};
 			FixedSizeCount<Uint8, SIZE1 + SIZE2 + SIZE3> counts;
+			std::vector<Uint32> extreme_lags;
+			void increment_lag(Uint32 lag);
 			bool autofail;
-			Sint32 last[65536];
+			Uint32 last[65536];
+			int warmup;
 		};
 	}//Tests
 }//PractRand

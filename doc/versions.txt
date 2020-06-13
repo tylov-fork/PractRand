@@ -1,3 +1,48 @@
+version 0.91
+	RNGs
+		efiix
+			revised seeding algorithm slightly
+		xsm32 & xsm64
+			changed algorithm
+			improved quality - mainly with respect to parallel generation
+			worsened speed as a result though
+			also improved seeding
+		non-recommended
+			fixed bugs in dual_cbuf, dual_cbuf_accum, isaac32_small
+			added isaac16_small, efiix4_small
+	Test Batteries:
+		core:
+			added an FPF parameterization
+			added BRank (it's a new test, see below)
+		expanded:
+			various changes?
+			(I don't usually remember to note when the expanded test set changes)
+	Tests:
+		new tests:
+			BRank - fairly standard binary matrix rank test
+			BCFN_MT - not working yet
+			BCFN_FF - not worth the extra time it takes?
+			FPMulti - not working yet
+		FPF
+			substantial optimizations
+			improvements to scoring & subtest breakdown
+			cleaned up some idiosyncracies
+		BCFN
+			significant optimizations
+				test changed slightly (necessary for optimizations)
+				might be slightly better or worse, can't tell yet
+				optimizations are currently optional in the code
+				though there's no way to turn them off from the command line tools
+			also changed handling of first call to test_blocks, elminated the "!" subtest
+		Gap-16
+			improved calibration data (more accurate & less conservative p-values at extremes)
+		DC6
+			improved speed
+	tools
+		RNG_test now defaults to -tlfail (stop when a test is failed)
+		fixed negative time issue in RNG_test
+	documentation
+		tried to improve a lot of docs
 version 0.90
 	other
 		accidentally had some debugging code enabled in 0.89 and 0.88 that was breaking autoseeding, fixed

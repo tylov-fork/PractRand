@@ -76,7 +76,7 @@ namespace PractRand {
 					walker->handle(a);
 					if (!a) a = 1;
 				}
-				void xorshift128_64::xrs(int bits) {
+				void xorshift64of128::xrs(int bits) {
 					if (bits < 64) {
 						low ^= low >> bits;
 						low ^= high << (64-bits);
@@ -85,7 +85,7 @@ namespace PractRand {
 					else if (bits > 64) low ^= high >> (bits - 64);
 					else low ^= high;
 				}
-				void xorshift128_64::xls(int bits) {
+				void xorshift64of128::xls(int bits) {
 					if (bits < 64) {
 						high ^= high << bits;
 						high ^= low >> (64-bits);
@@ -94,24 +94,24 @@ namespace PractRand {
 					else if (bits > 64) low ^= high >> (bits - 64);
 					else low ^= high;
 				}
-				Uint64 xorshift128_64::raw64() {
+				Uint64 xorshift64of128::raw64() {
 					xls(16);
 					xrs(53);
 					xls(47);
 					return low;
 				}
-				std::string xorshift128_64::get_name() const {return "xorshift128_64";}
-				void xorshift128_64::walk_state(StateWalkingObject *walker) {
+				std::string xorshift64of128::get_name() const {return "xorshift64of128";}
+				void xorshift64of128::walk_state(StateWalkingObject *walker) {
 					walker->handle(low);walker->handle(high);
 					if (!high && !low) low = 1;
 				}
 
-				std::string xorshift128_32::get_name() const {return "xorshift128_32";}
-				void xorshift128_32::walk_state(StateWalkingObject *walker) {impl.walk_state(walker);}
-				std::string xorshift64_32::get_name() const {return "xorshift64_32";}
-				void xorshift64_32::walk_state(StateWalkingObject *walker) {impl.walk_state(walker);}
-				std::string xorshift32_16::get_name() const {return "xorshift32_16";}
-				void xorshift32_16::walk_state(StateWalkingObject *walker) {impl.walk_state(walker);}
+				std::string xorshift32of128::get_name() const {return "xorshift32of128";}
+				void xorshift32of128::walk_state(StateWalkingObject *walker) {impl.walk_state(walker);}
+				std::string xorshift32of64::get_name() const {return "xorshift32of64";}
+				void xorshift32of64::walk_state(StateWalkingObject *walker) {impl.walk_state(walker);}
+				std::string xorshift16of32::get_name() const {return "xorshift16of32";}
+				void xorshift16of32::walk_state(StateWalkingObject *walker) {impl.walk_state(walker);}
 
 				Uint32 xorshift32x4::raw32() {
 					Uint32 tmp = x ^ (x << 15);
@@ -131,12 +131,12 @@ namespace PractRand {
 					if (!(x || y || z || w)) x = 1;
 				}
 
-				Uint32 xorwow96_32::raw32() {
+				Uint32 xorwow32of96::raw32() {
 					a += 362437;
 					return a + impl.raw32();
 				}
-				std::string xorwow96_32::get_name() const {return "xorwow96_32";}
-				void xorwow96_32::walk_state(StateWalkingObject *walker) {
+				std::string xorwow32of96::get_name() const {return "xorwow32of96";}
+				void xorwow32of96::walk_state(StateWalkingObject *walker) {
 					impl.walk_state(walker);
 					walker->handle(a);
 				}
@@ -176,7 +176,7 @@ namespace PractRand {
 					walker->handle(b);
 				}
 
-				Uint16 sap48_16::raw16() {
+				Uint16 sap16of48::raw16() {
 					Uint16 tmp;
 					tmp = a + 0x79b9 + c;
 					tmp = (tmp<<5)|(tmp>>11);
@@ -186,13 +186,13 @@ namespace PractRand {
 					c = (c + a) ^ b;
 					return b;
 				}
-				std::string sap48_16::get_name() const {return "sap48_16";}
-				void sap48_16::walk_state(StateWalkingObject *walker) {
+				std::string sap16of48::get_name() const {return "sap16of48";}
+				void sap16of48::walk_state(StateWalkingObject *walker) {
 					walker->handle(a);
 					walker->handle(b);
 					walker->handle(c);
 				}
-				Uint32 sap96_32::raw32() {
+				Uint32 sap32of96::raw32() {
 					Uint32 tmp;
 					tmp = a + 0x9e3779b9 + c;
 					tmp = (tmp<<7)|(tmp>>25);
@@ -202,8 +202,8 @@ namespace PractRand {
 					c = (c + a) ^ b;
 					return b;
 				}
-				std::string sap96_32::get_name() const {return "sap96_32";}
-				void sap96_32::walk_state(StateWalkingObject *walker) {
+				std::string sap32of96::get_name() const {return "sap32of96";}
+				void sap32of96::walk_state(StateWalkingObject *walker) {
 					walker->handle(a);
 					walker->handle(b);
 					walker->handle(c);
@@ -521,29 +521,29 @@ namespace PractRand {
 					walker->handle(a);
 					walker->handle(b);
 				}
-				Uint32 mo_Rers64_32::raw32() {
+				Uint32 mo_Rers32of64::raw32() {
 					state = rotate64(state, 8) - rotate64(state, 29);
 					return Uint32(state);
 				}
-				std::string mo_Rers64_32::get_name() const {return "mo_Rers64_32";}
-				void mo_Rers64_32::walk_state(StateWalkingObject *walker) {
+				std::string mo_Rers32of64::get_name() const {return "mo_Rers32of64";}
+				void mo_Rers32of64::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
-				Uint32 mo_Resr64_32::raw32() {
+				Uint32 mo_Resr32of64::raw32() {
 					state = rotate64(state, 21) - state; state = rotate64(state, 20);
 					return Uint32(state);
 				}
-				std::string mo_Resr64_32::get_name() const {return "mo_Resr64_32";}
-				void mo_Resr64_32::walk_state(StateWalkingObject *walker) {
+				std::string mo_Resr32of64::get_name() const {return "mo_Resr32of64";}
+				void mo_Resr32of64::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
-				Uint32 mo_Resdra64_32::raw32() {
+				Uint32 mo_Resdra32of64::raw32() {
 					state = rotate64(state, 42) - state;
 					state += rotate64(state, 14);
 					return Uint32(state);
 				}
-				std::string mo_Resdra64_32::get_name() const {return "mo_Resdra64_32";}
-				void mo_Resdra64_32::walk_state(StateWalkingObject *walker) {
+				std::string mo_Resdra32of64::get_name() const {return "mo_Resdra32of64";}
+				void mo_Resdra32of64::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
 			}

@@ -69,15 +69,15 @@ namespace PractRand {
 					if (index2 >= 55) index2 += 55;
 				}
 				//Mitchell-Moore modified: LFib16(Uint32, 55, 24, ADD) >> 16
-				Uint16 mm32_16::raw16() {
+				Uint16 mm16of32::raw16() {
 					Uint32 tmp;
 					tmp = cbuf[index1] += cbuf[index2];
 					if ( ++index1 == 55 ) index1 = 0;
 					if ( ++index2 == 55 ) index2 = 0;
 					return tmp >> 16;
 				}
-				std::string mm32_16::get_name() const {return "mm32_16";}
-				void mm32_16::walk_state(StateWalkingObject *walker) {
+				std::string mm16of32::get_name() const {return "mm16of32";}
+				void mm16of32::walk_state(StateWalkingObject *walker) {
 					walker->handle(index1);
 					for (int i = 0; i < 55; i++) walker->handle(cbuf[i]);
 					if (index1 >= 55) index1 %= 55;
@@ -157,8 +157,10 @@ namespace PractRand {
 					walker->handle(index2);
 					for (int i = 0; i < L1; i++) walker->handle(cbuf1[i]);
 					for (int i = 0; i < L2; i++) walker->handle(cbuf2[i]);
-					if (index1 >= L1) index1 %= L1;
-					if (index2 >= L2) index2 %= L2;
+					if (index1 > L1) index1 %= L1;
+					if (!index1) index1 = L1;
+					if (index2 > L2) index2 %= L2;
+					if (!index2) index2 = L2;
 				}
 				Uint32 dual_cbuf_accum::raw32() {
 					Uint32 tmp1, tmp2;
@@ -178,8 +180,10 @@ namespace PractRand {
 					walker->handle(accum);
 					for (int i = 0; i < L1; i++) walker->handle(cbuf1[i]);
 					for (int i = 0; i < L2; i++) walker->handle(cbuf2[i]);
-					if (index1 >= L1) index1 %= L1;
-					if (index2 >= L2) index2 %= L2;
+					if (index1 > L1) index1 %= L1;
+					if (index2 > L2) index2 %= L2;
+					if ( !index1 ) index1 = L1;
+					if ( !index2 ) index2 = L2;
 				}
 
 
@@ -205,7 +209,7 @@ namespace PractRand {
 					if (position >= LAG1) position %= LAG1;
 				}
 
-				Uint16 fibmul32_16::raw16() {
+				Uint16 fibmul16of32::raw16() {
 					if (position) return Uint16(buffer[--position] >> 16);
 					for (unsigned long i = 0; i < LAG2; i++) {
 						buffer[i] = buffer[i+LAG1-LAG1] * buffer[i+LAG1-LAG2];
@@ -216,14 +220,14 @@ namespace PractRand {
 					position = LAG1;
 					return Uint16(buffer[--position] >> 16);
 				}
-				std::string fibmul32_16::get_name() const {return "fibmul32_16";}
-				void fibmul32_16::walk_state(StateWalkingObject *walker) {
+				std::string fibmul16of32::get_name() const {return "fibmul16of32";}
+				void fibmul16of32::walk_state(StateWalkingObject *walker) {
 					walker->handle(position);
 					for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
 					if (position >= LAG1) position %= LAG1;
 					for (int i = 0; i < LAG1; i++) buffer[i] |= 1;
 				}
-				Uint32 fibmul64_32::raw32() {
+				Uint32 fibmul32of64::raw32() {
 					if (position) return Uint32(buffer[--position] >> 32);
 					for (unsigned long i = 0; i < LAG2; i++) {
 						buffer[i] = buffer[i+LAG1-LAG1] * buffer[i+LAG1-LAG2];
@@ -234,8 +238,8 @@ namespace PractRand {
 					position = LAG1;
 					return Uint32(buffer[--position] >> 32);
 				}
-				std::string fibmul64_32::get_name() const {return "fibmul64_32";}
-				void fibmul64_32::walk_state(StateWalkingObject *walker) {
+				std::string fibmul32of64::get_name() const {return "fibmul32of64";}
+				void fibmul32of64::walk_state(StateWalkingObject *walker) {
 					walker->handle(position);
 					for (int i = 0; i < LAG1; i++) walker->handle(buffer[i]);
 					if (position >= LAG1) position %= LAG1;

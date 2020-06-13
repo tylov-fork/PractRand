@@ -77,8 +77,8 @@ namespace PractRand {
 		RNG (SEED_NONE_TYPE ) {}\
 		Uint8  raw8 ();\
 		Uint16 raw16();\
-		Uint64 raw64();\
 		Uint32 raw32();\
+		Uint64 raw64();\
 		using vRNG::seed;\
 		Uint64 get_flags() const;\
 		std::string get_name() const;\

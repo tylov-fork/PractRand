@@ -13,71 +13,136 @@ namespace PractRand {
 	namespace RNGs {
 		namespace Polymorphic {
 			namespace NotRecommended {
-				//very similar to the standard RNG for libc
-				Uint16 lcg32_16::raw16() {
-					state = state * 1103515245 + 12345;
-					return Uint16(state >> 16);
-				}
-				std::string lcg32_16::get_name() const {return "lcg32_16";}
-				void lcg32_16::walk_state(StateWalkingObject *walker) {
-					walker->handle(state);
-				}
-
-				//basic LCG - the low bits are too low quality for ANY use
-				Uint32 lcg32::raw32() {
-					state = state * 1103515245 + 12345;
-					return state;
-				}
-				std::string lcg32::get_name() const {return "lcg32";}
-				void lcg32::walk_state(StateWalkingObject *walker) {
-					walker->handle(state);
-				}
-
-				Uint32 lcg64_32_varqual::raw32() {
+				Uint32 lcg32of64_varqual::raw32() {
 					state = state * 1103515245 + 12345;
 					return Uint32(state >> outshift);
 				}
-				std::string lcg64_32_varqual::get_name() const {
+				std::string lcg32of64_varqual::get_name() const {
 					std::ostringstream str;
-					str << "lcg" << (32 + outshift) << "_32";
+					str << "lcg(32," << (32 + outshift) << ")";
 					return str.str();
 				}
-				void lcg64_32_varqual::walk_state(StateWalkingObject *walker) {
+				void lcg32of64_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
-				Uint16 lcg64_16_varqual::raw16() {
+				Uint16 lcg16of64_varqual::raw16() {
 					state = state * 1103515245 + 12345;
 					return Uint16(state >> outshift);
 				}
-				std::string lcg64_16_varqual::get_name() const {
+				std::string lcg16of64_varqual::get_name() const {
 					std::ostringstream str;
-					str << "lcg" << (16 + outshift) << "_16";
+					str << "lcg(16," << (16 + outshift) << ")";
 					return str.str();
 				}
-				void lcg64_16_varqual::walk_state(StateWalkingObject *walker) {
+				void lcg16of64_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
-				Uint8 lcg64_8_varqual::raw8() {
+				Uint8 lcg8of64_varqual::raw8() {
 					state = state * 1103515245 + 12345;
 					return Uint8(state >> outshift);
 				}
-				std::string lcg64_8_varqual::get_name() const {
+				std::string lcg8of64_varqual::get_name() const {
 					std::ostringstream str;
-					str << "lcg" << (8 + outshift) << "_8";
+					str << "lcg(8," << (8 + outshift) << ")";
 					return str.str();
 				}
-				void lcg64_8_varqual::walk_state(StateWalkingObject *walker) {
+				void lcg8of64_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
 
-				//similar to lcg32_16, but with a longer period
-				Uint16 lcg32_16_extended::raw16() {
+				Uint32 lcg32of128_varqual::raw32() {
+					//large multiplication is much harder to write in C (than asm)
+					//made some compromises here... restricting the multiplier to 32 bits
+					//which would hurt quality some, being so small compared to the state
+					//but I think the correct comparison is to the output window, not the state
+					//which is only 16 bits, so it should all be good
+					const Uint32 multiplier = 1103515245;
+					const Uint64 adder = 1234567;
+					Uint64 a = Uint32(low) * Uint64(multiplier);
+					Uint64 b = (low >> 32) * Uint64(multiplier);
+					Uint64 old = low;
+					low = a + (b << 32);
+					b += a >> 32;
+					high *= multiplier;
+					high += b >> 32;
+					high += old;//adds 2**64 to the multiplier
+					low += adder;
+					if (a < adder) high++;
+					if (outshift >= 64) return Uint32(high >> (outshift-64));
+					if (outshift > 32) return Uint32( (low >> outshift) | (high << (64-outshift)) );
+					return Uint32(low >> outshift);
+				}
+				std::string lcg32of128_varqual::get_name() const {
+					std::ostringstream str;
+					str << "lcg(32," << (32 + outshift) << ")";
+					return str.str();
+				}
+				void lcg32of128_varqual::walk_state(StateWalkingObject *walker) {
+					walker->handle(low);
+					walker->handle(high);
+				}
+				Uint16 lcg16of128_varqual::raw16() {
+					const Uint32 multiplier = 1103515245;
+					const Uint64 adder = 1234567;
+					Uint64 a = Uint32(low) * Uint64(multiplier);
+					Uint64 b = (low >> 32) * Uint64(multiplier);
+					Uint64 old = low;
+					low = a + (b << 32);
+					b += a >> 32;
+					high *= multiplier;
+					high += b >> 32;
+					high += old;//adds 2**64 to the multiplier
+					low += adder;
+					if (a < adder) high++;
+					if (outshift >= 64) return Uint16(high >> (outshift-64));
+					if (outshift > 48) return Uint16( (low >> outshift) | (high << (64-outshift)) );
+					return Uint16(low >> outshift);
+				}
+				std::string lcg16of128_varqual::get_name() const {
+					std::ostringstream str;
+					str << "lcg(16," << (16 + outshift) << ")";
+					return str.str();
+				}
+				void lcg16of128_varqual::walk_state(StateWalkingObject *walker) {
+					walker->handle(low);
+					walker->handle(high);
+				}
+				Uint8 lcg8of128_varqual::raw8() {
+					const Uint32 multiplier = 1103515245;
+					const Uint64 adder = 1234567;
+					Uint64 a = Uint32(low) * Uint64(multiplier);
+					Uint64 b = (low >> 32) * Uint64(multiplier);
+					Uint64 old = low;
+					low = a + (b << 32);
+					b += a >> 32;
+					high *= multiplier;
+					high += b >> 32;
+					high += old;//adds 2**64 to the multiplier
+					low += adder;
+					if (a < adder) high++;
+					if (outshift >= 64) return Uint8(high >> (outshift-64));
+					if (outshift > 56) return Uint8( (low >> outshift) | (high << (64-outshift)) );
+					return Uint8(low >> outshift);
+				}
+				std::string lcg8of128_varqual::get_name() const {
+					std::ostringstream str;
+					str << "lcg(8," << (8 + outshift) << ")";
+					return str.str();
+				}
+				void lcg8of128_varqual::walk_state(StateWalkingObject *walker) {
+					walker->handle(low);
+					walker->handle(high);
+				}
+
+
+				//similar to lcg16of32, but with a longer period
+				Uint16 lcg16of32_extended::raw16() {
 					state = state * 1103515245 + add;
 					if (!(state & 0x7fff)) add += 2;
 					return Uint16(state >> 16);
 				}
-				std::string lcg32_16_extended::get_name() const {return "lcg32_16_extended";}
-				void lcg32_16_extended::walk_state(StateWalkingObject *walker) {
+				std::string lcg16of32_extended::get_name() const {return "lcg16of32_extended";}
+				void lcg16of32_extended::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 					walker->handle(add);
 					add |= 1;
@@ -96,49 +161,49 @@ namespace PractRand {
 					add |= 1;
 				}
 
-				Uint32 clcg96_32_varqual::raw32() {
+				Uint32 clcg32of96_varqual::raw32() {
 					lcg1 = lcg1 * 1103515245 + 12345;
 					Uint64 tmp = Uint64(lcg2) * 1579544716;
 					lcg2 = Uint32(tmp & 0x7FffFFff) + Uint32(tmp >> 33) + 1;
 					return lcg2 + Uint32(lcg1 >> outshift);
 				}
-				std::string clcg96_32_varqual::get_name() const {
+				std::string clcg32of96_varqual::get_name() const {
 					std::ostringstream str;
-					str << "clcg" << (32 + outshift + 32) << "_32";
+					str << "clcg(32," << (32 + outshift + 32) << ")";
 					return str.str();
 				}
-				void clcg96_32_varqual::walk_state(StateWalkingObject *walker) {
+				void clcg32of96_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(lcg1); walker->handle(lcg2);
 					if (!lcg2) lcg2 = 1;
 				}
-				Uint16 clcg96_16_varqual::raw16() {
+				Uint16 clcg16of96_varqual::raw16() {
 					lcg1 = lcg1 * 1103515245 + 12345;
 					Uint64 tmp = Uint64(lcg2) * 1579544716;
 					lcg2 = Uint32(tmp & 0x7FffFFff) + Uint32(tmp >> 33) + 1;
 					return Uint16(lcg2 >> 12) + Uint16(lcg1 >> outshift);
 					//return Uint16((lcg2 + lcg1) >> outshift);
 				}
-				std::string clcg96_16_varqual::get_name() const {
+				std::string clcg16of96_varqual::get_name() const {
 					std::ostringstream str;
-					str << "clcg" << (16 + outshift + 32) << "_16";
+					str << "clcg(16," << (16 + outshift + 32) << ")";
 					return str.str();
 				}
-				void clcg96_16_varqual::walk_state(StateWalkingObject *walker) {
+				void clcg16of96_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(lcg1); walker->handle(lcg2);
 					if (!lcg2) lcg2 = 1;
 				}
-				Uint8 clcg96_8_varqual::raw8() {
+				Uint8 clcg8of96_varqual::raw8() {
 					lcg1 = lcg1 * 1103515245 + 12345;
 					Uint64 tmp = lcg2 * Uint64(1579544716);
 					lcg2 = Uint32(tmp & 0x7FffFFff) + Uint32(tmp >> 33) + 1;
 					return Uint8(lcg2) + Uint8(lcg1 >> outshift);
 				}
-				std::string clcg96_8_varqual::get_name() const {
+				std::string clcg8of96_varqual::get_name() const {
 					std::ostringstream str;
-					str << "clcg" << (8 + outshift + 32) << "_8";
+					str << "clcg(8," << (8 + outshift + 32) << ")";
 					return str.str();
 				}
-				void clcg96_8_varqual::walk_state(StateWalkingObject *walker) {
+				void clcg8of96_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(lcg1); walker->handle(lcg2);
 					if (!lcg2) lcg2 = 1;
 				}
@@ -252,7 +317,7 @@ namespace PractRand {
 					walker->handle(a); walker->handle(b); walker->handle(c); walker->handle(d);
 				}
 
-				Uint32 xlcg64_32_varqual::raw32() {
+				Uint32 xlcg32of64_varqual::raw32() {
 					enum {
 						X = 0xC74EAD55,//must end in 5 or D
 						M = 0x947E3DB3,//must end in 3 or B
@@ -260,15 +325,15 @@ namespace PractRand {
 					state = (state ^ X) * M;
 					return Uint32(state >> outshift);
 				}
-				std::string xlcg64_32_varqual::get_name() const {
+				std::string xlcg32of64_varqual::get_name() const {
 					std::ostringstream str;
-					str << "xlcg" << (32 + outshift) << "_32";
+					str << "xlcg(32," << (32 + outshift) << ")";
 					return str.str();
 				}
-				void xlcg64_32_varqual::walk_state(StateWalkingObject *walker) {
+				void xlcg32of64_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
-				Uint16 xlcg64_16_varqual::raw16() {
+				Uint16 xlcg16of64_varqual::raw16() {
 					enum {
 						X = 0xC74EAD55,//must end in 5 or D
 						M = 0x947E3DB3,//must end in 3 or B
@@ -276,15 +341,15 @@ namespace PractRand {
 					state = (state ^ X) * M;
 					return Uint16(state >> outshift);
 				}
-				std::string xlcg64_16_varqual::get_name() const {
+				std::string xlcg16of64_varqual::get_name() const {
 					std::ostringstream str;
-					str << "xlcg" << (16 + outshift) << "_16";
+					str << "xlcg(16," << (16 + outshift) << ")";
 					return str.str();
 				}
-				void xlcg64_16_varqual::walk_state(StateWalkingObject *walker) {
+				void xlcg16of64_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
-				Uint8 xlcg64_8_varqual::raw8() {
+				Uint8 xlcg8of64_varqual::raw8() {
 					enum {
 						X = 0xC74EAD55,//must end in 5 or D
 						M = 0x947E3DB3,//must end in 3 or B
@@ -292,16 +357,16 @@ namespace PractRand {
 					state = (state ^ X) * M;
 					return Uint8(state >> outshift);
 				}
-				std::string xlcg64_8_varqual::get_name() const {
+				std::string xlcg8of64_varqual::get_name() const {
 					std::ostringstream str;
-					str << "xlcg" << (8 + outshift) << "_8";
+					str << "xlcg(8," << (8 + outshift) << ")";
 					return str.str();
 				}
-				void xlcg64_8_varqual::walk_state(StateWalkingObject *walker) {
+				void xlcg8of64_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(state);
 				}
 
-				Uint32 cxlcg96_32_varqual::raw32() {
+				Uint32 cxlcg32of96_varqual::raw32() {
 					enum {
 						X = 0xC74EAD55,//must end in 5 or D
 						M = 0x947E3DB3,//must end in 3 or B
@@ -311,16 +376,16 @@ namespace PractRand {
 					lcg2 = Uint32(tmp & 0x7FffFFff) + Uint32(tmp >> 33) + 1;
 					return lcg2 + Uint32(lcg1 >> outshift);
 				}
-				std::string cxlcg96_32_varqual::get_name() const {
+				std::string cxlcg32of96_varqual::get_name() const {
 					std::ostringstream str;
-					str << "cxlcg" << (32 + outshift + 32) << "_32";
+					str << "cxlcg(32," << (32 + outshift + 32) << ")";
 					return str.str();
 				}
-				void cxlcg96_32_varqual::walk_state(StateWalkingObject *walker) {
+				void cxlcg32of96_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(lcg1); walker->handle(lcg2);
 					if (!lcg2) lcg2 = 1;
 				}
-				Uint16 cxlcg96_16_varqual::raw16() {
+				Uint16 cxlcg16of96_varqual::raw16() {
 					enum {
 						X = 0xC74EAD55,//must end in 5 or D
 						M = 0x947E3DB3,//must end in 3 or B
@@ -330,16 +395,16 @@ namespace PractRand {
 					lcg2 = Uint32(tmp & 0x7FffFFff) + Uint32(tmp >> 33) + 1;
 					return Uint16(lcg2) + Uint16(lcg1 >> outshift);
 				}
-				std::string cxlcg96_16_varqual::get_name() const {
+				std::string cxlcg16of96_varqual::get_name() const {
 					std::ostringstream str;
-					str << "cxlcg" << (16 + outshift + 32) << "_16";
+					str << "cxlcg(16," << (16 + outshift + 32) << ")";
 					return str.str();
 				}
-				void cxlcg96_16_varqual::walk_state(StateWalkingObject *walker) {
+				void cxlcg16of96_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(lcg1); walker->handle(lcg2);
 					if (!lcg2) lcg2 = 1;
 				}
-				Uint8 cxlcg96_8_varqual::raw8() {
+				Uint8 cxlcg8of96_varqual::raw8() {
 					enum {
 						X = 0xC74EAD55,//must end in 5 or D
 						M = 0x947E3DB3,//must end in 3 or B
@@ -349,12 +414,12 @@ namespace PractRand {
 					lcg2 = Uint32(tmp & 0x7FffFFff) + Uint32(tmp >> 33) + 1;
 					return Uint8(lcg2) + Uint8(lcg1 >> outshift);
 				}
-				std::string cxlcg96_8_varqual::get_name() const {
+				std::string cxlcg8of96_varqual::get_name() const {
 					std::ostringstream str;
-					str << "cxlcg" << (8 + outshift + 32) << "_8";
+					str << "cxlcg(8," << (8 + outshift + 32) << ")";
 					return str.str();
 				}
-				void cxlcg96_8_varqual::walk_state(StateWalkingObject *walker) {
+				void cxlcg8of96_varqual::walk_state(StateWalkingObject *walker) {
 					walker->handle(lcg1); walker->handle(lcg2);
 					if (!lcg2) lcg2 = 1;
 				}
