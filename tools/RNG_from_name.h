@@ -20,7 +20,12 @@ namespace Special_RNGs {
 			end = &buffer[n];
 		}
 	public:
-		_stdin_reader() : ended(false) { refill(); }
+		_stdin_reader() : ended(false) {
+#ifdef _WIN32
+			setmode(_fileno(stdin), _O_BINARY);
+#endif			
+			refill();
+		}
 		Word read() { if (pos == end) refill(); return *(pos++); }
 	};
 	class RNG_stdin : public PractRand::RNGs::vRNG8 {

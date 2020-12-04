@@ -1855,7 +1855,7 @@ void  PractRand::Tests::Rep16::get_results(std::vector<TestResult> &results) {
 		counts2[v]++;
 	}
 	for (unsigned long i = 0; i < counts2.size(); i++) {
-		std::printf("%d: %d\n", i, counts2[i]);
+		std::printf("%lu: %d\n", i, counts2[i]);
 	}
 }
 
@@ -10673,7 +10673,7 @@ void PractRand::Tests::LPerm16::get_results(std::vector<TestResult> &results) {
 		Uint8 rawperm[8];
 		Uint8 used = 0;
 		if (i == 1736) {
-			std::printf("");
+			std::fflush(stdout); // ?
 		}
 		int u = i;
 		int d;
