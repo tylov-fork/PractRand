@@ -7625,13 +7625,11 @@ void PractRand::Tests::mod3n::get_results(std::vector<TestResult> &results) {
 	if (!total_blocks_on) return;
 	for (int level = 0; level < LEVELS; level++) {
 		Uint64 predicted_samples = ((total_blocks_on * TestBlock::SIZE) >> level) - (EXP - 1) * (level + 1);
-		//if (predicted_samples < 200) return;
-		if (predicted_samples < 20) return;//remove me
+		if (predicted_samples < 200) return;
 
 		int effective_EXP = int(std::floor(std::log(predicted_samples) / std::log(4.0) - 2.9));
 		if (effective_EXP < 3) effective_EXP = 3;
 		if (effective_EXP > EXP) effective_EXP = EXP;
-		effective_EXP = 3;////remove me
 
 		int effective_K = int(std::pow(3.0, (double)effective_EXP));
 		double E = predicted_samples / effective_K;
