@@ -1,5 +1,8 @@
 #ifndef RNG_from_name_h
 #define RNG_from_name_h
+#ifdef _WIN32
+#include <fcntl.h>
+#endif
 
 namespace Special_RNGs {
 	template<typename Word>
@@ -23,7 +26,7 @@ namespace Special_RNGs {
 		_stdin_reader() : ended(false) {
 #ifdef _WIN32
 			setmode(_fileno(stdin), _O_BINARY);
-#endif			
+#endif
 			refill();
 		}
 		Word read() { if (pos == end) refill(); return *(pos++); }
@@ -101,7 +104,7 @@ namespace PractRand {
 			const int num_nonrecommended_simple = sizeof(nonrecommended_simple) / sizeof(nonrecommended_simple[0]) - 1;
 			const char *nonrecommended_nonlcg[] = {
 				"garthy16", "garthy32", "binarymult16", "binarymult32", "rxmult16", "multish3x32", "multish4x16",
-				"mwrca16", "mwrca32", "mwrcc16", "mwrcc32", "mwrcca16", "mwrcca32", 
+				"mwrca16", "mwrca32", "mwrcc16", "mwrcc32", "mwrcca16", "mwrcca32",
 				"old_mwlac16", "mwlac_varA", "mwlac_varB", "mwlac_varC", "mwlac_varD", "mwlac_varE",
 				"mo_Cmfr", "mo_Cmr32of64", "mulcr16", "mulcr32", "mmr16", "mmr32",
 				NULL

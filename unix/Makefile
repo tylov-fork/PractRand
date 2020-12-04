@@ -13,7 +13,7 @@ ifeq ($(OS),Windows_NT)
 else
 	SYS   := build/$(shell uname)
 endif
-MKDIR_P   := mkdir -pst
+
 OBJ_DIR   := $(SYS)/obj
 BIN_DIR   := $(SYS)/bin
 
@@ -30,28 +30,33 @@ PROG_OBJS := $(PROG_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 PROG_DEPS := $(PROG_SRCS:%.cpp=$(OBJ_DIR)/%.d)
 
 CXX       := g++
-CXXFLAGS  ?= -O2 -I. -MMD -Iinclude -pthread -Wno-shift-count-overflow
+CXXFLAGS  ?= -std=c++11 -O2 -MMD -Iinclude -Wno-shift-count-overflow
+LDFLAGS   ?= -pthread
+AR_RCS    := ar rcs
+MKDIR_P   := mkdir -p
+RM_F      := rm -f
+STRIP     := strip
 
 
 all: $(PROGRAMS)
 
 clean:
-	rm -f $(LIB_OBJS) $(PROG_OBJS) $(LIB_DEPS) $(PROG_DEPS) $(PRAND_LIB)
+	$(RM_F) $(LIB_OBJS) $(PROG_OBJS) $(LIB_DEPS) $(PROG_DEPS) $(PRAND_LIB)
 
 distclean:
-	rm -f $(OBJ_DIR) $(BIN_DIR)
+	$(RM_F) $(OBJ_DIR) $(BIN_DIR)
 
 $(PRAND_LIB): $(LIB_OBJS)
-	ar rcs $@ $(LIB_OBJS)
+	$(AR_RCS) $@ $(LIB_OBJS)
 
 $(OBJ_DIR)/%.o: %.cpp
-	@mkdir -p $(@D)
+	@$(MKDIR_P) $(@D)
 	$(CXX) -o $@ $< -c $(CXXFLAGS)
 
 $(BIN_DIR)/RNG_%$(EXE): $(OBJ_DIR)/tools/RNG_%.o $(PRAND_LIB)
-	@mkdir -p $(@D)
-	$(CXX) -o $@ $< -L$(OBJ_DIR) $(CXXFLAGS) -l$(PRAND)
-	strip $@
+	@$(MKDIR_P) $(@D)
+	$(CXX) -o $@ $< -L$(OBJ_DIR) $(LDFLAGS) -l$(PRAND)
+	$(STRIP) $@
 
 
 .SECONDARY: $(PROG_OBJS) # Prevent deleting objs after building
