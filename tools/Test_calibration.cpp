@@ -110,7 +110,7 @@ void print_ss(const SampleSet &ss, const std::string &name, Uint64 blocks) {
 //	std::printf("{\"BCFN-%d/%d\",%7.0f,%5d, %d, {", tbits, 1<<stride_L2, double(Uint64(std::pow(2,length_L2) / 1024)), (int)ss.size(), (int)ss.num_duplicates());
 //	for (int i = 0; i < 117; i++) std::printf("%s%+7.3f", i ? "," : "", ss.get_result_by_percentile(ref_p[i]));
 //	std::printf("}, %+.4f, %+.4f, %.4f},\n", ss.get_result_by_percentile(0.5), ss.get_mean(), ss.get_stddev());
-	std::printf("{\"%s\",%9.0f,%5d,%4d, {", name.c_str(), (double)blocks, (long)ss.size(), (long)ss.num_duplicates());
+	std::printf("{\"%s\",%9.0f,%5ld,%4ld, {", name.c_str(), (double)blocks, (long)ss.size(), (long)ss.num_duplicates());
 	for (int i = 0; i < 129; i++) {
 		if (ref_p129[i] >= 0.01 && ref_p129[i] <= 0.99) std::printf("%s%+7.3f", i ? "," : "", ss.get_result_by_percentile(ref_p129[i]));
 		else std::printf("%s%+10.5f", i ? "," : "", ss.get_result_by_percentile(ref_p129[i]));
@@ -644,7 +644,7 @@ void verify_test_distributions() {
 					ss._normalize();
 					//if (ss.num_duplicates()) continue;
 					std::printf("\n\n name=\"%s\"; length_L2=%d;\n", name.c_str(), length_L2);
-					std::printf("total= %d; duplicates= %d;\n", ss.rs.size(), ss.num_duplicates());
+					std::printf("total= %lu; duplicates= %ld;\n", ss.rs.size(), ss.num_duplicates());
 					if (!ss.num_duplicates()) {
 						double sum = Tests::test_uniformity(ss);
 						double p = calib.get_percentile(sum);
@@ -1113,17 +1113,17 @@ void test_sfc16() {
 		for (int i = 1; i < 65536; i++) {
 			after2_16 *= 1 - (1 / (p248 - i));
 		}
-		std::printf("chance of a seed leading to a cycle < 2**32: %g\n", 1 / (1 - after2_16));
+		std::printf("chance of a seed leading to a cycle < 2**32: %Lg\n", 1 / (1 - after2_16));
 		long double after2_24 = 1;
 		for (int i = 1; i < 65536 * 256; i++) {
 			after2_24 *= 1 - (1 / (p248 - i));
 		}
-		std::printf("chance of a seed leading to a cycle < 2**40: %g\n", 1 / (1 - after2_24));
+		std::printf("chance of a seed leading to a cycle < 2**40: %Lg\n", 1 / (1 - after2_24));
 		long double after2_32 = 1;
 		for (unsigned long i = 1; i < 65536 * 65536ul; i++) {
 			after2_32 *= 1 - (1 / (p248 - i));
 		}
-		std::printf("chance of a seed leading to a cycle < 2**48: %f\n", 1 / (1 - after2_32));
+		std::printf("chance of a seed leading to a cycle < 2**48: %Lf\n", 1 / (1 - after2_32));
 	}
 }
 

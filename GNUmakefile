@@ -23,7 +23,7 @@ LIB_OBJS  := $(LIB_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 LIB_DEPS  := $(LIB_SRCS:%.cpp=$(OBJ_DIR)/%.d)
 PRAND_LIB := $(OBJ_DIR)/lib$(PRAND).a
 
-PNAMES    := RNG_test RNG_benchmark RNG_output
+PNAMES    := RNG_test RNG_benchmark RNG_output # Test_calibration
 PROGRAMS  := $(PNAMES:%=$(BIN_DIR)/%$(EXE))
 PROG_SRCS := $(PNAMES:%=tools/%.cpp)
 PROG_OBJS := $(PROG_SRCS:%.cpp=$(OBJ_DIR)/%.o)
@@ -53,7 +53,7 @@ $(OBJ_DIR)/%.o: %.cpp
 	@$(MKDIR_P) $(@D)
 	$(CXX) -o $@ $< -c $(CXXFLAGS)
 
-$(BIN_DIR)/RNG_%$(EXE): $(OBJ_DIR)/tools/RNG_%.o $(PRAND_LIB)
+$(BIN_DIR)/%$(EXE): $(OBJ_DIR)/tools/%.o $(PRAND_LIB)
 	@$(MKDIR_P) $(@D)
 	$(CXX) -o $@ $< -L$(OBJ_DIR) $(LDFLAGS) -l$(PRAND)
 	$(STRIP) $@
