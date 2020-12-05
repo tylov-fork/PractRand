@@ -2,10 +2,10 @@
 # It builds out-of-source, into build/Windows or build/Linux,
 # and provides dependecy checks.
 #
-# Tested on Windows with TDM-GCC64 9.2.0 - built executables requires no external DLLs.
-# It includes ming32-make.exe This makefile also need mkdir and rm, which are found in
+# Tested on Windows with TDM-GCC-64 9.2.0: built executables requires no external DLLs.
+# It includes mingw32-make.exe This makefile also require mkdir and rm, which are found in
 # C:\Program Files\Git\usr\bin if Git is installed. Use make -j or mingw32-make -j for
-# fast parallel build.
+# fast parallel compilation.
 
 ifeq ($(OS),Windows_NT)
 	EXE   := .exe
